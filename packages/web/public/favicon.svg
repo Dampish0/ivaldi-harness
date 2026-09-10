@@ -1,0 +1,8 @@
+<svg width="32" height="32" viewBox="108 105 302 302" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <style>
+    :root { color: #171717; }
+    @media (prefers-color-scheme: dark) { :root { color: #f3f3f3; } }
+  </style>
+  <defs><mask id="gap" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="512" height="512"><rect width="512" height="512" fill="#fff"/><polygon points="252.50,256.00 422.50,133.00 459.50,220.00 454.50,314.00" fill="#000"/></mask></defs>
+  <g fill="currentColor"><circle cx="252.50" cy="256.00" r="118.00" fill="none" stroke="currentColor" stroke-width="48.00" mask="url(#gap)"/><polygon points="374.50,207.00 401.50,234.00 374.50,261.00 347.50,234.00"/></g>
+</svg>

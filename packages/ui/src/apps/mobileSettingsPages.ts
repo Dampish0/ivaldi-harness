@@ -1,0 +1,26 @@
+import type { SettingsPageSlug } from '@/lib/settings/metadata';
+
+export const MOBILE_SETTINGS_PAGES = [
+  'general',
+  'appearance',
+  'chat',
+  'notifications',
+  'sessions',
+  'projects',
+  'git',
+  'magic-prompts',
+  'behavior',
+  'mcp',
+  'plugins',
+  'skills.installed',
+  'skills.catalog',
+  'providers',
+  'agents',
+  'commands',
+  'lifecycle-hooks',
+  'advanced',
+  'usage',
+  'voice',
+  'integrations',
+  'about',
+] as const satisfies readonly SettingsPageSlug[];

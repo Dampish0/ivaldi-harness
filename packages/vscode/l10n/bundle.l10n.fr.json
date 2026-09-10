@@ -1,0 +1,23 @@
+{
+  "Ivaldi: Failed to open sidebar - {0}": "Ivaldi : impossible d’ouvrir la barre latérale — {0}",
+  "Ivaldi: Chat sidebar is not ready": "Ivaldi : la barre latérale du chat n’est pas prête",
+  "Ivaldi: No active session": "Ivaldi : aucune session active",
+  "Ivaldi: API connection restarted": "Ivaldi : la connexion API a été redémarrée",
+  "Ivaldi: Failed to restart API - {0}": "Ivaldi : impossible de redémarrer l’API — {0}",
+  "Ivaldi [Add to Context]: No active editor": "Ivaldi [Ajouter au contexte] : aucun éditeur actif",
+  "Ivaldi [Add to Context]: No text selected": "Ivaldi [Ajouter au contexte] : aucun texte sélectionné",
+  "Ivaldi: No file selected to mention": "Ivaldi : aucun fichier sélectionné à mentionner",
+  "Ivaldi: Some selected entries were skipped (folders or unsupported resources)": "Ivaldi : certaines entrées sélectionnées ont été ignorées (dossiers ou ressources non prises en charge)",
+  "Ivaldi [Explain]: No active editor": "Ivaldi [Expliquer] : aucun éditeur actif",
+  "Explain the following Code / Text:": "Expliquez le code / texte suivant :",
+  "Ivaldi [Improve Code]: No active editor": "Ivaldi [Améliorer le code] : aucun éditeur actif",
+  "Ivaldi [Improve Code]: No text selected": "Ivaldi [Améliorer le code] : aucun texte sélectionné",
+  "Improve the following Code:": "Améliorez le code suivant :",
+  "OpenCode CLI not found. Install it and ensure it's in PATH.": "OpenCode CLI introuvable. Installez-le et assurez-vous qu’il est dans le PATH.",
+  "OpenCode CLI not found. Please install it and ensure it's in PATH.": "OpenCode CLI introuvable. Veuillez l’installer et vérifier qu’il est dans le PATH.",
+  "More Info": "Plus d’informations",
+  "Failed to start OpenCode: {0}": "Impossible de démarrer OpenCode : {0}",
+  "New Session": "Nouvelle session",
+  "Session": "Session",
+  "Agent Manager": "Gestionnaire d’agents"
+}

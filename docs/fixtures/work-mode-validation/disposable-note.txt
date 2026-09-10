@@ -1,0 +1,5 @@
+WORK MODE VALIDATION - SAFE TO DELETE
+
+This file exists only for the controlled confirmation test in the Work mode validation protocol.
+
+It contains no personal information and may be deleted during the session.

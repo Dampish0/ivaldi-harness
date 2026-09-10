@@ -1,0 +1,40 @@
+---
+title: Install
+description: Install Ivaldi for desktop, web, or VS Code.
+---
+
+# Install
+
+Ivaldi is preparing a stable release. Use builds from [Ivaldi releases](https://github.com/Dampish0/ivaldi-harness/releases) when available. Each release lists the platforms and architectures that were validated.
+
+## Desktop
+
+1. Download the Ivaldi installer for your platform and architecture.
+2. Install and launch Ivaldi.
+3. Connect your model provider and send a first message.
+
+Desktop bundles OpenCode. A separate OpenCode installation is not required.
+
+Automatic desktop updates are disabled. To update, stop active work, quit Ivaldi, and install the newer build for the same platform and architecture. Retain your application data and follow any migration instructions in the release notes.
+
+## Web and PWA from source
+
+Install Node.js 22+, the Bun version declared in the repository's `package.json`, and [OpenCode](https://opencode.ai). From a checkout of [the Ivaldi repository](https://github.com/Dampish0/ivaldi-harness), run:
+
+```bash
+bun install --frozen-lockfile
+bun run build:web
+node packages/web/bin/cli.js serve --ui-password be-creative-here
+```
+
+Open the URL printed by the CLI. Use your browser's Install option to add it as an app. Update by checking out the intended Ivaldi release, installing its locked dependencies, rebuilding, and restarting.
+
+Ivaldi source builds update only when you choose a newer Ivaldi release and rebuild. The `ivaldi` CLI does not contact another project's update channel.
+
+## VS Code
+
+Use an Ivaldi `.vsix` from an Ivaldi release, or build one from the repository with `bun run vscode:package`. In VS Code, run **Extensions: Install from VSIX** and select that file. This runtime requires an installed OpenCode CLI.
+
+The extension ID is `dampish0.ivaldi`. Install the Ivaldi VSIX from an Ivaldi release. Marketplace publication is a separate release step and is not currently advertised.
+
+If installation or startup fails, see [Troubleshooting](/troubleshooting/).

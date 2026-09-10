@@ -1,0 +1,33 @@
+---
+title: Installation
+description: Installez Ivaldi pour le desktop, le web ou VS Code.
+---
+
+# Installation
+
+Il existe trois façons d’utiliser Ivaldi :
+
+- l’application desktop pour macOS
+- l’application web servie par la CLI, que vous pouvez installer comme une application de téléphone (une PWA)
+- l’extension VS Code
+
+## Prérequis
+
+Installez d’abord [OpenCode](https://opencode.ai) — Ivaldi fonctionne par-dessus.
+
+## Web + PWA
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/openchamber/openchamber/main/scripts/install.sh | bash
+openchamber --ui-password be-creative-here
+```
+
+Ouvrez l’URL affichée par la CLI (souvent `http://localhost:3000`). Vous devriez voir la liste des sessions Ivaldi. Pour la garder à portée de main, utilisez l’option « Installer » de votre navigateur dans la barre d’adresse pour l’ajouter comme application.
+
+## Desktop
+
+Téléchargez la dernière version desktop depuis la page des releases GitHub ou la page de téléchargement Ivaldi. Ouvrez-la et connectez-la à votre workflow OpenCode habituel.
+
+## VS Code
+
+Installez l’extension depuis le VS Code Marketplace et connectez-la à votre workflow OpenCode habituel. La vue Ivaldi s’ouvre ensuite dans la barre latérale.

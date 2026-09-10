@@ -1,0 +1,19 @@
+<!-- Notification small icon: a monochrome Ivaldi ring + diamond mark.
+     Android tints it in the status bar / notification, so only the silhouette matters. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Open ring. The gap leaves room for the detached diamond. -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="3.2"
+        android:strokeLineCap="round"
+        android:pathData="M17.3,6.7 A7.7,7.7 0,1 0,17.3 17.3" />
+    <!-- Detached diamond. -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M19.2,9.4 L21.3,11.5 L19.2,13.6 L17.1,11.5 Z" />
+</vector>
