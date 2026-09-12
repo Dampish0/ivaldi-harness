@@ -3,13 +3,12 @@
  *
  * With the keyboard down the composer collapses to a compact input surface:
  * attachments, a one-line preview of the draft, and the same primary action
- * slot as the full composer, with a new-session button beside it.
+ * slot as the full composer.
  * Tapping anywhere in it expands the real composer and raises the keyboard in
  * the same gesture — which is why the expand handler must run synchronously
  * from the tap rather than from an effect.
  *
- * The new-session button collapses away once a draft is already open, letting
- * the pill grow into its place.
+ * New chats are started from the session list, alongside existing chats.
  */
 
 import React from 'react';
@@ -34,6 +33,7 @@ export interface MobilePillComposerProps {
     hasContent: boolean;
     isVSCode: boolean;
     canAbort: boolean;
+    canSend: boolean;
     footerIconButtonClass: string;
     iconSizeClass: string;
     stopIconSizeClass: string;
@@ -41,7 +41,6 @@ export interface MobilePillComposerProps {
     onApplySuggestion: (text: string) => void;
     showPlanSuggestion: boolean;
     onApplyPlanSuggestion: () => void;
-    onNewSession: () => void;
     onPickLocalFiles: () => void;
     onOpenIssuePicker: () => void;
     onOpenPrPicker: () => void;
@@ -63,6 +62,7 @@ export function MobilePillComposer(props: MobilePillComposerProps) {
         hasContent,
         isVSCode,
         canAbort,
+        canSend,
         footerIconButtonClass,
         iconSizeClass,
         stopIconSizeClass,
@@ -70,7 +70,6 @@ export function MobilePillComposer(props: MobilePillComposerProps) {
         onApplySuggestion,
         showPlanSuggestion,
         onApplyPlanSuggestion,
-        onNewSession,
         onPickLocalFiles,
         onOpenIssuePicker,
         onOpenPrPicker,
@@ -104,7 +103,7 @@ export function MobilePillComposer(props: MobilePillComposerProps) {
         <div className="flex items-center gap-2">
             <div
                 data-mobile-composer-pill="true"
-                className="flex h-12 min-w-0 flex-1 items-center gap-x-0.5 rounded-[18px] border border-border/70 bg-[var(--surface-elevated)] py-1 pl-1.5 pr-1 focus-within:ring-1 focus-within:ring-[var(--interactive-focus-ring)]"
+                className="flex min-h-14 min-w-0 flex-1 items-center gap-x-0.5 rounded-full border border-border/50 bg-[var(--surface-elevated)] py-1 pl-1.5 pr-1 focus-within:ring-1 focus-within:ring-[var(--interactive-focus-ring)]"
             >
                 <ComposerAttachmentControls
                     isVSCode={isVSCode}
@@ -129,7 +128,7 @@ export function MobilePillComposer(props: MobilePillComposerProps) {
                         {message.trim()
                             ? message
                             : currentSessionId || newSessionDraftOpen
-                                ? t('chat.chatInput.placeholder.chatCompact')
+                                ? t('mobile.composer.prompt')
                                 : t('chat.chatInput.placeholder.selectSession')}
                     </span>
                 </button>
@@ -169,6 +168,7 @@ export function MobilePillComposer(props: MobilePillComposerProps) {
                             onPrimaryAction();
                         }}
                         aria-label={t('chat.chatInput.actions.sendMessageAria')}
+                        disabled={!canSend}
                     >
                         <Icon name="arrow-up" className="size-4" />
                     </Button>
@@ -190,23 +190,6 @@ export function MobilePillComposer(props: MobilePillComposerProps) {
                     </Button>
                 ) : null}
             </div>
-            {/* Once a new-session draft owns the composer, this action no
-                longer has a job. Remove it instead of animating layout width. */}
-            {!newSessionDraftOpen ? (
-                <div className="flex-shrink-0">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className="size-12 rounded-md bg-[var(--surface-elevated)]"
-                        onClick={onNewSession}
-                        title={t('mobile.sessions.newChat')}
-                        aria-label={t('mobile.sessions.newChat')}
-                    >
-                        <Icon name="add" className="h-5 w-5 text-current" />
-                    </Button>
-                </div>
-            ) : null}
         </div>
         </div>
     );

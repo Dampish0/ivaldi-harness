@@ -13,6 +13,8 @@ import type { FileListEntry, FileSearchResult } from '@/lib/api/types';
 import { useFilesViewTabsStore } from '@/stores/useFilesViewTabsStore';
 import { useUIStore } from '@/stores/useUIStore';
 import { cn } from '@/lib/utils';
+import { getRuntimeKey } from '@/lib/runtime-switch';
+import { useMobileBackHandler } from './mobileAppContext';
 
 // The full desktop file editor, loaded on demand — it's a heavy chunk and only
 // needed once a file is actually opened.
@@ -61,31 +63,33 @@ const formatFileSize = (size?: number): string => {
 };
 
 type MobileFilesSurfaceProps = {
+  active?: boolean;
   /** When provided, the header gets a close X that calls this. */
   onClose?: () => void;
 };
 
-export const MobileFilesSurface: React.FC<MobileFilesSurfaceProps> = ({ onClose }) => {
+export const MobileFilesSurface: React.FC<MobileFilesSurfaceProps> = (props) => {
+  const root = normalizePath(useEffectiveDirectory() ?? null);
+  return <MobileFilesBrowser key={`${getRuntimeKey()}:${root}`} {...props} root={root} />;
+};
+
+type FileSearchState =
+  | { status: 'idle' | 'loading' }
+  | { status: 'ready'; results: FileSearchResult[] }
+  | { status: 'error' };
+
+const MobileFilesBrowser: React.FC<MobileFilesSurfaceProps & { root: string }> = ({ onClose, active = true, root }) => {
   const { t } = useI18n();
   const { files } = useRuntimeAPIs();
   const setSelectedPath = useFilesViewTabsStore((state) => state.setSelectedPath);
-  const root = normalizePath(useEffectiveDirectory() ?? null);
   const [route, setRoute] = React.useState<MobileFilesRoute>(() => ({ type: 'browser', directory: root }));
   const [entries, setEntries] = React.useState<FileListEntry[]>([]);
   const [isLoadingDirectory, setIsLoadingDirectory] = React.useState(false);
   const [directoryError, setDirectoryError] = React.useState<string | null>(null);
   const [query, setQuery] = React.useState('');
-  const [searchResults, setSearchResults] = React.useState<FileSearchResult[]>([]);
-  const [isSearching, setIsSearching] = React.useState(false);
+  const [searchState, setSearchState] = React.useState<FileSearchState>({ status: 'idle' });
+  const [searchRetry, setSearchRetry] = React.useState(0);
   const directoryLoadRequestIdRef = React.useRef(0);
-
-  React.useEffect(() => {
-    if (!root) return;
-    setRoute((current) => {
-      if (current.type === 'browser' && current.directory) return current;
-      return { type: 'browser', directory: root };
-    });
-  }, [root]);
 
   const currentDirectory = route.type === 'browser' ? route.directory : route.returnDirectory;
 
@@ -95,6 +99,7 @@ export const MobileFilesSurface: React.FC<MobileFilesSurfaceProps> = ({ onClose 
     directoryLoadRequestIdRef.current = requestId;
     setIsLoadingDirectory(true);
     setDirectoryError(null);
+    setEntries([]);
     try {
       const result = await files.listDirectory(directory);
       if (directoryLoadRequestIdRef.current !== requestId) return;
@@ -114,31 +119,28 @@ export const MobileFilesSurface: React.FC<MobileFilesSurfaceProps> = ({ onClose 
   }, [files, t]);
 
   React.useEffect(() => {
-    if (route.type !== 'browser') return;
+    if (!active || route.type !== 'browser') return;
     void loadDirectory(route.directory);
-  }, [loadDirectory, route]);
+    return () => { directoryLoadRequestIdRef.current += 1; };
+  }, [active, loadDirectory, route]);
 
   React.useEffect(() => {
-    if (route.type !== 'browser') return;
+    if (!active || !root || route.type !== 'browser') return;
     const normalizedQuery = query.trim();
     if (!normalizedQuery) {
-      setSearchResults([]);
-      setIsSearching(false);
+      setSearchState({ status: 'idle' });
       return;
     }
 
     let cancelled = false;
+    setSearchState({ status: 'loading' });
     const timeoutId = window.setTimeout(() => {
-      setIsSearching(true);
       void files.search({ directory: route.directory, query: normalizedQuery, maxResults: 40 })
         .then((results) => {
-          if (!cancelled) setSearchResults(results);
+          if (!cancelled) setSearchState({ status: 'ready', results });
         })
         .catch(() => {
-          if (!cancelled) setSearchResults([]);
-        })
-        .finally(() => {
-          if (!cancelled) setIsSearching(false);
+          if (!cancelled) setSearchState({ status: 'error' });
         });
     }, 250);
 
@@ -146,12 +148,34 @@ export const MobileFilesSurface: React.FC<MobileFilesSurfaceProps> = ({ onClose 
       cancelled = true;
       window.clearTimeout(timeoutId);
     };
-  }, [files, query, route]);
+  }, [active, files, query, root, route, searchRetry]);
 
   const openDirectory = (directory: string) => {
     setQuery('');
+    setSearchState({ status: 'idle' });
     setRoute({ type: 'browser', directory });
   };
+
+  const rawParent = getParentDirectory(currentDirectory);
+  const parentWithinRoot = currentDirectory !== root && rawParent !== null
+    && (rawParent === root || rawParent.startsWith(`${root}/`));
+  const parentDirectory = parentWithinRoot ? rawParent : null;
+  const goBack = () => {
+    if (route.type === 'file') {
+      setRoute({ type: 'browser', directory: route.returnDirectory });
+      return true;
+    }
+    if (query.trim()) {
+      setQuery('');
+      return true;
+    }
+    if (parentDirectory) {
+      openDirectory(parentDirectory);
+      return true;
+    }
+    return false;
+  };
+  useMobileBackHandler('workspace', active, goBack);
 
   const openFile = (path: string) => {
     // FilesView (editor-only) reads its target from the files-view tabs store.
@@ -167,12 +191,12 @@ export const MobileFilesSurface: React.FC<MobileFilesSurfaceProps> = ({ onClose 
   const pendingFileNavigation = useUIStore((state) => state.pendingFileNavigation);
   React.useEffect(() => {
     const target = normalizePath(pendingFileNavigation?.path ?? pendingFileFocusPath ?? '');
-    if (!target || !root) return;
+    if (!active || !target || !root) return;
     if (target !== root && !target.startsWith(`${root}/`)) return;
     setSelectedPath(root, target);
     setRoute({ type: 'file', path: target, returnDirectory: root });
     if (pendingFileFocusPath) useUIStore.getState().setPendingFileFocusPath(null);
-  }, [pendingFileFocusPath, pendingFileNavigation, root, setSelectedPath]);
+  }, [active, pendingFileFocusPath, pendingFileNavigation, root, setSelectedPath]);
 
   if (!root) {
     return <MobileFilesState message={t('mobile.files.empty.noDirectory')} />;
@@ -191,7 +215,7 @@ export const MobileFilesSurface: React.FC<MobileFilesSurfaceProps> = ({ onClose 
             size="icon"
             className="-ml-1 size-9 shrink-0 text-muted-foreground"
             aria-label={t('header.actions.backAria')}
-            onClick={() => setRoute({ type: 'browser', directory: route.returnDirectory })}
+            onClick={goBack}
             style={{ touchAction: 'manipulation' }}
           >
             <Icon name="arrow-left" className="size-5" />
@@ -212,20 +236,12 @@ export const MobileFilesSurface: React.FC<MobileFilesSurfaceProps> = ({ onClose 
   }
 
   const directoryLabel = route.directory === root ? t('mobile.files.rootDirectory') : getNameFromPath(route.directory);
-  const visibleSearchResults = query.trim() ? searchResults : [];
-
-  // Cap parent navigation at the project root: only allow stepping up while
-  // the parent stays inside (or equal to) the root.
-  const rawParent = getParentDirectory(route.directory);
-  const parentWithinRoot =
-    route.directory !== root && rawParent !== null && (rawParent === root || rawParent.startsWith(`${root}/`));
   const canGoBack = parentWithinRoot && !query.trim();
-  const parentDirectory = parentWithinRoot ? rawParent : null;
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-background text-foreground">
       {(onClose || canGoBack) ? (
-      <header className="flex h-10 shrink-0 items-center gap-1 border-b border-border/60 px-2 text-foreground">
+      <header className="flex h-14 shrink-0 items-center gap-1 border-b border-border/60 px-2 text-foreground">
         {onClose ? (
           <Button
             type="button"
@@ -275,17 +291,20 @@ export const MobileFilesSurface: React.FC<MobileFilesSurfaceProps> = ({ onClose 
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={t('mobile.files.search.placeholder')}
-            className="h-8 rounded-md bg-transparent pl-8 pr-8 typography-meta ring-0 shadow-none hover:[&:not(:focus)]:bg-interactive-hover/30 focus:bg-[var(--surface-elevated)] focus:ring-1 focus:ring-[var(--interactive-focus-ring)]"
+            aria-label={t('mobile.files.search.placeholder')}
+            className="min-h-11 rounded-md bg-transparent pl-8 pr-12 typography-meta ring-0 shadow-none hover:[&:not(:focus)]:bg-interactive-hover/30 focus:bg-[var(--surface-elevated)] focus:ring-1 focus:ring-[var(--interactive-focus-ring)]"
           />
           {query.trim() ? (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
               aria-label={t('sidebarFilesTree.search.clearAria')}
-              className="absolute right-2 top-1/2 inline-flex size-5 -translate-y-1/2 items-center justify-center text-muted-foreground hover:text-foreground"
+              className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground"
               onClick={() => setQuery('')}
             >
               <Icon name="close" className="size-4" />
-            </button>
+            </Button>
           ) : null}
         </div>
         {!canGoBack ? (
@@ -304,10 +323,16 @@ export const MobileFilesSurface: React.FC<MobileFilesSurfaceProps> = ({ onClose 
       </div>
 
       <ScrollShadow className="min-h-0 flex-1 overflow-y-auto px-2 pb-3">
-        {directoryError ? (
-          <MobileFilesState message={directoryError} />
-        ) : query.trim() ? (
-          <MobileSearchResults results={visibleSearchResults} isSearching={isSearching} onOpenFile={openFile} />
+        {query.trim() ? (
+          searchState.status === 'error' ? (
+            <MobileFilesState message={t('mobile.files.error.searchFailed')} onRetry={() => setSearchRetry((value) => value + 1)} />
+          ) : (
+            <MobileSearchResults results={searchState.status === 'ready' ? searchState.results : []} isSearching={searchState.status !== 'ready'} onOpenFile={openFile} />
+          )
+        ) : directoryError ? (
+          <MobileFilesState message={directoryError} onRetry={() => void loadDirectory(route.directory)} />
+        ) : isLoadingDirectory ? (
+          <MobileFilesState loading message={t('common.loading')} />
         ) : (
           <div className="flex flex-col gap-0.5">
             {entries.length === 0 && !isLoadingDirectory ? (
@@ -380,11 +405,15 @@ const MobileSearchResults: React.FC<{
 };
 
 
-const MobileFilesState: React.FC<{ message: string; loading?: boolean }> = ({ message, loading = false }) => (
+const MobileFilesState: React.FC<{ message: string; loading?: boolean; onRetry?: () => void }> = ({ message, loading = false, onRetry }) => {
+  const { t } = useI18n();
+  return (
   <div className="flex h-full items-center justify-center px-6 text-center">
     <div className="flex max-w-sm flex-col items-center gap-2">
       {loading ? <Icon name="loader-4" className="size-5 animate-spin text-muted-foreground" /> : <Icon name="folder-open" className="size-6 text-muted-foreground" />}
       <p className="typography-ui-label font-semibold text-foreground">{message}</p>
+      {onRetry ? <Button type="button" variant="outline" onClick={onRetry}>{t('directoryExplorerDialog.browse.retry')}</Button> : null}
     </div>
   </div>
-);
+  );
+};

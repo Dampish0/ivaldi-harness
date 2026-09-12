@@ -3,6 +3,12 @@ import { permissionModeMessages } from './permission-modes.i18n';
 import { sharedSettingsMessages } from './shared-settings';
 
 export const dict: Partial<Record<I18nKey, string>> = {
+  'mobile.message.actions': '消息操作与详情',
+  'mobile.header.actions': '聊天操作',
+  'mobile.header.workspace': '文件与工具',
+  'mobile.composer.prompt': '向 Ivaldi 发送消息',
+  'mobile.models.unavailable': '此连接暂时无法提供模型。请重试或检查提供商设置。',
+  'mobile.sessions.manage': '管理项目',
   'sessions.sidebar.footer.github.notConnected': '未连接 GitHub',
   'sessions.sidebar.footer.github.disconnect': '断开 GitHub 连接',
   'sessions.sidebar.footer.update.product': '更新 {product}',
@@ -126,6 +132,10 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'mobile.nav.settings': '设置',
   'mobile.surface.closeAria': '关闭',
   'mobile.header.openWorkspaceAria': '打开工作区面板',
+  'mobile.mode.switchAria': "切换模式，当前为{mode}",
+  'mobile.mode.workDescription': "聊天、文件和成果。",
+  'mobile.mode.developerDescription': "代码、Git 和终端。",
+  'mobile.files.error.searchFailed': "无法搜索文件。请检查连接后重试。",
   'mobile.header.openMetadataAria': '打开会话元数据',
   'mobile.header.metadata.context': '上下文',
   'mobile.header.metadata.usage': '用量',

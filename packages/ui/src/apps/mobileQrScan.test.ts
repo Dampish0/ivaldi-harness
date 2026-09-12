@@ -23,6 +23,8 @@ describe('parseConnectionPayload', () => {
       ],
     }));
     const payload = parseConnectionPayload(url);
+    expect(url.startsWith('ivaldi://connect?')).toBe(true);
+    expect(parseConnectionPayload(url.replace('ivaldi:', 'openchamber:'))).toEqual(payload);
     if (!payload || !('pairing' in payload)) throw new Error('expected a pairing payload');
     expect(payload.pairing.pairingId).toBe('pair_abc');
     expect(payload.pairing.secret).toBe('one-time');
@@ -93,7 +95,7 @@ describe('scanConnectionQr on Android', () => {
       secret: 'one-time',
       candidates: [{ type: 'lan', url: 'http://192.168.1.20:4096', priority: 10 }],
     }));
-    const mixedCase = url.replace('openchamber://connect', 'OpenChamber://CONNECT');
+    const mixedCase = url.replace('ivaldi://connect', 'Ivaldi://CONNECT');
     const listeners = new Map<string, (event: { barcodes?: Array<{ rawValue?: string }> }) => void>();
     const plugin = {
       requestPermissions: mock(async () => ({ camera: 'granted' })),

@@ -8,6 +8,7 @@ import { ProjectContextPanel } from '@/components/layout/RightSidebarTabs';
 import { Button } from '@/components/ui/button';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { TerminalView } from '@/components/views/TerminalView';
+import { useEffectiveDirectory } from '@/hooks/useEffectiveDirectory';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { useDirectoryStore } from '@/stores/useDirectoryStore';
@@ -17,13 +18,11 @@ import { useProductModeStore } from '@/stores/useProductModeStore';
 
 import { MobileChangesSurface } from './MobileChangesSurface';
 import { MobileFilesSurface } from './MobileFilesSurface';
+import { useMobileModalFocus } from './useMobileModalFocus';
+import { MOBILE_PANEL_EASING, useMobilePanelPresence } from './useMobilePanelPresence';
 
 const DRAWER_ROOT_ID = 'mobile-surface-root';
-const ENTER_DELAY_MS = 16;
-// Slightly long, decelerating slide — matches the sessions drawer so both
-// sides feel like the same piece of chrome.
 const ENTER_DURATION_MS = 220;
-const DRAWER_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)';
 
 export type MobileWorkspaceTab = 'changes' | 'files' | 'terminal' | 'notes' | 'mcp';
 
@@ -118,21 +117,26 @@ export const MobileWorkspaceDrawer: React.FC<{
 }> = ({ open, onClose, tab, onTabChange, pendingChangesDiff, onOpenPlan, onOpenMcpSettings, variant = 'drawer' }) => {
   const { t } = useI18n();
   const isDeveloperMode = useProductModeStore((state) => state.mode === 'developer');
+  const effectiveDirectory = useEffectiveDirectory();
   const effectiveTab: MobileWorkspaceTab = !isDeveloperMode && (tab === 'changes' || tab === 'terminal')
     ? 'files'
     : tab;
   const rootRef = React.useRef<HTMLElement | null>(null);
-  const [entered, setEntered] = React.useState(false);
-  // Kept visible through the exit slide; flipped to hidden once it finishes.
-  const [visible, setVisible] = React.useState(open);
-  const onCloseRef = React.useRef(onClose);
-  React.useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
-  const tabRef = React.useRef(tab);
-  React.useEffect(() => {
-    tabRef.current = effectiveTab;
-  }, [effectiveTab]);
+  const surfaceRef = React.useRef<HTMLElement | null>(null);
+  const { visible, entered, reducedMotion } = useMobilePanelPresence(open, ENTER_DURATION_MS);
+  const tabsRef = React.useRef<HTMLDivElement | null>(null);
+  const activeTabRef = React.useRef<HTMLButtonElement | null>(null);
+
+  // Adding Developer tabs must not leave the selected Work tab off-screen.
+  React.useLayoutEffect(() => {
+    const tabs = tabsRef.current;
+    const selected = activeTabRef.current;
+    if (!open || !visible || !tabs || !selected) return;
+    const start = selected.offsetLeft;
+    const end = start + selected.offsetWidth;
+    if (start < tabs.scrollLeft) tabs.scrollLeft = start;
+    else if (end > tabs.scrollLeft + tabs.clientWidth) tabs.scrollLeft = end - tabs.clientWidth;
+  }, [effectiveTab, isDeveloperMode, open, visible]);
 
   React.useEffect(() => {
     if (effectiveTab !== tab) {
@@ -163,33 +167,7 @@ export const MobileWorkspaceDrawer: React.FC<{
     rootRef.current = root;
   }
 
-  React.useEffect(() => {
-    if (open) {
-      setVisible(true);
-      const id = window.setTimeout(() => setEntered(true), ENTER_DELAY_MS);
-      return () => window.clearTimeout(id);
-    }
-    setEntered(false);
-    const id = window.setTimeout(() => setVisible(false), ENTER_DURATION_MS + 40);
-    return () => window.clearTimeout(id);
-  }, [open]);
-
-  React.useEffect(() => {
-    if (!open) return;
-    // Only the full-cover drawer owns the page scroll; the inline panel sits
-    // inside the shell and must leave the chat beside it scrollable.
-    const previousOverflow = document.body.style.overflow;
-    if (variant === 'drawer') document.body.style.overflow = 'hidden';
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // The terminal owns Escape (it goes to the PTY) — don't hijack it.
-      if (event.key === 'Escape' && tabRef.current !== 'terminal') onCloseRef.current();
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      if (variant === 'drawer') document.body.style.overflow = previousOverflow;
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [open, variant]);
+  useMobileModalFocus(surfaceRef, open && variant === 'drawer', effectiveTab === 'terminal' ? null : onClose);
 
   if (variant === 'drawer' && !rootRef.current) return null;
 
@@ -202,7 +180,7 @@ export const MobileWorkspaceDrawer: React.FC<{
     tabItems.push({ id: 'terminal', label: t('mobile.menu.terminal'), icon: <Icon name="terminal" className="h-3.5 w-3.5" /> });
   }
   tabItems.push(
-    { id: 'notes', label: t('contextRail.surface.notes'), icon: <Icon name="sticky-note" className="h-3.5 w-3.5" /> },
+    { id: 'notes', label: t('rightSidebar.contextNotesTodo.tabs.notes'), icon: <Icon name="sticky-note" className="h-3.5 w-3.5" /> },
     { id: 'mcp', label: t('mobile.menu.mcp'), icon: <McpIcon className="h-3.5 w-3.5" /> },
   );
 
@@ -210,7 +188,8 @@ export const MobileWorkspaceDrawer: React.FC<{
     <>
       <div className="flex h-[var(--oc-header-height,56px)] shrink-0 items-center gap-1 border-b border-border/60 px-2">
         <div
-          className="flex min-w-0 flex-1 items-center gap-0.5"
+          ref={tabsRef}
+          className="scrollbar-none relative flex min-w-0 flex-1 items-center gap-1 overflow-x-auto"
           role="tablist"
           aria-label={t('sortableTabsStrip.aria.tabs')}
         >
@@ -219,23 +198,22 @@ export const MobileWorkspaceDrawer: React.FC<{
             return (
               <Button
                 key={item.id}
+                ref={active ? activeTabRef : undefined}
                 type="button"
                 role="tab"
                 aria-selected={active}
                 aria-label={item.label}
                 title={item.label}
                 variant="ghost"
-                size="sm"
+                size="default"
                 onClick={() => onTabChange(item.id)}
                 className={cn(
-                  'h-8 min-w-8 gap-1.5 rounded-md px-2 text-muted-foreground',
+                  'shrink-0 gap-1.5 text-muted-foreground',
                   active && 'bg-interactive-selection text-interactive-selection-foreground hover:bg-interactive-selection',
                 )}
               >
                 <span className="flex size-4 shrink-0 items-center justify-center">{item.icon}</span>
-                {active ? (
-                  <span className="max-w-[9rem] truncate typography-ui-label font-medium">{item.label}</span>
-                ) : null}
+                <span className="typography-ui-label font-medium">{item.label}</span>
               </Button>
             );
           }) : null}
@@ -260,11 +238,12 @@ export const MobileWorkspaceDrawer: React.FC<{
           <div
             // A newly requested per-file diff remounts the pane so
             // initialDiffPath applies; plain reopens keep the state.
-            key={pendingChangesDiff ? `changes:${pendingChangesDiff.path}:${pendingChangesDiff.staged}` : 'changes'}
+            key={`${effectiveDirectory}:changes:${pendingChangesDiff?.path ?? ''}:${pendingChangesDiff?.staged ?? false}`}
             className={cn('h-full', effectiveTab !== 'changes' && 'hidden')}
           >
             <ErrorBoundary>
               <MobileChangesSurface
+                active={open && effectiveTab === 'changes'}
                 initialDiffPath={pendingChangesDiff?.path ?? null}
                 initialDiffStaged={pendingChangesDiff?.staged === true}
               />
@@ -274,7 +253,7 @@ export const MobileWorkspaceDrawer: React.FC<{
         {visitedTabs.has('files') ? (
           <div className={cn('h-full', effectiveTab !== 'files' && 'hidden')}>
             <ErrorBoundary>
-              <MobileFilesSurface />
+              <MobileFilesSurface active={open && effectiveTab === 'files'} />
             </ErrorBoundary>
           </div>
         ) : null}
@@ -308,7 +287,19 @@ export const MobileWorkspaceDrawer: React.FC<{
     // never gets its own compositing layer (iOS clips those to the safe-area
     // viewport, which is exactly what the drawer's settled `transform: none`
     // avoids on the other host).
-    return <div className="flex h-full min-h-0 flex-col bg-background text-foreground">{body}</div>;
+    return (
+      <div
+        inert={!open}
+        className="flex h-full min-h-0 flex-col bg-background text-foreground"
+        onKeyDown={(event) => {
+          if (event.key === 'Escape' && !event.defaultPrevented && effectiveTab !== 'terminal'
+            && event.target instanceof Node && event.currentTarget.contains(event.target)) {
+            event.preventDefault();
+            onClose();
+          }
+        }}
+      >{body}</div>
+    );
   }
 
   const portalRoot = rootRef.current;
@@ -316,17 +307,20 @@ export const MobileWorkspaceDrawer: React.FC<{
 
   return createPortal(
     <section
+      ref={surfaceRef}
       role="dialog"
+      tabIndex={-1}
       aria-modal="true"
       aria-label={t('mobile.header.openWorkspaceAria')}
       aria-hidden={!open}
+      inert={!open}
       className="oc-keyboard-inset-surface fixed inset-0 z-50 flex flex-col bg-background text-foreground"
       style={{
         paddingTop: 'var(--oc-safe-area-top, 0px)',
         // Settled state drops the transform entirely so the drawer isn't kept
         // on a compositing layer (iOS clips those to the safe-area viewport).
-        transform: entered ? 'none' : 'translateX(100%)',
-        transition: `transform ${ENTER_DURATION_MS}ms ${DRAWER_EASING}`,
+        transform: entered || reducedMotion ? 'none' : 'translateX(100%)',
+        transition: reducedMotion ? 'none' : `transform ${ENTER_DURATION_MS}ms ${MOBILE_PANEL_EASING}`,
         visibility: visible ? 'visible' : 'hidden',
         pointerEvents: open ? 'auto' : 'none',
       }}

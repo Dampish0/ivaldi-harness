@@ -2,9 +2,8 @@
  * The composer's footer row.
  *
  * Desktop lays it out as attachments and toggles on the left, model controls
- * and send on the right. Mobile keeps the action footer on one line and uses
- * compact model controls immediately above it so they stay near the primary
- * action without crowding the thumb-reachable row.
+ * and send on the right. Mobile Work keeps attachment, model and the primary
+ * action in one row. Developer has its model and agent controls above it.
  *
  * The dictation component is rendered here on desktop only: on mobile it lives
  * at the composer wrapper level so a recording started from the collapsed pill
@@ -24,6 +23,7 @@ import { useProductModeStore } from '@/stores/useProductModeStore';
 import { useConfigStore } from '@/stores/useConfigStore';
 import { isDictationCaptureSupported } from '@/lib/dictation/use-dictation-audio-source';
 import type { PermissionMode, PermissionModeCapabilities } from '@/lib/permissionModes';
+import { MobileModelButton } from '../../MobileModelButton';
 
 const MemoModelControls = React.memo(ModelControls);
 const MemoComposerDictation = React.memo(ComposerDictation);
@@ -53,6 +53,7 @@ export interface ComposerFooterProps {
     dictationActive: boolean;
 
     onOpenSettings?: () => void;
+    onOpenModel: () => void;
     onPickLocalFiles: () => void;
     onOpenIssuePicker: () => void;
     onOpenPrPicker: () => void;
@@ -93,6 +94,7 @@ export function ComposerFooter(props: ComposerFooterProps) {
         isPermissionModeInteractive,
         dictationActive,
         onOpenSettings,
+        onOpenModel,
         onPickLocalFiles,
         onOpenIssuePicker,
         onOpenPrPicker,
@@ -113,7 +115,7 @@ export function ComposerFooter(props: ComposerFooterProps) {
             className={cn(
                 'bg-transparent flex-shrink-0',
                 footerPaddingClass,
-                isMobile ? 'flex items-center gap-x-1.5' : cn('flex items-center justify-between', footerGapClass)
+                isMobile ? 'composer-mobile-footer flex items-center gap-x-1.5' : cn('flex items-center justify-between', footerGapClass)
             )}
             style={{
                 borderBottomLeftRadius: chatInputRadius,
@@ -124,7 +126,7 @@ export function ComposerFooter(props: ComposerFooterProps) {
             {isMobile ? (
                 <>
                     <div className="flex w-full items-center justify-between gap-x-1.5">
-                        <div className="composer-mobile-actions flex items-center gap-x-2 pl-1">
+                        <div className="composer-mobile-actions flex min-w-0 items-center gap-x-1 pl-1">
                             <ComposerAttachmentControls
                                 isVSCode={isVSCode}
                                 footerIconButtonClass={footerIconButtonClass}
@@ -132,17 +134,18 @@ export function ComposerFooter(props: ComposerFooterProps) {
                                 handlePickLocalFiles={onPickLocalFiles}
                                 openIssuePicker={onOpenIssuePicker}
                                 openPrPicker={onOpenPrPicker}
-                                onOpenSettings={onOpenSettings}
+                                onOpenSettings={isDeveloperMode ? onOpenSettings : undefined}
                                 onOpenMobileSheet={onOpenAttachSheet}
                             />
-                            <PermissionModeButton
+                            {!isDeveloperMode ? <MobileModelButton onOpenModel={onOpenModel} className="min-w-0 max-w-[52vw]" /> : null}
+                            {isDeveloperMode ? <PermissionModeButton
                                 footerIconButtonClass={footerIconButtonClass}
                                 iconSizeClass={iconSizeClass}
                                 isInteractive={isPermissionModeInteractive}
                                 mode={permissionMode}
                                 capabilities={permissionModeCapabilities}
                                 onModeChange={onPermissionModeChange}
-                            />
+                            /> : null}
                             {isDeveloperMode ? (
                                 <>
                                     <SessionGoalButton

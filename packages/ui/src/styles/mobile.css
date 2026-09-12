@@ -1,5 +1,15 @@
 /* Mobile Adaptations - All Devices */
 
+/* Keep touch areas independent of the type and icon sizes. */
+.composer-mobile-footer button,
+.oc-mobile-header button,
+#mobile-surface-root button:not([role="radio"]):not([role="checkbox"]):not([role="switch"]),
+#mobile-overlay-root button:not([role="radio"]):not([role="checkbox"]):not([role="switch"]),
+[data-mobile-composer-pill] button {
+  min-width: 48px !important;
+  min-height: 48px !important;
+}
+
 /* General mobile improvements for all mobile devices */
 @media (max-width: 1024px) {
   /* Override CSS custom properties for mobile */
@@ -13,34 +23,6 @@
     --text-settings-page-title: 1.125rem;
   }
 
-  /* Force override with higher specificity */
-  :root.mobile-pointer:not(.desktop-runtime) * {
-    --text-markdown: 1rem !important;
-    --text-code: 0.875rem !important;
-    --text-ui-header: 0.9375rem !important;
-    --text-ui-label: 0.875rem !important;
-    --text-meta: 0.875rem !important;
-    --text-micro: 0.8125rem !important;
-    --text-settings-page-title: 1.125rem !important;
-  }
-
-  /* Additional override for elements using typography classes */
-  :root.mobile-pointer:not(.desktop-runtime) .typography-markdown,
-  :root.mobile-pointer:not(.desktop-runtime) .typography-code,
-  :root.mobile-pointer:not(.desktop-runtime) .typography-ui-header,
-  :root.mobile-pointer:not(.desktop-runtime) .typography-ui-label,
-  :root.mobile-pointer:not(.desktop-runtime) .typography-meta,
-  :root.mobile-pointer:not(.desktop-runtime) .typography-micro {
-    font-size: unset !important;
-  }
-
-  /* Fix font size for tool displays */
-  :root.mobile-pointer:not(.desktop-runtime) [class*="tool"],
-  :root.mobile-pointer:not(.desktop-runtime) [class*="code"] {
-    --text-code: 0.875rem !important;
-    font-size: var(--text-code) !important;
-  }
-
   /* Improve touch targets for mobile */
   :root.mobile-pointer:not(.desktop-runtime) button:not([role="radio"]):not([role="checkbox"]):not([role="switch"]),
   :root.mobile-pointer:not(.desktop-runtime) .btn,
@@ -50,16 +32,6 @@
   :root.mobile-pointer:not(.desktop-runtime) .oc-static-tool-row {
     min-height: 36px;
     min-width: 36px;
-  }
-
-  /* Composer footer action buttons (sessions / attach / auto-accept): hug the
-     icon so the group stays tight. The container only renders in the mobile
-     JSX, so no pointer/runtime gating is needed; !important overrides both the
-     w-8 utility and the global mobile touch-target min-width regardless of
-     cascade layer or specificity. */
-  .composer-mobile-actions button {
-    width: 1.5rem !important;
-    min-width: 0 !important;
   }
 
   /* Improve input field touch targets */
@@ -107,13 +79,6 @@
   /* Allow system context menu only when explicitly requested via the "More" button */
   :root.mobile-pointer:not(.desktop-runtime) .message-content-text.show-system-menu {
     -webkit-touch-callout: default;
-  }
-
-  /* Fix mobile scroll containers */
-  :root.mobile-pointer:not(.desktop-runtime) .overflow-hidden {
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch;
   }
 
   :root.mobile-pointer:not(.desktop-runtime) [data-page-scroll-lock="true"] {

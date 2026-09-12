@@ -376,7 +376,6 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
     ));
     const setNewSessionDraftTarget = useSessionUIStore((s) => s.setNewSessionDraftTarget);
     const setDraftPermissionMode = useSessionUIStore((s) => s.setDraftPermissionMode);
-    const openNewSessionDraft = useSessionUIStore((s) => s.openNewSessionDraft);
     const prepareChatDraftDirectory = useSessionUIStore((s) => s.prepareChatDraftDirectory);
     const abortPromptSessionId = useSessionUIStore((s) => s.abortPromptSessionId);
     const clearAbortPrompt = useSessionUIStore((s) => s.clearAbortPrompt);
@@ -2592,11 +2591,6 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
     }, [isMobile, mobileComposerExpanded, mobileShell]);
 
 
-    const handleMobileNewSession = React.useCallback(() => {
-        if (newSessionDraftOpen) return;
-        openNewSessionDraft(currentDirectory ? { directoryOverride: currentDirectory } : undefined);
-    }, [newSessionDraftOpen, openNewSessionDraft, currentDirectory]);
-
     /** The dictation engine listens for this globally; the composer only asks. */
     const toggleDictation = React.useCallback(() => {
         window.dispatchEvent(new CustomEvent('openchamber:dictation-toggle'));
@@ -2769,7 +2763,7 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
                         ? null
                         : <PendingChangesBar />}
                 />
-                {isMobile && showDraftTargetSelectors && selectedDraftProject ? (
+                {isMobile && showDraftTargetSelectors && selectedDraftProject && (mobileComposerExpanded || selectedDraftProject.kind !== 'chat') ? (
                     <MobileDraftTargetTriggers
                         selectedProject={selectedDraftProject}
                         selectedBranchLabel={selectedDraftBranchLabel}
@@ -2796,6 +2790,7 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
                         hasContent={Boolean(hasContent)}
                         isVSCode={isVSCode}
                         canAbort={canAbort}
+                        canSend={canSend}
                         footerIconButtonClass={footerIconButtonClass}
                         iconSizeClass={iconSizeClass}
                         stopIconSizeClass={stopIconSizeClass}
@@ -2803,7 +2798,6 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
                         onApplySuggestion={applyAssistSuggestion}
                         showPlanSuggestion={showWorkPlanSuggestion}
                         onApplyPlanSuggestion={handleApplyPlanSuggestion}
-                        onNewSession={handleMobileNewSession}
                         onPickLocalFiles={handlePickLocalFiles}
                         onOpenIssuePicker={openIssuePicker}
                         onOpenPrPicker={openPrPicker}
@@ -2981,7 +2975,7 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
                                     : currentSessionId || newSessionDraftOpen
                                         ? inputMode === 'shell'
                                             ? t('chat.chatInput.placeholder.shell')
-                                            : t(isDeveloperMode
+                                            : isMobile ? t('mobile.composer.prompt') : t(isDeveloperMode
                                                 ? 'chat.chatInput.placeholder.chatCompact'
                                                 : 'chat.chatInput.placeholder.chatCompactWork')
                                         : t('chat.chatInput.placeholder.selectSession')}
@@ -3010,7 +3004,7 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
                             />
                         </div>
                     </div>
-                    {isMobile ? (
+                    {isMobile && isDeveloperMode ? (
                         <div className="scrollbar-none relative z-10 flex items-center gap-x-1 overflow-x-auto px-2.5 pb-0.5 pt-0.5">
                             <MemoMobileModelButton onOpenModel={() => handleOpenMobilePanel('model')} className="flex-shrink-0" />
                             {isDeveloperMode ? <MemoMobileAgentButton
@@ -3042,6 +3036,7 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
                         isPermissionModeInteractive={isPermissionModeInteractive}
                         dictationActive={mobileShell.dictationActive}
                         onOpenSettings={onOpenSettings}
+                        onOpenModel={() => handleOpenMobilePanel('model')}
                         onPickLocalFiles={handlePickLocalFiles}
                         onOpenIssuePicker={openIssuePicker}
                         onOpenPrPicker={openPrPicker}

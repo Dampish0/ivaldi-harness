@@ -3,6 +3,12 @@ import { permissionModeMessages } from './permission-modes.i18n';
 import { sharedSettingsMessages } from './shared-settings';
 
 export const dict = {
+  'mobile.message.actions': 'Message actions and details',
+  'mobile.header.actions': 'Chat actions',
+  'mobile.header.workspace': 'Files and tools',
+  'mobile.composer.prompt': 'Message Ivaldi',
+  'mobile.models.unavailable': 'Models are unavailable from this connection. Try again or check your provider settings.',
+  'mobile.sessions.manage': 'Manage projects',
   ...sharedSettingsMessages.en,
   ...permissionModeMessages.en,
   'terminalView.actions.attachSelection': 'Attach selected output',
@@ -123,6 +129,10 @@ export const dict = {
   'mobile.nav.settings': 'Settings',
   'mobile.surface.closeAria': 'Close',
   'mobile.header.openWorkspaceAria': 'Open workspace panel',
+  'mobile.mode.switchAria': "Switch mode, currently {mode}",
+  'mobile.mode.workDescription': "Chats, files, and results.",
+  'mobile.mode.developerDescription': "Code, Git, and terminal.",
+  'mobile.files.error.searchFailed': "Could not search files. Check your connection and try again.",
   'mobile.header.openMetadataAria': 'Open session metadata',
   'mobile.header.metadata.context': 'Context',
   'mobile.header.metadata.usage': 'Usage',

@@ -14,6 +14,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { MobileOverlayPanel } from '@/components/ui/MobileOverlayPanel';
+import { MobileWorkModelPicker } from './MobileWorkModelPicker';
 import { ProviderLogo } from '@/components/ui/ProviderLogo';
 import { ScrollableOverlay } from '@/components/ui/ScrollableOverlay';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -325,6 +326,15 @@ export const ModelControls: React.FC<ModelControlsProps> = ({
     const { isReady, isUnavailable } = useOpenCodeReadiness();
     const readinessLabel = isUnavailable ? t('common.unavailable') : t('common.loading');
     const providers = useConfigStore((state) => state.providers);
+    const [retryingModels, setRetryingModels] = React.useState(false);
+    const retryModels = async () => {
+        setRetryingModels(true);
+        try {
+            await useConfigStore.getState().initializeApp();
+        } finally {
+            setRetryingModels(false);
+        }
+    };
     const currentProviderId = useConfigStore((state) => state.currentProviderId);
     const currentModelId = useConfigStore((state) => state.currentModelId);
     const effectiveCurrentVariant = useConfigStore((state) => state.currentVariant);
@@ -1653,6 +1663,36 @@ export const ModelControls: React.FC<ModelControlsProps> = ({
             setActiveMobilePanel('variant');
         };
 
+        if (!isDeveloperMode) {
+            const thinkingLabel = currentProviderId && currentModelId && getModelVariantOptions(currentProviderId, currentModelId).length > 0
+                ? formatEffortLabel(resolveModelVariantSelection(currentProviderId, currentModelId))
+                : null;
+            return <MobileWorkModelPicker
+                open={activeMobilePanel === 'model'}
+                groups={visibleProviders.map((provider) => ({
+                    id: provider.id,
+                    name: provider.name,
+                    models: provider.models.flatMap((model: ProviderModel) => model.id ? [{
+                        id: model.id,
+                        name: getModelDisplayName(model),
+                        favorite: isFavoriteModel(provider.id, model.id),
+                    }] : []),
+                }))}
+                selectedProvider={currentProviderId}
+                selectedModel={currentModelId}
+                selectedName={currentModelDisplayName}
+                favorite={Boolean(currentProviderId && currentModelId && isFavoriteModel(currentProviderId, currentModelId))}
+                thinkingLabel={thinkingLabel}
+                retrying={retryingModels}
+                onClose={closeMobilePanel}
+                onSelect={(providerId, modelId) => handleMobileModelApply(providerId, modelId, resolveModelVariantSelection(providerId, modelId))}
+                onToggleFavorite={() => { if (currentProviderId && currentModelId) toggleFavoriteModel(currentProviderId, currentModelId); }}
+                onThinking={() => { if (currentProviderId && currentModelId) openMobileVariantOverflow(currentProviderId, currentModelId); }}
+                onRetry={() => void retryModels()}
+                onSettings={openWorkModelSettings}
+            />;
+        }
+
         const renderMobileModelRow = ({
             model,
             providerId,
@@ -1714,7 +1754,7 @@ export const ModelControls: React.FC<ModelControlsProps> = ({
                                     </span>
                                     {isSelected ? <Icon name="check" className="size-4 flex-shrink-0 text-foreground" /> : null}
                                 </div>
-                                {contextText || indicatorIcons.length > 0 ? (
+                                {isDeveloperMode && (contextText || indicatorIcons.length > 0) ? (
                                     <div className="flex min-w-0 items-center gap-1.5 overflow-hidden typography-micro text-muted-foreground">
                                         {contextText ? (
                                             <span className="whitespace-nowrap flex-shrink-0">
@@ -1860,13 +1900,22 @@ export const ModelControls: React.FC<ModelControlsProps> = ({
                     {!hasResults && (
                         <div className="flex flex-col items-center gap-2 px-3 py-8 text-center typography-meta text-muted-foreground">
                             <span>
-                                {t('chat.modelControls.noProvidersOrModelsFound')}
+                                {retryingModels
+                                    ? t('common.loading')
+                                    : normalizedQuery.length > 0
+                                        ? t('chat.modelControls.noProvidersOrModelsFound')
+                                        : t('mobile.models.unavailable')}
                             </span>
-                            {!isDeveloperMode && normalizedQuery.length === 0 ? (
-                                <Button type="button" variant="outline" size="xs" onClick={openWorkModelSettings}>
+                            {normalizedQuery.length === 0 ? (
+                                <div className="flex flex-wrap justify-center gap-2">
+                                <Button type="button" variant="outline" disabled={retryingModels} onClick={() => void retryModels()}>
+                                    {t('startup.initRecovery.retry')}
+                                </Button>
+                                <Button type="button" variant="ghost" onClick={openWorkModelSettings}>
                                     <Icon name="settings-3" className="size-3.5" />
                                     {t('commandPalette.item.openSettings')}
                                 </Button>
+                                </div>
                             ) : null}
                         </div>
                     )}

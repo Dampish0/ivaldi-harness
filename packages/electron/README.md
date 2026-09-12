@@ -20,6 +20,8 @@ Same-origin session-chat iframes complete an authenticated parent-frame handshak
 
 The preload bridge exposes desktop-only APIs to the web UI through `window.__OPENCHAMBER_DESKTOP__`. Privileged commands are checked in `main.mjs`, not only in the UI.
 
+New pairing links and QR codes use `ivaldi://connect`. Desktop registers `ivaldi` and the legacy `openchamber` protocol at runtime and in installer metadata, so existing links remain readable. Both pairing prefixes follow the same validation and native confirmation before a remote instance is imported.
+
 ## Main Files
 
 | File | Purpose |

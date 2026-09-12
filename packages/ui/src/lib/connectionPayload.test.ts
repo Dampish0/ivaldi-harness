@@ -25,7 +25,7 @@ describe('connection payload helpers', () => {
 
     const encoded = encodePairingConnectionPayload(payload);
 
-    expect(encoded.startsWith('openchamber://connect?v=2&p=')).toBe(true);
+    expect(encoded.startsWith('ivaldi://connect?v=2&p=')).toBe(true);
     expect(parsePairingConnectionPayload(encoded)).toEqual({
       ...payload,
       candidates: [
@@ -117,6 +117,27 @@ describe('parsePairingConnectionPayloadString (Android WebView fallback)', () =>
   });
   const encoded = encodePairingConnectionPayload(payload);
 
+  for (const scheme of ['ivaldi', 'openchamber']) {
+    test(`accepts ${scheme} pairing links in both parsers`, () => {
+      const link = encoded.replace('ivaldi:', `${scheme}:`);
+      expect(parsePairingConnectionPayload(link)).toEqual(payload);
+      expect(parsePairingConnectionPayloadString(link)).toEqual(payload);
+
+      const expired = Buffer.from(JSON.stringify({ ...payload, expiresAt: '2000-01-01T00:00:00.000Z' })).toString('base64url');
+      const expiredLink = `${scheme}://connect?v=2&p=${expired}`;
+      expect(parsePairingConnectionPayload(expiredLink)).toBeNull();
+      expect(parsePairingConnectionPayloadString(expiredLink)).toBeNull();
+      expect(parsePairingConnectionPayload(link.replace('v=2', 'v=1'))).toBeNull();
+      expect(parsePairingConnectionPayloadString(link.replace('v=2', 'v=1'))).toBeNull();
+    });
+  }
+
+  test('rejects other schemes even with a valid pairing payload', () => {
+    const link = encoded.replace('ivaldi:', 'other-app:');
+    expect(parsePairingConnectionPayload(link)).toBeNull();
+    expect(parsePairingConnectionPayloadString(link)).toBeNull();
+  });
+
   test('parses the canonical link identically to the URL-based parser', () => {
     // Old Android WebViews resolve the same string with hostname "" / pathname "//connect";
     // the string parser must not depend on the URL API to succeed.
@@ -124,13 +145,13 @@ describe('parsePairingConnectionPayloadString (Android WebView fallback)', () =>
   });
 
   test('recovers a link whose scheme/host case the URL parser would reject', () => {
-    const mixedCase = encoded.replace('openchamber://connect', 'OpenChamber://CONNECT');
+    const mixedCase = encoded.replace('ivaldi://connect', 'Ivaldi://CONNECT');
     expect(parsePairingConnectionPayload(mixedCase)).toBeNull();
     expect(parsePairingConnectionPayloadString(mixedCase)).toEqual(parsePairingConnectionPayload(encoded));
   });
 
   test('tolerates a trailing slash and reordered query params', () => {
-    const trailingSlash = encoded.replace('openchamber://connect?', 'openchamber://connect/?');
+    const trailingSlash = encoded.replace('ivaldi://connect?', 'ivaldi://connect/?');
     expect(parsePairingConnectionPayloadString(trailingSlash)).toEqual(parsePairingConnectionPayload(encoded));
 
     const p = encoded.slice(encoded.indexOf('p=') + 2);

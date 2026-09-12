@@ -41,6 +41,8 @@ Examples:
 
 These stores coordinate visible app state, navigation, selected context-panel tabs, dialogs, and lightweight feature flags. `useUIStore.activeSurface` selects the primary mobile view and the few desktop views that are promoted out of the context panel. It is not a desktop tab selection.
 
+`useUIStore.uiFont` remains a device-local persisted preference. Fresh Capacitor installs default to bundled Selawik; desktop and browser installs default to System. Hydration preserves an existing choice, including System. Mobile Appearance exposes the same font setting and resets to the native default without changing another device's preference.
+
 `useUpdateStore.openCodeUpdate` holds the current runtime's confirmed OpenCode version and the action that opens its update notice. `OpenCodeUpdateToast` remains the single owner of status checks and upgrade actions; the sidebar reads this notice without fetching again. Runtime changes, successful upgrades and authoritative no-update responses clear it; failed status reads preserve it. Dismissing a toast does not remove the footer indicator. Bundled OpenCode continues to update with Ivaldi.
 
 `useProductModeStore.ts` owns Ivaldi's device-local Work/Developer presentation mode. The mode changes which product chrome and developer-oriented actions are exposed, but it must never select a weaker agent, reduce model/tool capability, or change execution permissions. Developer mode preserves the complete OpenChamber/Ivaldi interface; Work mode is a quieter view over the same underlying agent. The store action closes developer-only context panels and worktree dialogs when switching to Work, consistently for the sidebar menu and profile editor.

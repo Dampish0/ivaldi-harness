@@ -3,6 +3,12 @@ import { permissionModeMessages } from './permission-modes.i18n';
 import { sharedSettingsMessages } from './shared-settings';
 
 export const dict: Partial<Record<I18nKey, string>> = {
+  'mobile.message.actions': 'メッセージの操作と詳細',
+  'mobile.header.actions': 'チャットの操作',
+  'mobile.header.workspace': 'ファイルとツール',
+  'mobile.composer.prompt': 'Ivaldiにメッセージを送る',
+  'mobile.models.unavailable': 'この接続ではモデルを利用できません。再試行するか、プロバイダー設定を確認してください。',
+  'mobile.sessions.manage': 'プロジェクトを管理',
   'sessions.sidebar.footer.github.notConnected': 'GitHub 未接続',
   'sessions.sidebar.footer.github.disconnect': 'GitHub の接続を解除',
   'sessions.sidebar.footer.update.product': '{product} を更新',
@@ -127,6 +133,10 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'mobile.instances.cancelDeleteAria': '{label} を残す',
   'mobile.surface.closeAria': '閉じる',
   'mobile.header.openWorkspaceAria': 'ワークスペースパネルを開く',
+  'mobile.mode.switchAria': "モードを切り替え、現在は{mode}",
+  'mobile.mode.workDescription': "チャット、ファイル、成果物。",
+  'mobile.mode.developerDescription': "コード、Git、ターミナル。",
+  'mobile.files.error.searchFailed': "ファイルを検索できませんでした。接続を確認して、もう一度お試しください。",
   'mobile.header.openMetadataAria': 'セッションメタデータを開く',
   'mobile.header.metadata.context': 'コンテキスト',
   'mobile.header.metadata.usage': '使用量',

@@ -57,6 +57,7 @@ import { MobileSessionsSheet } from './MobileSessionsSheet';
 import { MobileFullscreenSurface } from './MobileFullscreenSurface';
 import { MobileWorkspaceDrawer, type MobileWorkspaceTab } from './MobileWorkspaceDrawer';
 import { DedicatedMobileAppProvider, type MobileAppActions } from './mobileAppContext';
+import { createMobileBackNavigation } from './mobileBackNavigation';
 import { autoConnectLastInstance, getAutoConnectTargetLabel, logMobileConnectEvent, reprobeActiveConnection, type AutoConnectOutcome } from './mobileConnections';
 import { isCapacitorMobileApp, useNativeAndroidBackButton, useNativeMobileChrome, useNativeMobileLifecycle } from './mobileNativeChrome';
 import { reconnectAppForTransportSwitch, resetAppForRuntimeEndpointChange } from './runtimeEndpointReset';
@@ -94,6 +95,7 @@ type MobileSurface = 'instances' | 'settings' | 'update';
 
 const MobileShell: React.FC<{ onActiveConnectionDeleted: () => void }> = ({ onActiveConnectionDeleted }) => {
   const { t } = useI18n();
+  const [backNavigation] = React.useState(createMobileBackNavigation);
   const isDeveloperMode = useProductModeStore((state) => state.mode === 'developer');
   const [sessionsSheetOpen, setSessionsSheetOpen] = React.useState(false);
   const [activeSurface, setActiveSurface] = React.useState<MobileSurface | null>(null);
@@ -240,6 +242,7 @@ const MobileShell: React.FC<{ onActiveConnectionDeleted: () => void }> = ({ onAc
 
   const mobileActions = React.useMemo<MobileAppActions>(
     () => ({
+      registerBackHandler: backNavigation.register,
       openChanges: ({ diffPath, staged } = {}) => {
         openChangesSurface(diffPath ? { path: diffPath, staged: staged === true } : null);
       },
@@ -249,7 +252,7 @@ const MobileShell: React.FC<{ onActiveConnectionDeleted: () => void }> = ({ onAc
         openSettingsSurface(section ? 'page-content' : 'nav');
       },
     }),
-    [openChangesSurface, openFilesSurface, openSettingsSurface, setSettingsPage],
+    [backNavigation, openChangesSurface, openFilesSurface, openSettingsSurface, setSettingsPage],
   );
 
   // Expose the shell's panel-opening actions to the deep-link layer so openchamber:// URLs
@@ -300,24 +303,29 @@ const MobileShell: React.FC<{ onActiveConnectionDeleted: () => void }> = ({ onAc
   // (opened from the drawer footer / workspace tabs), so they close before the
   // drawers underneath.
   const handleNativeBack = React.useCallback(() => {
+    if (backNavigation.back('overlay')) return true;
     if (openPlan) {
+      if (backNavigation.back('plan')) return true;
       setOpenPlan(null);
       return true;
     }
     if (activeSurface) {
+      if (backNavigation.back(activeSurface)) return true;
       closeSurface();
       return true;
     }
     if (workspaceOpen) {
+      if (backNavigation.back('workspace')) return true;
       closeWorkspace();
       return true;
     }
     if (sessionsSheetOpen) {
+      if (backNavigation.back('sessions')) return true;
       setSessionsSheetOpen(false);
       return true;
     }
-    return false;
-  }, [activeSurface, closeSurface, closeWorkspace, openPlan, sessionsSheetOpen, workspaceOpen]);
+    return backNavigation.back('chat');
+  }, [activeSurface, backNavigation, closeSurface, closeWorkspace, openPlan, sessionsSheetOpen, workspaceOpen]);
 
   useNativeAndroidBackButton(handleNativeBack);
 
@@ -339,6 +347,7 @@ const MobileShell: React.FC<{ onActiveConnectionDeleted: () => void }> = ({ onAc
       instanceLabel: showCapacitorOnlyFeatures ? getAutoConnectTargetLabel() : null,
       onOpenInstances: showCapacitorOnlyFeatures ? () => openSurface('instances') : undefined,
       onOpenSettings: () => openSettingsSurface('nav'),
+      onOpenWorkspace: () => setWorkspaceOpen(true),
       onOpenUpdate: showUpdateItem ? () => openSurface('update') : undefined,
     }),
     [openSettingsSurface, openSurface, showCapacitorOnlyFeatures, showUpdateItem],
@@ -449,7 +458,6 @@ const MobileShell: React.FC<{ onActiveConnectionDeleted: () => void }> = ({ onAc
           <MobileHeader
             onOpenSessions={() => (isTabletLayout ? toggleSidebar() : setSessionsSheetOpen(true))}
             onOpenWorkspace={() => setWorkspaceOpen(true)}
-            compactTitle={isTabletLayout}
           />
           <main ref={chatMainRef} className="relative min-h-0 flex-1 overflow-hidden" data-page-scroll-lock="true">
             <div className="h-full w-full">
@@ -965,9 +973,15 @@ export function MobileApp({ apis }: MobileAppProps) {
 
   React.useEffect(() => {
     if (!isConnected) return;
+    // Settings can deliver projects after the initial connection bootstrap.
+    // Re-resolve the config owner instead of retrying an unknown directory.
+    if (providersCount === 0 && projects.length > 0) {
+      void initializeApp();
+      return;
+    }
     if (providersCount === 0) void loadProviders({ source: 'mobileApp:recovery' });
     if (agentsCount === 0) void loadAgents({ source: 'mobileApp:recovery' });
-  }, [agentsCount, isConnected, loadAgents, loadProviders, providersCount]);
+  }, [agentsCount, initializeApp, isConnected, loadAgents, loadProviders, projects.length, providersCount]);
 
   // Cold-launch continuity: after the launch instance connects, reopen the
   // session that was open on this instance last time — but only after an

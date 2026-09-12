@@ -44,7 +44,7 @@ const __dirname = path.dirname(__filename);
 const isDev = process.env.OPENCHAMBER_ELECTRON_DEV === '1' || !app.isPackaged;
 const electronStartupStartedAt = performance.now();
 
-const DEEP_LINK_PROTOCOL = 'openchamber';
+const DEEP_LINK_PROTOCOLS = ['ivaldi', 'openchamber'];
 const UI_PROTOCOL = 'openchamber-ui';
 const PACKAGED_APP_USER_MODEL_ID = 'dev.ivaldi.desktop';
 const DEV_APP_USER_MODEL_ID = 'dev.ivaldi.desktop.dev';
@@ -184,13 +184,15 @@ try {
 } catch {
 }
 
-try {
-  if (!app.isDefaultProtocolClient(DEEP_LINK_PROTOCOL)) {
-    app.setAsDefaultProtocolClient(DEEP_LINK_PROTOCOL);
+for (const protocol of DEEP_LINK_PROTOCOLS) {
+  try {
+    if (!app.isDefaultProtocolClient(protocol)) {
+      app.setAsDefaultProtocolClient(protocol);
+    }
+  } catch (error) {
+    // log.* not yet initialized at this point; fall back to console.
+    console.warn('[electron] failed to register deep-link protocol:', error);
   }
-} catch (error) {
-  // log.* not yet initialized at this point; fall back to console.
-  console.warn('[electron] failed to register deep-link protocol:', error);
 }
 
 const readAppMetadata = () => {
@@ -2068,7 +2070,7 @@ const parseDeepLink = (raw) => {
   if (!trimmed) return null;
   try {
     const url = new URL(trimmed);
-    if (url.protocol !== `${DEEP_LINK_PROTOCOL}:`) return null;
+    if (!DEEP_LINK_PROTOCOLS.some((protocol) => url.protocol === `${protocol}:`)) return null;
     const type = url.hostname;
     if (!type) return null;
     const segments = url.pathname.split('/').filter(Boolean);
@@ -2095,7 +2097,7 @@ const parseConnectPairingDeepLinkPayload = (raw) => {
   if (typeof raw !== 'string') return null;
   try {
     const url = new URL(raw.trim());
-    if (url.protocol !== `${DEEP_LINK_PROTOCOL}:` || url.hostname !== 'connect') return null;
+    if (!DEEP_LINK_PROTOCOLS.some((protocol) => url.protocol === `${protocol}:`) || url.hostname !== 'connect') return null;
     if (url.searchParams.get('v') !== '2') return null;
     const payload = decodeBase64UrlJson(url.searchParams.get('p') || '');
     if (!payload || payload.v !== 2 || typeof payload !== 'object') return null;
@@ -2366,7 +2368,7 @@ const handleDeepLinks = (urls) => {
 };
 
 const extractInitialDeepLinks = () =>
-  process.argv.filter((arg) => typeof arg === 'string' && arg.startsWith(`${DEEP_LINK_PROTOCOL}://`));
+  process.argv.filter((arg) => typeof arg === 'string' && DEEP_LINK_PROTOCOLS.some((protocol) => arg.startsWith(`${protocol}://`)));
 
 const dispatchDomEventToWindow = (browserWindow, event, detail) => {
   if (!browserWindow || browserWindow.isDestroyed()) return;
@@ -5409,7 +5411,7 @@ app.on('before-quit', (event) => {
 
 app.on('second-instance', (_event, argv) => {
   const urls = Array.isArray(argv)
-    ? argv.filter((arg) => typeof arg === 'string' && arg.startsWith(`${DEEP_LINK_PROTOCOL}://`))
+    ? argv.filter((arg) => typeof arg === 'string' && DEEP_LINK_PROTOCOLS.some((protocol) => arg.startsWith(`${protocol}://`)))
     : [];
   if (urls.length > 0) handleDeepLinks(urls);
   if (BrowserWindow.getAllWindows().length > 0) {

@@ -2,6 +2,12 @@ import { permissionModeMessages } from './permission-modes.i18n';
 import { sharedSettingsMessages } from './shared-settings';
 
 export const dict = {
+  'mobile.message.actions': 'Nachrichtenaktionen und Details',
+  'mobile.header.actions': 'Chat-Aktionen',
+  'mobile.header.workspace': 'Dateien und Werkzeuge',
+  'mobile.composer.prompt': 'Nachricht an Ivaldi',
+  'mobile.models.unavailable': 'Über diese Verbindung sind keine Modelle verfügbar. Versuche es erneut oder prüfe deine Anbietereinstellungen.',
+  'mobile.sessions.manage': 'Projekte verwalten',
   ...sharedSettingsMessages.de,
   ...permissionModeMessages.de,
   'common.language.german': 'Deutsch',
@@ -3018,6 +3024,10 @@ export const dict = {
   'mobile.connect.notice.authExpired': 'Der Zugriff auf {label} ist abgelaufen oder wurde widerrufen. Melden Sie sich erneut an.',
   'mobile.connect.recovery.description': 'Verbindung mit dem gespeicherten Server nicht möglich. Prüfen Sie, ob er läuft, oder wählen Sie eine andere Instanz.',
   'mobile.header.openWorkspaceAria': 'Arbeitsbereich öffnen',
+  'mobile.mode.switchAria': "Modus wechseln, aktuell {mode}",
+  'mobile.mode.workDescription': "Chats, Dateien und Ergebnisse.",
+  'mobile.mode.developerDescription': "Code, Git und Terminal.",
+  'mobile.files.error.searchFailed': "Dateien konnten nicht durchsucht werden. Prüfe deine Verbindung und versuche es erneut.",
   'mobile.menu.terminal': 'Terminal',
   'mobile.sessions.renameSessionAria': '{title} umbenennen',
   'mobile.sessions.renameError': 'Sitzung konnte nicht umbenannt werden',

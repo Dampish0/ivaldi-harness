@@ -27,6 +27,7 @@ import { flattenAssistantTextParts, suggestPlanTitleFromText } from '@/lib/messa
 import { MULTIRUN_EXECUTION_FORK_PROMPT_META_TEXT } from '@/lib/messages/executionMeta';
 import { useMessageTTS } from '@/hooks/useMessageTTS';
 import { useConfigStore } from '@/stores/useConfigStore';
+import { useProductModeStore } from '@/stores/useProductModeStore';
 import { useProjectsStore } from '@/stores/useProjectsStore';
 import { TextSelectionMenu } from './TextSelectionMenu';
 import { copyTextToClipboard } from '@/lib/clipboard';
@@ -60,6 +61,23 @@ import { isCapacitorMobileApp } from '@/apps/mobileNativeChrome';
 const CONTAIN_LAYOUT_STYLE = { contain: 'layout' as const, transform: 'translateZ(0)' };
 const MESSAGE_FOOTER_CONTAINER_STYLE = { containerType: 'inline-size' as const, containerName: 'message-footer' };
 const INLINE_MESSAGE_ACTIONS_CLASS_NAME = 'mt-2 mb-1 flex items-center justify-start gap-1.5';
+
+// Mobile Work keeps per-message tools and execution details behind one control.
+// The existing actions retain their callbacks and permissions when disclosed.
+const MobileMessageActions: React.FC<{ isMobile: boolean; align?: 'start' | 'end'; children: React.ReactNode }> = ({ isMobile, align = 'start', children }) => {
+    const { t } = useI18n();
+    const isWorkMode = useProductModeStore((state) => state.mode === 'work');
+    if (!isMobile || !isWorkMode) return children;
+    return (
+        <details className="mt-1" data-mobile-message-actions="true">
+            <summary className={cn('flex min-h-12 w-12 cursor-pointer list-none items-center justify-center rounded-full text-muted-foreground hover:bg-interactive-hover [&::-webkit-details-marker]:hidden', align === 'end' && 'ml-auto')}>
+                <Icon name="more" className="size-5" />
+                <span className="sr-only">{t('mobile.message.actions')}</span>
+            </summary>
+            {children}
+        </details>
+    );
+};
 
 const getDisplayFileName = (file: string): string => {
     const normalized = file.replace(/\\/g, '/');
@@ -576,6 +594,7 @@ const UserMessageBody = React.memo(({ messageId, parts, messageCreatedAt, isMobi
         return formatted.length > 0 ? formatted : null;
     }, [locale, messageCreatedAt, timeFormatPreference]);
     const actionsBlock = chatSurfaceMode !== 'peek' && ((canCopyMessage && hasCopyableText) || onRevert || effectiveOnFork || onToggleContextPin) && showUserActions ? (
+        <MobileMessageActions isMobile={isMobile} align="end">
         <div className={cn(
             'group/user-actions',
             isMobile
@@ -713,6 +732,7 @@ const UserMessageBody = React.memo(({ messageId, parts, messageCreatedAt, isMobi
                 )}
             </div>
         </div>
+        </MobileMessageActions>
     ) : null;
 
     if (!showUserContent) {
@@ -2168,6 +2188,7 @@ const AssistantMessageBody = React.memo(({
                     </div>
                 )}
                 {shouldShowTurnFooter && (
+                    <MobileMessageActions isMobile={isMobile}>
                     <div
                         className="mt-2 mb-1 flex flex-wrap items-center justify-start gap-x-3 gap-y-1.5"
                         style={MESSAGE_FOOTER_CONTAINER_STYLE}
@@ -2256,6 +2277,7 @@ const AssistantMessageBody = React.memo(({
                             {finalTurnActionButtons}
                         </div>
                     </div>
+                    </MobileMessageActions>
                 )}
 
             </div>

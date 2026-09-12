@@ -3,6 +3,12 @@ import { permissionModeMessages } from './permission-modes.i18n';
 import { sharedSettingsMessages } from './shared-settings';
 
 export const dict: Partial<Record<I18nKey, string>> = {
+  'mobile.message.actions': '메시지 작업 및 세부 정보',
+  'mobile.header.actions': '채팅 작업',
+  'mobile.header.workspace': '파일 및 도구',
+  'mobile.composer.prompt': 'Ivaldi에게 메시지 보내기',
+  'mobile.models.unavailable': '이 연결에서 모델을 사용할 수 없습니다. 다시 시도하거나 제공업체 설정을 확인하세요.',
+  'mobile.sessions.manage': '프로젝트 관리',
   'sessions.sidebar.footer.github.notConnected': 'GitHub 연결 안 됨',
   'sessions.sidebar.footer.github.disconnect': 'GitHub 연결 해제',
   'sessions.sidebar.footer.update.product': '{product} 업데이트',
@@ -126,6 +132,10 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'mobile.nav.settings': '설정',
   'mobile.surface.closeAria': '닫기',
   'mobile.header.openWorkspaceAria': '작업 공간 패널 열기',
+  'mobile.mode.switchAria': "모드 전환, 현재 {mode}",
+  'mobile.mode.workDescription': "채팅, 파일 및 결과물.",
+  'mobile.mode.developerDescription': "코드, Git 및 터미널.",
+  'mobile.files.error.searchFailed': "파일을 검색하지 못했습니다. 연결을 확인하고 다시 시도하세요.",
   'mobile.header.openMetadataAria': '세션 메타데이터 열기',
   'mobile.header.metadata.context': '컨텍스트',
   'mobile.header.metadata.usage': '사용량',

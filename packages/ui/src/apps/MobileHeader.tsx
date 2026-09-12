@@ -3,159 +3,103 @@ import React from 'react';
 import { Icon } from '@/components/icon/Icon';
 import { resolveWorkChatTitle } from '@/components/session/sidebar/utils';
 import { Button } from '@/components/ui/button';
+import { isChatDirectoryPath } from '@/lib/chatDirectories';
+import { useEffectiveDirectory } from '@/hooks/useEffectiveDirectory';
 import { useI18n } from '@/lib/i18n';
-import { cn } from '@/lib/utils';
-import { useDirectoryStore } from '@/stores/useDirectoryStore';
 import { useProductModeStore } from '@/stores/useProductModeStore';
+import { useProjectsStore } from '@/stores/useProjectsStore';
 import { useSessionUIStore } from '@/sync/session-ui-store';
 import { useSession } from '@/sync/sync-context';
 
+import { useMobileBackHandler } from './mobileAppContext';
+import { getProjectLabel, normalizePath } from './mobilePaths';
 import { MobileSessionMetadataButton } from './MobileSessionMetadata';
-import { MobileSessionSwitcher } from './MobileSessionSwitcher';
 
 export const MobileHeader: React.FC<{
   onOpenSessions: () => void;
-  /** Opens the right workspace drawer (Changes / Files / Terminal / Notes / MCP). */
   onOpenWorkspace: () => void;
-  /** Tablet: size the title trigger to its text instead of the free width, so
-      a wide header doesn't turn the switcher into a full-width tap target. */
-  compactTitle?: boolean;
-}> = ({ onOpenSessions, onOpenWorkspace, compactTitle = false }) => {
+}> = ({ onOpenSessions, onOpenWorkspace }) => {
   const { t } = useI18n();
   const [metadataOpen, setMetadataOpen] = React.useState(false);
-  const [switcherOpen, setSwitcherOpen] = React.useState(false);
-  const titleRef = React.useRef<HTMLButtonElement>(null);
-  const currentDirectory = useDirectoryStore((state) => state.currentDirectory);
+  const mode = useProductModeStore((state) => state.mode);
+  const isWorkMode = mode === 'work';
+  const effectiveDirectory = useEffectiveDirectory();
   const currentSessionId = useSessionUIStore((state) => state.currentSessionId);
-  const currentSessionDirectory = useSessionUIStore(
-    React.useCallback((state) => (currentSessionId ? state.getDirectoryForSession(currentSessionId) : null), [currentSessionId]),
-  );
-  const effectiveDirectory = currentSessionDirectory || currentDirectory;
-  const currentSession = useSession(currentSessionId, effectiveDirectory || undefined);
+  const currentSession = useSession(currentSessionId, effectiveDirectory);
   const isNewSessionDraftOpen = useSessionUIStore((state) => Boolean(state.newSessionDraft?.open));
-  const isWorkMode = useProductModeStore((state) => state.mode === 'work');
-
-  const sessionTitle = isWorkMode
+  const project = useProjectsStore((state) => {
+    const sessionDirectory = currentSession?.directory;
+    if (!sessionDirectory || isChatDirectoryPath(sessionDirectory)) return undefined;
+    const directory = normalizePath(sessionDirectory);
+    let closest: (typeof state.projects)[number] | undefined;
+    let closestRootLength = -1;
+    for (const entry of state.projects) {
+      const root = normalizePath(entry.path);
+      if (root.length > closestRootLength && (directory === root || directory.startsWith(`${root}/`))) {
+        closest = entry;
+        closestRootLength = root.length;
+      }
+    }
+    return closest;
+  });
+  const projectLabel = project ? project.label?.trim() || getProjectLabel(project.path) : '';
+  const sessionTitle = !currentSessionId ? undefined : isWorkMode
     ? resolveWorkChatTitle(currentSession?.title, t('chat.work.untitledChat'))
     : currentSession?.title?.trim();
-  // Single-line title, desktop-style: session title, or the "New session"
-  // placeholder on the draft screen. No project/branch metadata line.
-  const primaryLabel = sessionTitle
-    || (currentSessionId
-      ? t(isWorkMode ? 'chat.work.untitledChat' : 'mobile.sessions.untitled')
-      : isWorkMode
-        ? t('chat.work.newChat')
-        : t('sessions.switcher.draftTitle'));
+  const primaryLabel = sessionTitle || (currentSessionId
+    ? t(isWorkMode ? 'chat.work.untitledChat' : 'mobile.sessions.untitled')
+    : t(isWorkMode ? 'chat.work.newChat' : 'sessions.switcher.draftTitle'));
+
+  const closeHeaderMenus = () => {
+    setMetadataOpen(false);
+  };
 
   React.useEffect(() => {
     setMetadataOpen(false);
-    setSwitcherOpen(false);
   }, [currentSessionId, effectiveDirectory]);
 
-  const handleOpenSessions = React.useCallback(() => {
-    setMetadataOpen(false);
-    setSwitcherOpen(false);
-    onOpenSessions();
-  }, [onOpenSessions]);
-
-  // The two header popovers are mutually exclusive.
-  const handleMetadataOpenChange = React.useCallback((value: boolean | ((open: boolean) => boolean)) => {
-    setMetadataOpen((current) => {
-      const next = typeof value === 'function' ? value(current) : value;
-      if (next) setSwitcherOpen(false);
-      return next;
-    });
-  }, []);
-
-  const toggleSwitcher = React.useCallback(() => {
-    setSwitcherOpen((current) => {
-      const next = !current;
-      if (next) setMetadataOpen(false);
-      return next;
-    });
-  }, []);
+  useMobileBackHandler('chat', metadataOpen, () => {
+    closeHeaderMenus();
+    return true;
+  });
 
   return (
-    <>
-      <header
-        className="oc-mobile-header relative z-30 flex shrink-0 items-center gap-1 bg-background"
-        style={{ paddingTop: 'var(--oc-safe-area-top, 0px)' }}
-      >
-        <div className="flex h-[var(--oc-header-height,56px)] w-full items-center gap-0.5 px-2">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="size-10 shrink-0 rounded-md text-muted-foreground"
-            aria-label={t(isWorkMode ? 'sessions.sidebar.activity.chatsTitle' : 'mobile.sessions.openSheetAria')}
-            onClick={handleOpenSessions}
-            style={{ touchAction: 'manipulation' }}
-          >
-            <Icon name="list-unordered" className="size-5" />
-          </Button>
-
-          {/* Session title doubles as the recent-sessions switcher trigger. */}
-          <button
-            ref={titleRef}
-            type="button"
-            className={cn(
-              'flex h-10 min-w-0 items-center rounded-md px-1.5 text-left transition-colors duration-150 active:bg-interactive-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--interactive-focus-ring)]',
-              compactTitle ? 'shrink' : 'flex-1',
-            )}
-            aria-label={t(isWorkMode ? 'chat.work.selectChats' : 'sessions.switcher.openAria')}
-            aria-haspopup="dialog"
-            aria-expanded={switcherOpen}
-            onClick={toggleSwitcher}
-            style={{ touchAction: 'manipulation' }}
-          >
-            <span className="flex min-w-0 items-center gap-0.5">
-              <span className="block min-w-0 truncate text-[13px] font-medium leading-4 text-foreground">{primaryLabel}</span>
-              {/* Discoverability: the chevron marks the title as a disclosure
-                  trigger and flips while the switcher is open. */}
-              <Icon
-                name="arrow-down-s"
-                className={cn(
-                  'size-3.5 shrink-0 text-muted-foreground/80 transition-transform duration-150',
-                  switcherOpen && 'rotate-180',
-                )}
-              />
+    <header className="oc-mobile-header relative z-30 shrink-0 bg-background" style={{ paddingTop: 'var(--oc-safe-area-top, 0px)' }}>
+      <div className="flex h-[var(--oc-header-height,56px)] items-center justify-between gap-2 px-2">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="shrink-0 text-muted-foreground"
+          aria-label={t(isWorkMode ? 'sessions.sidebar.activity.chatsTitle' : 'mobile.sessions.openSheetAria')}
+          onClick={() => { closeHeaderMenus(); onOpenSessions(); }}
+        >
+          <Icon name="menu-2" className="size-5" />
+        </Button>
+        <div className="flex min-w-0 flex-1 items-center">
+        {currentSessionId && !isNewSessionDraftOpen ? (
+        <MobileSessionMetadataButton
+          open={metadataOpen}
+          onOpenChange={setMetadataOpen}
+          currentSessionId={currentSessionId}
+          effectiveDirectory={effectiveDirectory ?? null}
+          isNewSessionDraftOpen={isNewSessionDraftOpen}
+          triggerContent={(
+            <span className="flex min-w-0 flex-1 items-baseline gap-2 text-left">
+              <span className="truncate text-[17px] font-medium text-foreground">{primaryLabel}</span>
+              {projectLabel ? <span className="truncate typography-micro text-muted-foreground">{projectLabel}</span> : null}
             </span>
-          </button>
-
-          {/* Compact title: this takes the leftover width so the trailing
-              controls stay pinned to the right edge. */}
-          {compactTitle ? <div className="min-w-0 flex-1" /> : null}
-
-          <MobileSessionMetadataButton
-            open={metadataOpen}
-            onOpenChange={handleMetadataOpenChange}
-            currentSessionId={currentSessionId}
-            effectiveDirectory={effectiveDirectory}
-            isNewSessionDraftOpen={isNewSessionDraftOpen}
-          />
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="size-10 shrink-0 rounded-md text-muted-foreground"
-            aria-label={t('mobile.header.openWorkspaceAria')}
-            onClick={() => {
-              setMetadataOpen(false);
-              setSwitcherOpen(false);
-              onOpenWorkspace();
-            }}
-            style={{ touchAction: 'manipulation' }}
-          >
-            <Icon name="pencil-ruler-2" className="size-[18px]" />
-          </Button>
+          )}
+        />
+        ) : <span className="text-[19px] font-semibold tracking-[-0.025em]">Ivaldi</span>}
         </div>
-      </header>
-      <MobileSessionSwitcher
-        open={switcherOpen}
-        onClose={() => setSwitcherOpen(false)}
-        anchorRef={titleRef}
-      />
-    </>
+        {!isWorkMode ? <Button type="button" variant="ghost" size="icon" aria-label={t('mobile.header.workspace')} onClick={() => { closeHeaderMenus(); onOpenWorkspace(); }}>
+          <Icon name="folder" className="size-5" />
+        </Button> : null}
+        <Button type="button" variant="ghost" size="icon" aria-label={t('mobile.sessions.newChat')} onClick={() => { closeHeaderMenus(); useSessionUIStore.getState().openNewSessionDraft(); }}>
+          <Icon name="edit-box" className="size-5" />
+        </Button>
+      </div>
+    </header>
   );
 };

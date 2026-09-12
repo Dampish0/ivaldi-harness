@@ -1,4 +1,5 @@
 import React from 'react';
+import { useMobileBackHandler } from '@/apps/mobileAppContext';
 import { cn } from '@/lib/utils';
 import {
   formatShortcutForDisplay,
@@ -885,6 +886,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onClose, forceMobile
 
     setMobileStage('nav');
   }, [backButtonTargetsPageSidebar, runtimeCtx.isVSCode, settingsSlug]);
+
+  useMobileBackHandler('settings', showBackButton, () => {
+    handleBack();
+    return true;
+  });
 
   React.useEffect(() => {
     if (!useStackedMobileLayout || runtimeCtx.isVSCode) {

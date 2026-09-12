@@ -28,7 +28,8 @@ import {
 import { useDeviceInfo } from '@/lib/device';
 import { usePwaDetection } from '@/hooks/usePwaDetection';
 import { updateDesktopSettings } from '@/lib/persistence';
-import { CODE_FONT_OPTIONS, DEFAULT_MONO_FONT, DEFAULT_UI_FONT, UI_FONT_OPTIONS, type MonoFontOption, type UiFontOption } from '@/lib/fontOptions';
+import { CODE_FONT_OPTIONS, DEFAULT_MOBILE_UI_FONT, DEFAULT_MONO_FONT, DEFAULT_UI_FONT, UI_FONT_OPTIONS, type MonoFontOption, type UiFontOption } from '@/lib/fontOptions';
+import { isCapacitorApp } from '@/lib/platform';
 import { useI18n, type Locale } from '@/lib/i18n';
 import { useConfigStore } from '@/stores/useConfigStore';
 import { normalizeMobileKeyboardMode, supportsMobileKeyboardResizeContent, type MobileKeyboardMode } from '@/lib/mobileKeyboardMode';
@@ -288,6 +289,7 @@ export const OpenChamberVisualSettings: React.FC<OpenChamberVisualSettingsProps>
     const { locale, locales, setLocale, label, t } = useI18n();
     const tUnsafe = React.useCallback((key: string) => t(key as Parameters<typeof t>[0]), [t]);
     const { isMobile } = useDeviceInfo();
+    const defaultUiFont = isCapacitorApp() ? DEFAULT_MOBILE_UI_FONT : DEFAULT_UI_FONT;
     const { terminal } = useRuntimeAPIs();
     const { browserTab } = usePwaDetection();
     const directoryShowHidden = useDirectoryShowHidden();
@@ -1141,12 +1143,12 @@ export const OpenChamberVisualSettings: React.FC<OpenChamberVisualSettingsProps>
                 {/* --- Density & type --- */}
                 {hasLayoutSettings && (
                     <SettingsSection title={t('settings.openchamber.visual.section.densityAndType')} contentClassName={SETTINGS_FIELDS_STACK_CLASS}>
-                        {(shouldShow('fontSize') && !isMobile) || shouldShow('terminalFontSize') ? (
+                        {shouldShow('fontSize') || shouldShow('terminalFontSize') ? (
                             <SettingsTwoColumn>
-                                {shouldShow('fontSize') && !isMobile && (
+                                {shouldShow('fontSize') && (
                                     <SettingsStackedField
                                         label={t('settings.openchamber.visual.field.interfaceFont')}
-                                        settingsItem="appearance.interface-font-size"
+                                        settingsItem="appearance.interface-font"
                                         controlClassName="w-full"
                                     >
                                         <Select value={uiFont} onValueChange={(value) => setUiFont(value as UiFontOption)}>
@@ -1164,8 +1166,8 @@ export const OpenChamberVisualSettings: React.FC<OpenChamberVisualSettingsProps>
                                         <Button size="sm"
                                             type="button"
                                             variant="ghost"
-                                            onClick={() => setUiFont(DEFAULT_UI_FONT)}
-                                            disabled={uiFont === DEFAULT_UI_FONT}
+                                            onClick={() => setUiFont(defaultUiFont)}
+                                            disabled={uiFont === defaultUiFont}
                                             className={SETTINGS_ICON_BUTTON_CLASS}
                                             aria-label={t('settings.openchamber.visual.actions.resetInterfaceFontAria')}
                                             title={t('settings.common.actions.reset')}

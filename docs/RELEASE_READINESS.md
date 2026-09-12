@@ -20,6 +20,14 @@ No branch or tag push automatically builds or publishes artifacts.
 
 ## Candidate record
 
+Android preview 2, tag `v1.20.1-preview.2`, distributes the mobile redesign with
+version code `12002` and the same release signing key as preview 1. Its scope is
+Android; desktop and VS Code binaries remain on preview 1. The
+[mobile audit](MOBILE_UX_REDESIGN.md) records the physical-phone UI checks.
+The release's `VERIFICATION.md` records the final source commit, signature,
+artifact checks, and upgrade result. Motion remains under active review after
+this published baseline.
+
 A result from an earlier checkout does not validate a later candidate.
 
 | Field | Evidence |

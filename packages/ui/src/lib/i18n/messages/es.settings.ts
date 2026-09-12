@@ -302,7 +302,7 @@ export const settingsDict = {
   "settings.remoteInstances.direct.headers.removeAria": "Remove header",
   "settings.remoteInstances.direct.actions.add": "Añadir servidor",
   "settings.remoteInstances.direct.import.description": "Pega un enlace de conexión de otro servidor de Ivaldi.",
-  "settings.remoteInstances.direct.import.placeholder": "openchamber://connect?...",
+  "settings.remoteInstances.direct.import.placeholder": "ivaldi://connect?...",
   "settings.remoteInstances.direct.import.action": "Importar enlace",
   "settings.remoteInstances.direct.error.invalidConnectLink": "Enlace de conexión de Ivaldi no válido.",
   "settings.remoteInstances.direct.state.loading": "Cargando servidores...",

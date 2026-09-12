@@ -1,4 +1,5 @@
 import React from 'react';
+import { ImageDiffViewer } from '@/components/views/ImageDiffViewer';
 import { Icon } from '@/components/icon/Icon';
 
 import { toast } from '@/components/ui';
@@ -23,6 +24,7 @@ import {
   useGitLoadingStatus,
 } from '@/stores/useGitStore';
 import { getRuntimeKey } from '@/lib/runtime-switch';
+import { useMobileBackHandler } from './mobileAppContext';
 
 type SyncAction = 'fetch' | 'pull' | 'push' | 'sync' | null;
 type CommitAction = 'commit' | 'commitAndPush' | null;
@@ -43,6 +45,7 @@ const isUnstagedStatusFile = (file: GitStatus['files'][number]): boolean => {
 const diffCacheKey = (path: string, staged: boolean): string => staged ? `${path}\u0000staged` : path;
 
 type MobileChangesSurfaceProps = {
+  active?: boolean;
   /** When provided, the list header gets a close X that calls this. */
   onClose?: () => void;
   /**
@@ -54,7 +57,7 @@ type MobileChangesSurfaceProps = {
   initialDiffStaged?: boolean;
 };
 
-export const MobileChangesSurface: React.FC<MobileChangesSurfaceProps> = ({ onClose, initialDiffPath, initialDiffStaged = false }) => {
+export const MobileChangesSurface: React.FC<MobileChangesSurfaceProps> = ({ onClose, initialDiffPath, initialDiffStaged = false, active = true }) => {
   const { t } = useI18n();
   const { git } = useRuntimeAPIs();
   const currentDirectory = normalizePath(useEffectiveDirectory() ?? null);
@@ -72,6 +75,10 @@ export const MobileChangesSurface: React.FC<MobileChangesSurfaceProps> = ({ onCl
   const [route, setRoute] = React.useState<{ type: 'list' } | { type: 'diff'; path: string; staged: boolean }>(
     () => (initialDiffPath ? { type: 'diff', path: initialDiffPath, staged: initialDiffStaged } : { type: 'list' }),
   );
+  useMobileBackHandler('workspace', active && route.type === 'diff', () => {
+    setRoute({ type: 'list' });
+    return true;
+  });
 
   // Allow the host (MobileApp) to push us into a specific diff when the surface
   // is reopened or when an external trigger (e.g. PendingChangesBar tap) requests
@@ -646,7 +653,9 @@ const MobileDiffDetail: React.FC<{
         ) : diff.isBinary ? (
           <MobileChangesState icon message={t('diffView.binary.unavailable')} />
         ) : isImageFile(path) ? (
-          <MobileChangesState icon message={t('mobile.changes.diffDetail.imageUnavailable')} />
+          <ScrollShadow className="h-full overflow-auto">
+            <ImageDiffViewer filePath={path} diff={diff} renderSideBySide={false} />
+          </ScrollShadow>
         ) : (
           <ScrollShadow
             className="h-full overflow-y-auto overflow-x-hidden p-3"

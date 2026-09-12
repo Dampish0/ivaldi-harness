@@ -5,6 +5,7 @@ import { Icon } from '@/components/icon/Icon';
 import { Button } from '@/components/ui/button';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
+import { useMobileModalFocus } from './useMobileModalFocus';
 
 const SURFACE_ROOT_ID = 'mobile-surface-root';
 const ENTER_DELAY_MS = 16;
@@ -75,16 +76,6 @@ export const MobileFullscreenSurface: React.FC<MobileFullscreenSurfaceProps> = (
   const [entered, setEntered] = React.useState(false);
   const [contentReady, setContentReady] = React.useState(false);
   const surfaceRef = React.useRef<HTMLElement | null>(null);
-  const previousFocusRef = React.useRef<HTMLElement | null>(null);
-  // Keep onClose in a ref so the focus/keydown effect below depends only on `open`.
-  // The parent passes a fresh inline onClose on every render; if the effect depended
-  // on it, each parent re-render (e.g. an SSE store update) would re-run it and
-  // refocus the first element — stealing focus from whatever input the user is in
-  // and collapsing the keyboard mid-edit.
-  const onCloseRef = React.useRef(onClose);
-  React.useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
 
   if (!rootRef.current) {
     rootRef.current = ensureSurfaceRoot();
@@ -112,56 +103,7 @@ export const MobileFullscreenSurface: React.FC<MobileFullscreenSurfaceProps> = (
     return () => window.clearTimeout(id);
   }, [open]);
 
-  React.useEffect(() => {
-    if (!open) return;
-    const previousOverflow = document.body.style.overflow;
-    previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    document.body.style.overflow = 'hidden';
-    const focusFirstElement = () => {
-      const surface = surfaceRef.current;
-      if (!surface) return;
-      const focusable = surface.querySelector<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-      );
-      (focusable ?? surface).focus({ preventScroll: true });
-    };
-    const focusTimer = window.setTimeout(focusFirstElement, ENTER_DELAY_MS);
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !disableEscapeDismiss) {
-        onCloseRef.current();
-        return;
-      }
-      if (event.key !== 'Tab') return;
-      const surface = surfaceRef.current;
-      if (!surface) return;
-      const focusable = Array.from(surface.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-      )).filter((element) => !element.hasAttribute('disabled') && element.getAttribute('aria-hidden') !== 'true');
-      if (focusable.length === 0) {
-        event.preventDefault();
-        surface.focus({ preventScroll: true });
-        return;
-      }
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      const active = document.activeElement;
-      if (event.shiftKey && active === first) {
-        event.preventDefault();
-        last.focus({ preventScroll: true });
-      } else if (!event.shiftKey && active === last) {
-        event.preventDefault();
-        first.focus({ preventScroll: true });
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.clearTimeout(focusTimer);
-      document.body.style.overflow = previousOverflow;
-      document.removeEventListener('keydown', handleKeyDown);
-      previousFocusRef.current?.focus?.({ preventScroll: true });
-      previousFocusRef.current = null;
-    };
-  }, [disableEscapeDismiss, open]);
+  useMobileModalFocus(surfaceRef, open, disableEscapeDismiss ? null : onClose);
 
   if (!open || !rootRef.current) return null;
 

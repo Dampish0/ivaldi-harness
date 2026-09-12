@@ -5,6 +5,9 @@ import { useI18n } from '@/lib/i18n';
 import { ScrollableOverlay } from './ScrollableOverlay';
 import { Icon } from "@/components/icon/Icon";
 import { Button } from './button';
+import { useMobileBackHandler } from '@/apps/mobileAppContext';
+import { useMobileModalFocus } from '@/apps/useMobileModalFocus';
+import { MOBILE_PANEL_EASING, useMobilePanelPresence } from '@/apps/useMobilePanelPresence';
 
 interface MobileOverlayPanelProps {
   open: boolean;
@@ -18,9 +21,7 @@ interface MobileOverlayPanelProps {
 }
 
 const OVERLAY_ROOT_ID = 'mobile-overlay-root';
-// Entrance animation: classic slide up from the bottom + scrim fade.
-const ENTER_DELAY_MS = 16;
-const ENTER_DURATION_MS = 200;
+const PANEL_DURATION_MS = 180;
 
 const ensureOverlayRoot = () => {
   if (typeof document === 'undefined') return null;
@@ -45,35 +46,14 @@ export const MobileOverlayPanel: React.FC<MobileOverlayPanelProps> = ({
 }) => {
   const { t } = useI18n();
   const overlayRootRef = React.useRef<HTMLElement | null>(null);
-  const [entered, setEntered] = React.useState(false);
-  // True once the enter transition has finished. While entering, the panel's
-  // keyboard-inset bottom anchor must NOT animate: opening an overlay usually
-  // closes the keyboard at the same moment, and a transitioning `bottom` under
-  // the panel's own rise made the entrance jerky / offset. During the enter the
-  // anchor snaps to its final value and only the rise animates.
-  const [enterSettled, setEnterSettled] = React.useState(false);
+  const panelRef = React.useRef<HTMLDivElement | null>(null);
+  const { visible, entered, reducedMotion } = useMobilePanelPresence(open, PANEL_DURATION_MS);
+  useMobileBackHandler('overlay', open, () => { onClose(); return true; });
+  useMobileModalFocus(panelRef, open && visible, onClose);
 
   if (typeof document !== 'undefined' && !overlayRootRef.current) {
     overlayRootRef.current = ensureOverlayRoot();
   }
-
-  // Replay the enter transition on each open (rise + scrim fade).
-  React.useEffect(() => {
-    if (!open) {
-      setEntered(false);
-      setEnterSettled(false);
-      return;
-    }
-    const id = window.setTimeout(() => setEntered(true), ENTER_DELAY_MS);
-    const settleId = window.setTimeout(
-      () => setEnterSettled(true),
-      ENTER_DELAY_MS + ENTER_DURATION_MS + 50,
-    );
-    return () => {
-      window.clearTimeout(id);
-      window.clearTimeout(settleId);
-    };
-  }, [open]);
 
   // Synchronous close signal: this layout-effect cleanup runs inside the same
   // React flush as the user click that closed the panel, so listeners (e.g.
@@ -88,25 +68,7 @@ export const MobileOverlayPanel: React.FC<MobileOverlayPanelProps> = ({
     };
   }, [open]);
 
-  React.useEffect(() => {
-    if (!open) {
-      return;
-    }
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onClose();
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [open, onClose]);
-
-  if (!open || !overlayRootRef.current) {
+  if (!visible || !overlayRootRef.current) {
     return null;
   }
 
@@ -115,12 +77,13 @@ export const MobileOverlayPanel: React.FC<MobileOverlayPanelProps> = ({
   const content = (
     <div
       className={cn(
-        'oc-keyboard-inset-surface fixed inset-0 z-[60] flex flex-col transition-opacity duration-200 ease-out',
-        !enterSettled && 'oc-keyboard-inset-snap',
-        entered ? 'opacity-100' : 'opacity-0',
+        'oc-keyboard-inset-surface oc-keyboard-inset-snap fixed inset-0 z-[60] flex flex-col',
       )}
       role="dialog"
-      aria-modal="true"
+      aria-modal={open}
+      aria-hidden={!open}
+      inert={!open}
+      aria-label={title}
       onClick={onClose}
       // The panel centers over the CHAT column, not the whole app: on a tablet
       // the shell keeps a persistent sessions sidebar, and a sheet centered on
@@ -131,17 +94,24 @@ export const MobileOverlayPanel: React.FC<MobileOverlayPanelProps> = ({
         background: 'color-mix(in srgb, var(--surface-overlay) 45%, transparent)',
         paddingLeft: 'var(--oc-chat-inset-left, 0px)',
         paddingRight: 'var(--oc-chat-inset-right, 0px)',
+        opacity: entered ? 1 : 0,
+        pointerEvents: open ? 'auto' : 'none',
+        transition: reducedMotion ? 'none' : `opacity ${PANEL_DURATION_MS}ms ${MOBILE_PANEL_EASING}`,
       }}
     >
         <div
+          ref={panelRef}
+          tabIndex={-1}
+          aria-label={title}
           className={cn(
-            'mt-auto flex max-h-[calc(100dvh-0.75rem)] min-h-0 w-full flex-col rounded-t-xl border-x border-t border-border/50 bg-background shadow-none pwa-overlay-panel',
+            'mt-auto flex max-h-[calc(100dvh-0.75rem)] min-h-0 w-full flex-col rounded-t-3xl bg-background shadow-none pwa-overlay-panel',
             'mx-auto max-w-lg',
             className
           )}
           style={{
-            transform: entered ? 'none' : 'translateY(100%)',
-            transition: `transform ${ENTER_DURATION_MS}ms cubic-bezier(0.32, 0.72, 0, 1)`,
+            transform: entered || reducedMotion ? 'none' : 'translateY(16px)',
+            transition: reducedMotion ? 'none' : `transform ${PANEL_DURATION_MS}ms ${MOBILE_PANEL_EASING}`,
+            paddingBottom: 'var(--oc-safe-area-bottom, 0px)',
           }}
           onClick={(event) => event.stopPropagation()}
         >
@@ -164,8 +134,8 @@ export const MobileOverlayPanel: React.FC<MobileOverlayPanelProps> = ({
           }
 
           return (
-            <div className="flex items-center justify-between px-3 py-2 border-b border-border/40">
-              <h2 className="typography-ui-label font-semibold text-foreground">{title}</h2>
+            <div className="flex items-center justify-between px-5 pb-1 pt-2">
+              <h2 className="text-[18px] font-semibold text-foreground">{title}</h2>
               {closeButton}
             </div>
           );
@@ -183,7 +153,7 @@ export const MobileOverlayPanel: React.FC<MobileOverlayPanelProps> = ({
           {children}
         </ScrollableOverlay>
         {footer ? (
-          <div className="shrink-0 border-t border-border/40 px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+          <div className="shrink-0 border-t border-border/40 px-3 py-2">
             {footer}
           </div>
         ) : null}

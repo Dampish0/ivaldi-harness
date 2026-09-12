@@ -32,6 +32,7 @@ import { useI18n } from '@/lib/i18n';
 import { useThemeSystem } from '@/contexts/useThemeSystem';
 import { useDeviceInfo } from '@/lib/device';
 import { cn } from '@/lib/utils';
+import { MobileOverlayPanel } from '@/components/ui/MobileOverlayPanel';
 import { useUIStore } from '@/stores/useUIStore';
 import { useProductModeStore } from '@/stores/useProductModeStore';
 import {
@@ -212,9 +213,21 @@ const AddStarterPicker: React.FC<{
     onAdd: (item: PinnableItem) => void;
 }> = ({ pinnable, onOpen, onAdd }) => {
     const { t } = useI18n();
+    const { isMobile } = useDeviceInfo();
     const isWorkMode = useProductModeStore((state) => state.mode === 'work');
     const [open, setOpen] = React.useState(false);
     const addLabel = isWorkMode ? t('chat.work.draftStarters.add') : t('chat.draftStarters.add');
+
+    if (isMobile) return (
+        <>
+            <button type="button" aria-label={addLabel} onClick={() => { setOpen(true); onOpen(); }} className={cn(ROUND_ICON_BUTTON_CLASS, 'text-muted-foreground hover:bg-interactive-hover')}>
+                <Icon name="add" className="size-4" />
+            </button>
+            <MobileOverlayPanel open={open} onClose={() => setOpen(false)} title={addLabel}>
+                <StarterPickerList pinnable={pinnable} onPick={(item) => { onAdd(item); setOpen(false); }} className="flex max-h-[60vh] flex-col" />
+            </MobileOverlayPanel>
+        </>
+    );
 
     return (
         <Dialog
@@ -260,9 +273,15 @@ const AddStarterPicker: React.FC<{
  * ignored.
  */
 const DraftPresetChipsContent: React.FC<DraftPresetChipsProps> = ({ onSubmit, className }) => {
+    const { t } = useI18n();
     const { global, project, pinnable, ensureLoaded, addStarter, removeStarter, reorder } = useDraftStarters();
     const { isMobile } = useDeviceInfo();
     const [isDragging, setIsDragging] = React.useState(false);
+    const [showAll, setShowAll] = React.useState(false);
+    const submitFromChooser = (starter: ResolvedStarter) => {
+        setShowAll(false);
+        onSubmit(starter);
+    };
 
     const sensors = useSensors(
         // Desktop: start dragging after a small move so a click still submits.
@@ -299,7 +318,7 @@ const DraftPresetChipsContent: React.FC<DraftPresetChipsProps> = ({ onSubmit, cl
         }
     };
 
-    return (
+    const editableStarters = (
         <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -314,7 +333,7 @@ const DraftPresetChipsContent: React.FC<DraftPresetChipsProps> = ({ onSubmit, cl
                 {global.length > 0 ? (
                     <StarterGroup
                         items={global}
-                        onSubmit={onSubmit}
+                        onSubmit={submitFromChooser}
                         onRemove={(item) => removeStarter('global', item.ref)}
                         hideRemove={isMobile}
                     />
@@ -322,7 +341,7 @@ const DraftPresetChipsContent: React.FC<DraftPresetChipsProps> = ({ onSubmit, cl
                 {project.length > 0 ? (
                     <StarterGroup
                         items={project}
-                        onSubmit={onSubmit}
+                        onSubmit={submitFromChooser}
                         onRemove={(item) => removeStarter('project', item.ref)}
                         hideRemove={isMobile}
                     />
@@ -334,6 +353,27 @@ const DraftPresetChipsContent: React.FC<DraftPresetChipsProps> = ({ onSubmit, cl
                 )}
             </div>
         </DndContext>
+    );
+
+    if (!isMobile) return editableStarters;
+
+    return (
+        <>
+            <div className={cn('flex flex-wrap items-center justify-center gap-2', className)}>
+                {[...global, ...project].slice(0, 2).map((item) => (
+                    <button key={item.id} type="button" onClick={() => onSubmit(item)} className="inline-flex min-h-12 max-w-full items-center gap-2 rounded-full border border-border/50 px-3 typography-ui-label text-muted-foreground hover:bg-interactive-hover">
+                        <Icon name={item.icon} className="size-4 shrink-0" />
+                        <span className="truncate">{item.label}</span>
+                    </button>
+                ))}
+                <button type="button" onClick={() => setShowAll(true)} className="min-h-12 rounded-full px-3 typography-ui-label text-muted-foreground hover:bg-interactive-hover">
+                    {t('inlineComment.actions.showMore')}
+                </button>
+            </div>
+            <MobileOverlayPanel open={showAll} onClose={() => setShowAll(false)} title={t('chat.work.draftStarters.sectionBuiltIn')}>
+                {editableStarters}
+            </MobileOverlayPanel>
+        </>
     );
 };
 

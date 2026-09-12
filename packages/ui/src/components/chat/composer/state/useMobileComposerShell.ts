@@ -299,8 +299,7 @@ export function useMobileComposerShell(
 
     // Fold back into the pill once nothing keeps the composer open. The short
     // delay bridges focus moving between composer controls.
-    const busy = focused
-        || overlayHostBusy
+    const heldOpen = overlayHostBusy
         || dictationActive
         || holders.controlsPanelOpen
         || holders.attachMenuOpen
@@ -308,6 +307,7 @@ export function useMobileComposerShell(
         || holders.issuePickerOpen
         || holders.prPickerOpen
         || holders.isDragging;
+    const busy = focused || heldOpen;
 
     React.useEffect(() => {
         if (!isMobile || !expanded || busy || alwaysExpanded) return;
@@ -323,8 +323,8 @@ export function useMobileComposerShell(
         return () => window.clearTimeout(timer);
     }, [alwaysExpanded, busy, editorRef, expanded, isMobile, setExpandedInput]);
 
-    const busyRef = React.useRef(false);
-    busyRef.current = busy;
+    const heldOpenRef = React.useRef(false);
+    heldOpenRef.current = heldOpen;
 
     // Browser counterpart of Capacitor's oc-keyboard-open root class (which is
     // driven by native keyboard events): the focused composer is the best
@@ -369,9 +369,12 @@ export function useMobileComposerShell(
             if (!expandedRef.current || alwaysExpandedRef.current) return;
             // Something still holds the composer open (dictation, an overlay
             // that closed the keyboard, a drag) — the fallback path handles it.
-            if (busyRef.current) return;
+            if (heldOpenRef.current) return;
+            // Android Back hides the keyboard without blurring the editor.
+            // The native hide signal overrides focus, but never an open picker.
             expandIntentRef.current = null;
             flushSync(() => {
+                setFocused(false);
                 setExpanded(false);
                 setExpandedInput(false);
             });
@@ -420,9 +423,8 @@ export function useMobileComposerShell(
         // WebView does not need the hold — but it DOES need the state committed
         // synchronously: the oc:keyboard-intent collapse arrives a few
         // milliseconds after this blur on a setTimeout(0), and React's own
-        // scheduling can lose that race, leaving busyRef stale — the intent
-        // handler then skips the instant collapse and the pill appears only
-        // via the 250ms fallback, well after the keyboard has gone.
+        // scheduling can lose that race, leaving overlay restoration and the
+        // fallback collapse watcher with stale focus state.
         if (isCapacitorApp()) {
             flushSync(() => setFocused(false));
             return;

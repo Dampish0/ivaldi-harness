@@ -12,7 +12,7 @@ Ivaldi is a workspace for running AI agents, following their progress, and revie
 | --- | --- | --- |
 | Windows | [x64 installer](https://github.com/Dampish0/ivaldi-harness/releases/download/v1.20.1-preview.1/Ivaldi-1.20.1-win-x64.exe) | Unsigned NSIS installer |
 | Linux | [x64 AppImage](https://github.com/Dampish0/ivaldi-harness/releases/download/v1.20.1-preview.1/Ivaldi-1.20.1-linux-x86_64.AppImage) | FUSE 2, or extract and run |
-| Android | [Release APK](https://github.com/Dampish0/ivaldi-harness/releases/download/v1.20.1-preview.1/Ivaldi-1.20.1-android.apk) | Android 7.0+, an Ivaldi server |
+| Android | [Updated release APK](https://github.com/Dampish0/ivaldi-harness/releases/download/v1.20.1-preview.2/Ivaldi-1.20.1-android.apk) | Android 7.0+, an Ivaldi server |
 | VS Code | [VSIX extension](https://github.com/Dampish0/ivaldi-harness/releases/download/v1.20.1-preview.1/ivaldi-1.20.1.vsix) | VS Code 1.85+, OpenCode CLI |
 | Web | [Run from source](#build-from-source) | Node.js 22+, Bun, OpenCode CLI |
 
@@ -20,7 +20,7 @@ This is a public preview. Windows and Linux bundle OpenCode 1.18.23. Desktop upd
 
 The Windows installer is unsigned, so Windows may show an unknown-publisher warning. Verify downloads against the release's [SHA256SUMS.txt](https://github.com/Dampish0/ivaldi-harness/releases/download/v1.20.1-preview.1/SHA256SUMS.txt).
 
-Android 1.20.1 starts a new signing-key lineage. If you installed the earlier 1.20.0 APK, save any local connection details and uninstall it before installing this version. Your conversations remain on the server. Future APK updates will use the new key. Android push notifications are not configured in this preview.
+Android preview 2 includes the mobile UI redesign and uses the same release key as 1.20.1 preview 1, with version code 12002. It installs over that published APK. Use its [checksums](https://github.com/Dampish0/ivaldi-harness/releases/download/v1.20.1-preview.2/SHA256SUMS.txt) to verify the download. If you installed the earlier 1.20.0 APK, save any local connection details and uninstall it before installing this version. Your conversations remain on the server. Android push notifications are not configured in this preview.
 
 ## Follow the work, review the result
 

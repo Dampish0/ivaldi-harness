@@ -3,6 +3,12 @@ import { permissionModeMessages } from './permission-modes.i18n';
 import { sharedSettingsMessages } from './shared-settings';
 
 export const dict: Partial<Record<I18nKey, string>> = {
+  'mobile.message.actions': 'Ações e detalhes da mensagem',
+  'mobile.header.actions': 'Ações do chat',
+  'mobile.header.workspace': 'Arquivos e ferramentas',
+  'mobile.composer.prompt': 'Envie uma mensagem ao Ivaldi',
+  'mobile.models.unavailable': 'Os modelos estão indisponíveis nesta conexão. Tente novamente ou verifique as configurações dos provedores.',
+  'mobile.sessions.manage': 'Gerenciar projetos',
   'sessions.sidebar.footer.github.notConnected': 'GitHub não conectado',
   'sessions.sidebar.footer.github.disconnect': 'Desconectar GitHub',
   'sessions.sidebar.footer.update.product': 'Atualizar {product}',
@@ -126,6 +132,10 @@ export const dict: Partial<Record<I18nKey, string>> = {
   "mobile.nav.settings": "Configurações",
   "mobile.surface.closeAria": "Fechar",
   "mobile.header.openWorkspaceAria": "Abrir painel de trabalho",
+  'mobile.mode.switchAria': "Alterar modo, atualmente {mode}",
+  'mobile.mode.workDescription': "Conversas, arquivos e resultados.",
+  'mobile.mode.developerDescription': "Código, Git e terminal.",
+  'mobile.files.error.searchFailed': "Não foi possível buscar arquivos. Verifique sua conexão e tente novamente.",
   "mobile.header.openMetadataAria": "Abrir metadados da sessão",
   "mobile.header.metadata.context": "Contexto",
   "mobile.header.metadata.usage": "Uso",

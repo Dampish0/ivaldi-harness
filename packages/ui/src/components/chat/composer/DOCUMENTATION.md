@@ -174,11 +174,34 @@ refusing programmatic focus outside a gesture, WebKit leaving the layout
 viewport panned after the keyboard hides, overlay chains handing off through a
 frame where nothing is open.
 
-The collapsed mobile composer mirrors the desktop primary-action contract in
-both product modes. An empty prompt shows dictation when capture is available,
+Both modes collapse the resting phone input to `MobilePillComposer`. Tapping
+it expands and focuses the shared editor in the same gesture. Tablets and
+hardware keyboards retain the expanded editor. Both presentations share the same draft owner and
+primary-action contract. An empty prompt shows dictation when capture is available,
 content changes that same slot to Send, and an active turn changes it to Stop.
 Keep that as one primary slot rather than adding a permanent microphone beside
 Send; the compact mobile layout is presentation, not a different send model.
+New chat belongs in navigation, separate from the composer's attachment
+action. The expanded mobile Work footer keeps attachment, model, and the primary
+action in one row. Developer retains its separate model/agent row. Work hides
+permanent permission and goal controls just as desktop does. Mode changes must
+not submit or clear the draft. `MobileOverlayPanel` registers its own native
+Back handler above the containing page and uses the shared modal focus owner.
+Native keyboard dismissal can leave Android editor focus intact. The composer
+uses the native hide signal to collapse even in that case. Open pickers,
+dictation, dragging, and the tablet or hardware-keyboard layout still prevent
+collapse.
+
+`MobileWorkModelPicker` owns the mobile Work list presentation. The current model
+appears first with its provider. Provider sections and favorites retain provider
+identity and omit duplicates, including the current model. Thinking and
+favorite actions apply to the selected model in the footer. `ModelControls`
+still owns model selection, variant resolution, persistence, and recovery.
+Developer retains its detailed picker. `MobileOverlayPanel` uses
+`useMobilePanelPresence` for reversible 180 millisecond opacity and transform
+transitions. A closing sheet is inert and releases Back and focus immediately;
+it remains painted until the exit finishes. Reduced motion removes the exit
+delay. Keyboard restoration must still be checked on hardware when this changes.
 
 **Every timeout and `flushSync` in them has a reason recorded next to it, and
 none of them is verifiable outside a real device.** Change them only against
@@ -186,13 +209,14 @@ hardware.
 
 ## Testing
 
-The package has no DOM test environment, so coverage stops at the state and
-logic layers: the language, the submit assembly, path and drop handling, text
+Composer coverage focuses on the state and logic layers: the language, the
+submit assembly, path and drop handling, text
 splicing, message history, and the CodeMirror language extension at the
 `EditorState` level.
 
-Rendering, focus, keyboard behavior, IME and WKWebView are **not covered by
-tests** and are verified by hand. Do not report a change to them as validated
+The package has Happy DOM behavior tests for some shared controls and mobile
+modal focus. They do not cover the composer's native keyboard, IME, or WKWebView
+behavior. Verify those by hand on hardware. Do not report them as validated
 on the strength of type-check and unit tests.
 
 Run tests per file (`bun test <path>`): `mock.module` is process-global, so

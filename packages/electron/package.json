@@ -55,6 +55,12 @@
   "build": {
     "appId": "dev.ivaldi.desktop",
     "productName": "Ivaldi",
+    "protocols": [
+      {
+        "name": "Ivaldi",
+        "schemes": ["ivaldi", "openchamber"]
+      }
+    ],
     "files": [
       "dist-bundle/main.mjs",
       "preload.mjs"

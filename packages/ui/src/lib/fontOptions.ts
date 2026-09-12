@@ -1,4 +1,4 @@
-export type UiFontOption = 'inter' | 'geist-sans' | 'atkinson-hyperlegible' | 'source-sans-3' | 'roboto' | 'noto-sans' | 'dm-sans' | 'manrope' | 'system';
+export type UiFontOption = 'selawik' | 'inter' | 'geist-sans' | 'atkinson-hyperlegible' | 'source-sans-3' | 'roboto' | 'noto-sans' | 'dm-sans' | 'manrope' | 'system';
 
 export type MonoFontOption = 'jetbrains-mono' | 'fira-code' | 'geist-mono' | 'commit-mono' | 'source-code-pro' | 'cascadia-code' | 'roboto-mono' | 'iosevka' | 'system-mono';
 
@@ -19,6 +19,12 @@ export interface FontOptionDefinition<T extends string> {
 }
 
 export const UI_FONT_OPTIONS: FontOptionDefinition<UiFontOption>[] = [
+    {
+        id: 'selawik',
+        label: 'Selawik',
+        description: "Microsoft's open-source replacement for Segoe UI.",
+        stack: '"Selawik", "Segoe UI", system-ui, sans-serif',
+    },
     {
         id: 'inter',
         label: 'Inter',
@@ -155,6 +161,7 @@ export const UI_FONT_OPTION_MAP = buildFontMap(UI_FONT_OPTIONS);
 export const CODE_FONT_OPTION_MAP = buildFontMap(CODE_FONT_OPTIONS);
 
 export const DEFAULT_UI_FONT: UiFontOption = 'system';
+export const DEFAULT_MOBILE_UI_FONT: UiFontOption = 'selawik';
 export const DEFAULT_MONO_FONT: MonoFontOption = 'system-mono';
 
 export const isUiFontOption = (value: unknown): value is UiFontOption =>

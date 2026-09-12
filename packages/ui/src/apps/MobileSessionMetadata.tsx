@@ -314,12 +314,14 @@ export const MobileSessionMetadataButton = React.memo(function MobileSessionMeta
   currentSessionId,
   effectiveDirectory,
   isNewSessionDraftOpen,
+  triggerContent,
 }: {
   open: boolean;
   onOpenChange: (open: boolean | ((open: boolean) => boolean)) => void;
   currentSessionId: string | null;
   effectiveDirectory: string | null;
   isNewSessionDraftOpen: boolean;
+  triggerContent?: React.ReactNode;
 }) {
   const { t } = useI18n();
   const isWorkMode = useProductModeStore((state) => state.mode === 'work');
@@ -448,8 +450,8 @@ export const MobileSessionMetadataButton = React.memo(function MobileSessionMeta
         ref={metadataTriggerRef}
         type="button"
         variant="ghost"
-        size="icon"
-        className="size-10 shrink-0 rounded-md text-muted-foreground hover:text-foreground"
+        size={triggerContent ? 'default' : 'icon'}
+        className={triggerContent ? 'min-w-0 flex-1 justify-start' : 'shrink-0 text-muted-foreground'}
         aria-label={t(isWorkMode ? 'mobile.header.metadata.usage' : 'mobile.header.openMetadataAria')}
         aria-expanded={open}
         onClick={() => onOpenChange((currentOpen) => !currentOpen)}
@@ -457,7 +459,7 @@ export const MobileSessionMetadataButton = React.memo(function MobileSessionMeta
       >
         {/* Live context gauge doubles as the metadata trigger: filled by the
             session's context usage, an empty ring on a fresh draft. */}
-        <ContextProgressIcon percentage={contextDisplay?.percentage ?? 0} />
+        {triggerContent ?? <ContextProgressIcon percentage={contextDisplay?.percentage ?? 0} />}
       </Button>
       <SessionMetadataOverlay
         open={open}

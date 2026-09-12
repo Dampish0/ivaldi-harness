@@ -15,7 +15,7 @@ android {
         applicationId "dev.ivaldi.mobile"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode releaseVersionCode ? releaseVersionCode.toInteger() : 12001
+        versionCode releaseVersionCode ? releaseVersionCode.toInteger() : 12002
         versionName releaseVersionName ?: "1.20.1"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

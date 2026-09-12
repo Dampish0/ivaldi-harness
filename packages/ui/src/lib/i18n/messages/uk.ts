@@ -3,6 +3,12 @@ import { permissionModeMessages } from './permission-modes.i18n';
 import { sharedSettingsMessages } from './shared-settings';
 
 export const dict: Partial<Record<I18nKey, string>> = {
+  'mobile.message.actions': 'Дії та відомості повідомлення',
+  'mobile.header.actions': 'Дії чату',
+  'mobile.header.workspace': 'Файли та інструменти',
+  'mobile.composer.prompt': 'Написати Ivaldi',
+  'mobile.models.unavailable': 'Моделі недоступні через це з’єднання. Спробуйте ще раз або перевірте налаштування постачальників.',
+  'mobile.sessions.manage': 'Керування проєктами',
   'sessions.sidebar.footer.github.notConnected': 'GitHub не підключено',
   'sessions.sidebar.footer.github.disconnect': 'Відключити GitHub',
   'sessions.sidebar.footer.update.product': 'Оновити {product}',
@@ -126,6 +132,10 @@ export const dict: Partial<Record<I18nKey, string>> = {
   "mobile.nav.settings": "Налаштування",
   "mobile.surface.closeAria": "Закрити",
   "mobile.header.openWorkspaceAria": "Відкрити робочу панель",
+  'mobile.mode.switchAria': "Змінити режим, зараз {mode}",
+  'mobile.mode.workDescription': "Чати, файли та результати.",
+  'mobile.mode.developerDescription': "Код, Git і термінал.",
+  'mobile.files.error.searchFailed': "Не вдалося виконати пошук файлів. Перевірте з’єднання та спробуйте ще раз.",
   "mobile.header.openMetadataAria": "Відкрити метадані сесії",
   "mobile.header.metadata.context": "Контекст",
   "mobile.header.metadata.usage": "Використання",

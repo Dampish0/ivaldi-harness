@@ -2,6 +2,12 @@ import { permissionModeMessages } from './permission-modes.i18n';
 import { sharedSettingsMessages } from './shared-settings';
 
 export const dict = {
+  'mobile.message.actions': 'Actions et détails du message',
+  'mobile.header.actions': 'Actions du chat',
+  'mobile.header.workspace': 'Fichiers et outils',
+  'mobile.composer.prompt': 'Écrire à Ivaldi',
+  'mobile.models.unavailable': 'Les modèles sont indisponibles sur cette connexion. Réessayez ou vérifiez les paramètres des fournisseurs.',
+  'mobile.sessions.manage': 'Gérer les projets',
   'sessions.sidebar.footer.github.notConnected': 'GitHub non connecté',
   'sessions.sidebar.footer.github.disconnect': 'Déconnecter GitHub',
   'sessions.sidebar.footer.update.product': 'Mettre à jour {product}',
@@ -2932,6 +2938,10 @@ export const dict = {
   'mobile.nav.settings': 'Paramètres',
   'mobile.surface.closeAria': 'Fermer',
   'mobile.header.openWorkspaceAria': 'Ouvrir le panneau de travail',
+  'mobile.mode.switchAria': "Changer de mode, actuellement {mode}",
+  'mobile.mode.workDescription': "Discussions, fichiers et résultats.",
+  'mobile.mode.developerDescription': "Code, Git et terminal.",
+  'mobile.files.error.searchFailed': "Impossible de rechercher des fichiers. Vérifiez votre connexion et réessayez.",
   'mobile.header.openMetadataAria': 'Ouvrir les métadonnées de session',
   'mobile.header.metadata.context': 'Contexte',
   'mobile.header.metadata.usage': 'Utilisation',

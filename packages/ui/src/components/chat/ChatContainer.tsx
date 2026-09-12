@@ -568,7 +568,7 @@ const DraftWelcome: React.FC<{ exiting?: boolean }> = ({ exiting = false }) => {
                     projectLabel,
                 )}
             </h1>
-            {isWorkMode ? (
+            {isWorkMode && !isMobileSurface ? (
                 <p className={cn(
                     'max-w-xl text-balance text-muted-foreground',
                     isMobileSurface ? 'mt-2.5 typography-ui-label' : 'mt-3 typography-body',
