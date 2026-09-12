@@ -107,6 +107,8 @@ That runs, in order:
 
 Build output goes to `packages/electron/dist`.
 
+Bundled original skills are copied with ASAR-aware file reads. Node's recursive `fs.cpSync` cannot traverse these directories inside `app.asar`; testing with an already installed skill can hide this first-launch failure. Check a fresh home directory when validating packaged startup.
+
 macOS builds produce `dmg` and `zip` artifacts. Windows builds produce an NSIS installer. Linux builds produce an AppImage for the native x64 or arm64 host.
 
 ## Platform Notes
@@ -215,6 +217,7 @@ Development builds use a separate user data directory named `Ivaldi Dev`, so dev
 - Keep desktop-specific code in this package. Do not move OpenCode feature backend logic into Electron.
 - Use hidden Windows process launches for background helpers. Avoid visible console flashes.
 - Keep `@ivaldi/web`, `bun-pty`, `node-pty`, and native modules external in `bundle-main.mjs`; bundling them can break Electron startup.
+- Keep `electron-log` external too. Its preload initialization resolves files relative to its package directory; inlining it embeds the build machine's absolute path.
 - Rebuild native modules after dependency or Electron version changes.
 - Test both HMR dev mode and bundled UI mode when changing startup, preload, routing, or packaged asset behavior.
 

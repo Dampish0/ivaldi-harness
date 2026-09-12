@@ -11,6 +11,18 @@ const IVALDI_ORIGINAL_SKILLS = [
   { name: 'project-blueprint' },
 ];
 
+// Electron's fs.cpSync cannot traverse directories inside a packaged ASAR.
+// Read the bundled skill files through its ASAR-aware filesystem instead.
+const copySkillDirectory = (sourceDir, targetDir) => {
+  fs.mkdirSync(targetDir, { recursive: true });
+  for (const entry of fs.readdirSync(sourceDir, { withFileTypes: true })) {
+    const source = path.join(sourceDir, entry.name);
+    const target = path.join(targetDir, entry.name);
+    if (entry.isDirectory()) copySkillDirectory(source, target);
+    else fs.writeFileSync(target, fs.readFileSync(source));
+  }
+};
+
 const readManagedMetadata = (skillMdPath) => {
   if (!fs.existsSync(skillMdPath)) {
     return { managed: false, version: 0 };
@@ -59,7 +71,7 @@ export const ensureIvaldiOriginalSkills = ({
     }
 
     if (!fs.existsSync(targetMdPath)) {
-      fs.cpSync(sourceDir, targetDir, { recursive: true, force: true });
+      copySkillDirectory(sourceDir, targetDir);
       result.installed.push(skill.name);
       continue;
     }
@@ -75,10 +87,9 @@ export const ensureIvaldiOriginalSkills = ({
       continue;
     }
 
-    fs.cpSync(sourceDir, targetDir, { recursive: true, force: true });
+    copySkillDirectory(sourceDir, targetDir);
     result.updated.push(skill.name);
   }
 
   return result;
 };
-

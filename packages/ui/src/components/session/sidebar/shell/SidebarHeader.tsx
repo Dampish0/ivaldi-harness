@@ -16,8 +16,6 @@ import { ArrowsMerge } from '@/components/icons/ArrowsMerge';
 import { Button } from '@/components/ui/button';
 import { useSessionDisplayStore } from '@/stores/useSessionDisplayStore';
 import { useProductModeStore } from '@/stores/useProductModeStore';
-import { useUIStore } from '@/stores/useUIStore';
-import { isDeveloperOnlyContextMode, type ProductMode } from '@/lib/productMode';
 import { useSessionMultiSelectStore } from '@/stores/useSessionMultiSelectStore';
 import { useI18n } from '@/lib/i18n';
 import { updateDesktopSettings } from '@/lib/persistence';
@@ -96,20 +94,7 @@ export function SidebarHeader(props: Props): React.ReactNode {
     ? t('chat.work.selectChats')
     : t('sessions.sidebar.header.actions.selectSessions');
 
-  const handleProductModeChange = React.useCallback((nextMode: ProductMode) => {
-    if (nextMode === 'work') {
-      const uiState = useUIStore.getState();
-      uiState.setNewWorktreeDialogOpen(false);
-      uiState.setWorktreesPageProjectId(null);
-      for (const [directory, panelState] of Object.entries(uiState.contextPanelByDirectory)) {
-        const activeTab = panelState.tabs.find((tab) => tab.id === panelState.activeTabId);
-        if (panelState.isOpen && activeTab && isDeveloperOnlyContextMode(activeTab.mode)) {
-          uiState.closeContextPanel(directory);
-        }
-      }
-    }
-    setProductMode(nextMode);
-  }, [setProductMode]);
+
 
   if (hideDirectoryControls) {
     return null;
@@ -216,14 +201,14 @@ export function SidebarHeader(props: Props): React.ReactNode {
                   <DropdownMenuSubTrigger>{t('sessions.sidebar.header.productMode.label')}</DropdownMenuSubTrigger>
                   <DropdownMenuSubContent className="min-w-[170px]">
                     <DropdownMenuItem
-                      onClick={() => handleProductModeChange('work')}
+                      onClick={() => setProductMode('work')}
                       className="flex items-center justify-between"
                     >
                       <span>{t('sessions.sidebar.header.productMode.work')}</span>
                       {productMode === 'work' ? <Icon name="check" className="h-4 w-4 text-foreground" /> : null}
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      onClick={() => handleProductModeChange('developer')}
+                      onClick={() => setProductMode('developer')}
                       className="flex items-center justify-between"
                     >
                       <span>{t('sessions.sidebar.header.productMode.developer')}</span>

@@ -1,6 +1,6 @@
 {
   "name": "ivaldi-monorepo",
-  "version": "1.20.0",
+  "version": "1.20.1",
   "description": "Ivaldi workspace for AI coding across desktop, web, editor, and mobile",
   "private": true,
   "type": "module",

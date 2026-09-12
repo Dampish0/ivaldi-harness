@@ -141,7 +141,7 @@ const SessionTabItem: React.FC<{
       ref={setNodeRef}
       style={{ transform: DndCSS.Translate.toString(transform), transition }}
       className={cn(
-        'session-tab-slot flex h-7 shrink-0 touch-none',
+        'app-region-no-drag session-tab-slot flex h-7 shrink-0 touch-none',
         isSolo ? 'w-auto max-w-56 min-w-0' : 'w-44',
         isDragging && 'z-10 opacity-60',
       )}
@@ -563,8 +563,10 @@ export const SessionTabsStrip: React.FC<{
   const showDraftPill = !currentSessionId || !tabs.some((tab) => tab.id === currentSessionId);
 
   return (
+    // Keep no-drag on the tabs and controls so unused strip space remains
+    // part of the native title bar.
     <div
-      className="app-region-no-drag group/session-tabs relative mr-2 flex h-full min-w-0 flex-1 items-center"
+      className="group/session-tabs relative mr-2 flex h-full min-w-0 flex-1 items-center"
       onPointerEnter={updateEdges}
       onFocusCapture={updateEdges}
     >
@@ -605,7 +607,10 @@ export const SessionTabsStrip: React.FC<{
           <div
             role="tab"
             aria-selected
-            className="session-tab-slot flex h-7 min-w-0 max-w-56 shrink items-center px-1.5"
+            className={cn(
+              'session-tab-slot flex h-7 min-w-0 max-w-56 shrink items-center px-1.5',
+              suppressActiveTabControls && 'app-region-no-drag',
+            )}
             data-active="true"
           >
             <div className="min-w-0 flex-1">{children}</div>
@@ -627,7 +632,7 @@ export const SessionTabsStrip: React.FC<{
           onMouseDown={(event) => event.preventDefault()}
           onClick={() => scrollTabs(-1)}
           className={cn(
-            'relative h-full w-7 rounded-none bg-transparent p-0 text-muted-foreground shadow-none transition-colors duration-150 ease-out hover:bg-transparent hover:text-foreground focus-visible:bg-transparent',
+            'app-region-no-drag relative h-full w-7 rounded-none bg-transparent p-0 text-muted-foreground shadow-none transition-colors duration-150 ease-out hover:bg-transparent hover:text-foreground focus-visible:bg-transparent',
             edges.left
               ? 'group-hover/session-tabs:pointer-events-auto group-focus-within/session-tabs:pointer-events-auto'
               : 'pointer-events-none',
@@ -651,7 +656,7 @@ export const SessionTabsStrip: React.FC<{
           onMouseDown={(event) => event.preventDefault()}
           onClick={() => scrollTabs(1)}
           className={cn(
-            'relative h-full w-7 rounded-none bg-transparent p-0 text-muted-foreground shadow-none transition-colors duration-150 ease-out hover:bg-transparent hover:text-foreground focus-visible:bg-transparent',
+            'app-region-no-drag relative h-full w-7 rounded-none bg-transparent p-0 text-muted-foreground shadow-none transition-colors duration-150 ease-out hover:bg-transparent hover:text-foreground focus-visible:bg-transparent',
             edges.right
               ? 'group-hover/session-tabs:pointer-events-auto group-focus-within/session-tabs:pointer-events-auto'
               : 'pointer-events-none',

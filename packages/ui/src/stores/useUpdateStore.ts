@@ -16,7 +16,13 @@ import { getClientPlatform, isCapacitorApp } from '@/lib/platform';
 
 declare const __APP_VERSION__: string | undefined;
 
+type OpenCodeUpdateNotice = {
+  version: string;
+  open: () => void;
+};
+
 type UpdateState = {
+  openCodeUpdate: OpenCodeUpdateNotice | null;
   checking: boolean;
   available: boolean;
   downloading: boolean;
@@ -30,6 +36,7 @@ type UpdateState = {
 };
 
 interface UpdateStore extends UpdateState {
+  setOpenCodeUpdate: (notice: OpenCodeUpdateNotice | null) => void;
   checkForUpdates: () => Promise<number | null>;
   downloadUpdate: () => Promise<void>;
   restartToUpdate: () => Promise<void>;
@@ -189,6 +196,7 @@ function detectRuntimeType(): 'desktop' | 'web' | 'vscode' | 'mobile' | null {
 }
 
 const initialState: UpdateState = {
+  openCodeUpdate: null,
   checking: false,
   available: false,
   downloading: false,
@@ -203,6 +211,7 @@ const initialState: UpdateState = {
 
 export const useUpdateStore = create<UpdateStore>()((set, get) => ({
   ...initialState,
+  setOpenCodeUpdate: (openCodeUpdate) => set({ openCodeUpdate }),
 
   checkForUpdates: async () => {
     const runtime = detectRuntimeType();

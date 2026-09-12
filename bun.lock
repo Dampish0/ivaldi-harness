@@ -97,7 +97,7 @@
     },
     "packages/electron": {
       "name": "@ivaldi/electron",
-      "version": "1.20.0",
+      "version": "1.20.1",
       "dependencies": {
         "@ivaldi/web": "workspace:*",
         "electron-context-menu": "^4.1.2",
@@ -134,7 +134,7 @@
     },
     "packages/ui": {
       "name": "@ivaldi/ui",
-      "version": "1.20.0",
+      "version": "1.20.1",
       "dependencies": {
         "@aparajita/capacitor-secure-storage": "^8.0.0",
         "@base-ui/react": "^1.4.0",
@@ -240,7 +240,7 @@
     },
     "packages/vscode": {
       "name": "ivaldi",
-      "version": "1.20.0",
+      "version": "1.20.1",
       "dependencies": {
         "@ivaldi/ui": "workspace:*",
         "@opencode-ai/sdk": "1.18.23",
@@ -263,7 +263,7 @@
     },
     "packages/web": {
       "name": "@ivaldi/web",
-      "version": "1.20.0",
+      "version": "1.20.1",
       "bin": {
         "ivaldi": "./bin/cli.js",
         "openchamber": "./bin/cli.js",
@@ -290,6 +290,7 @@
         "web-push": "^3.6.7",
         "ws": "^8.18.3",
         "yaml": "^2.8.1",
+        "zod": "^4.3.6",
       },
       "devDependencies": {
         "@base-ui/react": "^1.4.0",

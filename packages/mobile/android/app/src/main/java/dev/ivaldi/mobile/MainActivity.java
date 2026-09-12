@@ -1,4 +1,4 @@
-package com.openchamber.app;
+package dev.ivaldi.mobile;
 
 import com.getcapacitor.BridgeActivity;
 

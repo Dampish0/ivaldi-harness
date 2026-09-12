@@ -47,6 +47,8 @@ import { RuntimeAPIProvider } from '@/contexts/RuntimeAPIProvider';
 import { registerRuntimeAPIs } from '@/contexts/runtimeAPIRegistry';
 import { useUIStore } from '@/stores/useUIStore';
 import { useGitHubAuthStore } from '@/stores/useGitHubAuthStore';
+import { useProfileStore } from '@/stores/useProfileStore';
+import { ProfileSetup } from '@/components/onboarding/ProfileSetup';
 import { useFeatureFlagsStore } from '@/stores/useFeatureFlagsStore';
 import type { RuntimeAPIs } from '@/lib/api/types';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -245,6 +247,9 @@ function App({ apis }: AppProps) {
   const isSwitchingDirectory = useDirectoryStore((state) => state.isSwitchingDirectory);
   const [showMemoryDebug, setShowMemoryDebug] = React.useState(false);
   const refreshGitHubAuthStatus = useGitHubAuthStore((state) => state.refreshStatus);
+  const profile = useProfileStore((state) => state.profile);
+  const loadProfile = useProfileStore((state) => state.load);
+  React.useEffect(() => { loadProfile(); }, [loadProfile]);
   const [isVSCodeRuntime, setIsVSCodeRuntime] = React.useState<boolean>(() => apis.runtime.isVSCode);
   // Embedded chats start inactive until the parent panel identifies the active
   // tab. Otherwise a newly loaded background tab can focus its composer first
@@ -834,6 +839,14 @@ function App({ apis }: AppProps) {
     }
     return undefined;
   };
+
+  // Ask once before either the connection chooser or the normal workspace.
+  // Recovery, embedded chats and OAuth callbacks must remain directly reachable.
+  if (!isVSCodeRuntime && !embeddedSessionChat && !isMcpOAuthCallback
+    && bootView?.screen !== 'recovery' && profile.kind !== 'ready') {
+    if (profile.kind === 'unloaded') return <div className="h-full bg-background" />;
+    return <ProfileSetup />;
+  }
 
   // Desktop boot view routing.
   // When the boot outcome resolves to a non-main screen (chooser, recovery),

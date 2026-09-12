@@ -34,7 +34,9 @@ type DeviceFlowCompleteResponse =
   | { connected: true; user: GitHubUser; scope?: string }
   | { connected: false; status?: string; error?: string };
 
-export const GitHubSettings: React.FC = () => {
+export const GitHubSettings: React.FC<{
+  initialAction?: 'connect' | 'disconnect';
+}> = ({ initialAction }) => {
   const { t } = useI18n();
   const { isMobile } = useDeviceInfo();
   const runtimeGitHub = getRegisteredRuntimeAPIs()?.github;
@@ -52,6 +54,7 @@ export const GitHubSettings: React.FC = () => {
   const [flow, setFlow] = React.useState<DeviceFlowStartResponse | null>(null);
   const [pollIntervalMs, setPollIntervalMs] = React.useState<number | null>(null);
   const pollTimerRef = React.useRef<number | null>(null);
+  const initialActionStarted = React.useRef(false);
 
   const stopPolling = React.useCallback(() => {
     if (pollTimerRef.current != null) {
@@ -223,6 +226,23 @@ export const GitHubSettings: React.FC = () => {
       setIsBusy(false);
     }
   }, [refreshStatus, runtimeGitHub, stopPolling, t]);
+
+  React.useEffect(() => {
+    if (!initialAction || initialActionStarted.current || !hasChecked || isLoading || status?.error) {
+      return;
+    }
+    // A footer selection runs once per dialog, including under Strict Mode.
+    initialActionStarted.current = true;
+    if (initialAction === 'connect') {
+      void startConnect();
+    } else if (status?.connected) {
+      if (status.ghCli?.active) {
+        void toggleGhCli(true);
+      } else {
+        void disconnect();
+      }
+    }
+  }, [disconnect, hasChecked, initialAction, isLoading, startConnect, status, toggleGhCli]);
 
   const activateAccount = React.useCallback(async (accountId: string) => {
     if (!accountId) return;

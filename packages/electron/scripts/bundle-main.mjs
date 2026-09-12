@@ -26,6 +26,8 @@ const result = await Bun.build({
   format: 'esm',
   external: [
     'electron',
+    'electron-log',
+    'electron-log/*',
     '@ivaldi/web',
     '@ivaldi/web/*',
     'bun-pty',

@@ -24,14 +24,36 @@ A result from an earlier checkout does not validate a later candidate.
 
 | Field | Evidence |
 | --- | --- |
-| Candidate version and commit | Pending |
-| Audience and supported workflows | Pending |
-| Included platforms and architectures | Pending |
-| Build machine, commands, and artifact names | Pending |
-| SHA-256 hashes of distributed artifacts | Pending |
-| Signing or notarization status | Pending |
-| Previous version used for upgrade validation | Pending |
-| Tester, date, and result for each platform | Pending |
+| Candidate version and commit | 1.20.1, tag `v1.20.1-preview.1`; exact source commit in release verification attachment |
+| Audience and supported workflows | Public preview for agent sessions and review; not a stable-release sign-off |
+| Included platforms and architectures | Windows x64, Linux x64, Android release APK, VS Code VSIX |
+| Build machine, commands, and artifact names | Windows native and Ubuntu 24.04 WSL x64; commands and artifact names in `VERIFICATION.md` on the release |
+| SHA-256 hashes of distributed artifacts | `SHA256SUMS.txt` on the release |
+| Signing or notarization status | Windows unsigned; Android signed with the new Ivaldi release key; Linux and VSIX unsigned |
+| Previous version used for upgrade validation | Windows QA profile retained across reinstall of the final 1.20.1 candidate; 1.20.0 upgrade not validated. Android 1.20.0 requires reinstall because the key changed. |
+| Tester, date, and result for each platform | Codex, 2026-09-12. Windows installer and backend passed; Linux extracted AppImage and backend passed; Android install, conversation, and restart passed; VSIX packaging passed. |
+
+## 1.20.1 preview checks, 2026-09-12
+
+The final Windows NSIS installer installed into a test directory and launched the packaged `openchamber-ui://app/index.html` page. Onboarding saved a QA name; the final rebuilt installer retained that name and returned HTTP 200 from its backend. The Linux x64 AppImage passed architecture, bundled OpenCode 1.18.23, and native-module verification. Its extracted application reached onboarding and returned HTTP 200 under WSLg. Direct FUSE execution and a conventional Linux desktop install remain untested.
+
+Linux first launch exposed an Electron ASAR limitation in `fs.cpSync` while installing the bundled original skill. The installer now traverses the directory through ASAR-aware reads. Both desktop packages were rebuilt after the fix. The original-skill tests passed, and Linux then launched in a fresh profile.
+
+The Android 1.20.1 APK has package ID `dev.ivaldi.mobile`, version code `12001`, and a new signing key. Its signature was verified. On an Android 15 x64 emulator it installed, connected to the demo server, displayed the actual agent conversation and changes, and retained its connection and conversation after force-stop and restart. The old 1.20.0 signature cannot be upgraded in place.
+
+Workspace type-check and lint passed. Script tests passed in 2 files, UI tests in 337 files, VS Code tests in 26 files, and Electron tests in 17 files. Web full-suite runs each reported 1 failing timing-sensitive SSE test, with 1,765 passing tests and 3 skipped. The proxy and event-stream tests passed separately, 19 and 9 tests respectively. This is an unresolved full-suite limitation, not a clean test-suite result. The changed original-skill module passed its 3 tests. Dead-code inspection retained the existing 2 unused files, 222 exports, 163 exported types, and 1 duplicate export. Documentation validation passed for 460 pages and 46 sidebar links.
+
+The README now uses promotional compositions based on a populated demo, with links to the original captures. A real OpenCode session built Atlas, added keyboard shortcuts, checked JavaScript syntax, and reviewed accessibility. The desktop capture uses production web assets; the mobile capture comes from the signed APK. See `docs/images/README.md` for image provenance and prompts.
+
+## Public preview correction, 2026-09-12
+
+The first public preview, `v1.20.0-rc.1`, had a Windows startup failure. Its installer was removed from the GitHub release. The installed log identified a missing `zod` package imported by the web server's lifecycle-hook configuration. `@ivaldi/web` now declares `zod` as a production dependency so the Electron package includes it. The corrected unpacked app started its loopback server and bundled OpenCode CLI in an isolated test profile before the final UI rebuild. The final NSIS installer has been rebuilt, but installation and launch of that final installer still need a native smoke test.
+
+The Android preview uses package ID `dev.ivaldi.mobile` and version code `12000`. Its release APK is signed with a key kept outside this repository. On an Android 15 x64 emulator, the signed APK installed, launched, connected by address to an isolated Ivaldi server, displayed its example project, opened Settings, and retained the connection after force-stop and restart. This check used an ADB loopback connection. Physical-device installation, remote HTTPS, QR pairing, and provider-backed conversations remain untested. Firebase is not configured, so push notifications are unavailable. The iOS native project is outside this preview and has not been migrated or validated.
+
+The root README screenshots were captured from this candidate using a separate test profile. The desktop layout was captured in a browser using the same production web assets staged into Electron. The mobile Settings screenshot comes from the signed APK in the emulator. The example project was created in the app; no screenshot labels were synthesized or replaced. The localized Projects heading is visible in the desktop capture. It still needs a visual check in the final installed Windows package.
+
+Package inspection also found that bundling `electron-log` embedded the build machine's absolute directory in its preload initialization. It now stays external and resolves its installed package directory at runtime. The rebuilt ASAR contains `electron-log` and `zod`, and its main bundle no longer contains the private build path. Windows remains unsigned. Final installer launch is a publication gate; a successful build or archive inspection does not satisfy it.
 
 ## Build checks
 
@@ -127,9 +149,9 @@ identify the packaging blocker and are not a completed candidate record.
 | Full workspace build, lint, and tests | Superseded by the merged source validation above |
 
 The recovery integration uses a local upstream fixture, not a real provider or
-packaged app. Install the Spectre libraries matching the Windows toolset and
-architecture, then retry `bun run electron:build`. No installer has been produced
-or published by this work.
+packaged app. At the time of this earlier record, the missing Spectre libraries
+blocked the Windows installer. Later preview builds resolved that packaging
+prerequisite; the candidate above records their remaining validation gaps.
 
 ## Release decision
 

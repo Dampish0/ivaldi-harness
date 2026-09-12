@@ -45,6 +45,21 @@ bun run build:android:debug
 
 These commands build and sync the native projects without launching Xcode, Android Studio, Simulator, or an emulator.
 
+## Android preview package
+
+The Android package ID is `dev.ivaldi.mobile`, with version code `12001` for the 1.20.1 preview. This preview starts a new signing-key lineage because the previous key was unavailable. An installed 1.20.0 preview must be uninstalled before installing 1.20.1. Retain the new release key for every subsequent update. The distributable APK is a signed release build, not the debug APK. Build it after preparing and syncing the web assets:
+
+```sh
+bun run build
+bunx cap sync android
+cd android
+./gradlew assembleRelease
+```
+
+Set `IVALDI_ANDROID_KEYSTORE_PATH`, `IVALDI_ANDROID_KEYSTORE_PASSWORD`, `IVALDI_ANDROID_KEY_ALIAS`, and `IVALDI_ANDROID_KEY_PASSWORD` in the build environment before the Gradle command. Keep the signing key and password outside the repository and back them up securely. Future updates to `dev.ivaldi.mobile` must use the same signing key and a higher version code. Verify the resulting `android/app/build/outputs/apk/release/app-release.apk` with Android SDK `apksigner` before publishing it. A build without those variables is unsigned and must not be distributed.
+
+The existing iOS native project has not been migrated to the new package ID or validated for this preview. Do not treat the Android result as an iOS release check.
+
 ## Local Tooling
 
 The default scripts assume the local Homebrew/Xcode paths prepared for this workspace:

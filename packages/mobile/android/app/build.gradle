@@ -1,22 +1,22 @@
 apply plugin: 'com.android.application'
 
-def ciVersionCode = System.getenv('OPENCHAMBER_ANDROID_VERSION_CODE')
-def ciVersionName = System.getenv('OPENCHAMBER_ANDROID_VERSION_NAME')
-def ciKeystorePath = System.getenv('OPENCHAMBER_ANDROID_KEYSTORE_PATH')
-def ciKeystorePassword = System.getenv('OPENCHAMBER_ANDROID_KEYSTORE_PASSWORD')
-def ciKeyAlias = System.getenv('OPENCHAMBER_ANDROID_KEY_ALIAS')
-def ciKeyPassword = System.getenv('OPENCHAMBER_ANDROID_KEY_PASSWORD')
-def hasCiSigning = ciKeystorePath && ciKeystorePassword && ciKeyAlias && ciKeyPassword
+def releaseVersionCode = System.getenv('IVALDI_ANDROID_VERSION_CODE')
+def releaseVersionName = System.getenv('IVALDI_ANDROID_VERSION_NAME')
+def releaseKeystorePath = System.getenv('IVALDI_ANDROID_KEYSTORE_PATH')
+def releaseKeystorePassword = System.getenv('IVALDI_ANDROID_KEYSTORE_PASSWORD')
+def releaseKeyAlias = System.getenv('IVALDI_ANDROID_KEY_ALIAS')
+def releaseKeyPassword = System.getenv('IVALDI_ANDROID_KEY_PASSWORD')
+def hasReleaseSigning = releaseKeystorePath && releaseKeystorePassword && releaseKeyAlias && releaseKeyPassword
 
 android {
-    namespace "com.openchamber.app"
+    namespace "dev.ivaldi.mobile"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.openchamber.app"
+        applicationId "dev.ivaldi.mobile"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode ciVersionCode ? ciVersionCode.toInteger() : 1
-        versionName ciVersionName ?: "1.0"
+        versionCode releaseVersionCode ? releaseVersionCode.toInteger() : 12001
+        versionName releaseVersionName ?: "1.20.1"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
              // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
@@ -25,17 +25,17 @@ android {
     }
     signingConfigs {
         release {
-            if (hasCiSigning) {
-                storeFile file(ciKeystorePath)
-                storePassword ciKeystorePassword
-                keyAlias ciKeyAlias
-                keyPassword ciKeyPassword
+            if (hasReleaseSigning) {
+                storeFile file(releaseKeystorePath)
+                storePassword releaseKeystorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
             }
         }
     }
     buildTypes {
         release {
-            if (hasCiSigning) {
+            if (hasReleaseSigning) {
                 signingConfig signingConfigs.release
             }
             minifyEnabled false

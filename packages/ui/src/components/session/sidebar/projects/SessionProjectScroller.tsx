@@ -19,6 +19,10 @@ import { formatProjectLabel } from '../utils';
 import { useI18n } from '@/lib/i18n';
 import type { ProjectSortOrder } from '@/stores/useSessionDisplayStore';
 import { streamPerfCount } from '@/stores/utils/streamDebug';
+import { Icon } from '@/components/icon/Icon';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { sessionEvents } from '@/lib/sessionEvents';
+import { cn } from '@/lib/utils';
 
 type SessionProjectScrollerState = Pick<SessionGroupSectionProps,
   | 'editingId'
@@ -251,6 +255,40 @@ function SessionProjectScrollerComponent(props: Props): React.ReactNode {
         onScroll={enableStickyFade ? (event) => syncTopFade(event.currentTarget) : undefined}
       >
       {model.topContent}
+      {!model.singleProjectMode && !view.showOnlyMainWorkspace ? (
+        <div className="pt-2">
+          <div className="group/projects relative -ml-2.5 -mr-2 flex h-7 items-center pl-4 pr-10">
+            <span className="typography-micro font-medium uppercase tracking-[0.1em] text-muted-foreground/60">{t('sessions.sidebar.activity.projectsTitle')}</span>
+            {!view.hideDirectoryControls ? (
+              <div className="absolute right-0.5 top-1/2 z-10 -translate-y-1/2">
+                <Tooltip delayDuration={500}>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        sessionEvents.requestDirectoryDialog();
+                      }}
+                      aria-label={t('sessions.sidebar.header.actions.addProject')}
+                      className={cn(
+                        'inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--interactive-focus-ring)] transition-opacity',
+                        view.alwaysShowActions || view.mobileVariant
+                          ? 'opacity-100'
+                          : 'opacity-0 pointer-events-none group-hover/projects:opacity-100 group-hover/projects:pointer-events-auto group-focus-within/projects:opacity-100 group-focus-within/projects:pointer-events-auto',
+                      )}
+                    >
+                      <Icon name="add" className="h-4 w-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" sideOffset={4}>
+                    <p>{t('sessions.sidebar.header.actions.addProject')}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
       {view.showOnlyMainWorkspace ? (
         <div className="space-y-[0.6rem] py-1">
           {(() => {

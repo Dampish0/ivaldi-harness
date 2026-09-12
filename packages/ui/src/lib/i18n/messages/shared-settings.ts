@@ -2,6 +2,10 @@
 // intentionally small so chat startup does not load the full Settings catalog.
 export const sharedSettingsMessages = {
   "en": {
+    'settings.github.page.actions.connect': 'Connect GitHub',
+    'settings.github.page.status.loadFailed': 'Could not refresh GitHub connection status.',
+    'settings.common.actions.retry': 'Retry',
+    'settings.page.usage.title': 'Usage',
     "settings.agents.modelSelector.actions.favorite": "Favorite",
     "settings.agents.modelSelector.actions.unfavorite": "Unfavorite",
     "settings.mcp.sidebar.actions.addServerTitle": "Add MCP server",
@@ -35,6 +39,10 @@ export const sharedSettingsMessages = {
     "chat.message.userText.collapseAria": "Collapse user message",
   },
   "de": {
+    'settings.github.page.actions.connect': 'GitHub verbinden',
+    'settings.github.page.status.loadFailed': 'Der GitHub-Verbindungsstatus konnte nicht aktualisiert werden.',
+    'settings.common.actions.retry': 'Wiederholen',
+    'settings.page.usage.title': 'Nutzung',
     "settings.agents.modelSelector.actions.favorite": "Favorit",
     "settings.agents.modelSelector.actions.unfavorite": "Favorit entfernen",
     "settings.mcp.sidebar.actions.addServerTitle": "MCP-Server hinzufügen",
@@ -68,6 +76,10 @@ export const sharedSettingsMessages = {
     "chat.message.userText.collapseAria": "Benutzernachricht einklappen",
   },
   "es": {
+    "settings.github.page.actions.connect": "Conectar GitHub",
+    "settings.github.page.status.loadFailed": "No se pudo actualizar el estado de conexión de GitHub.",
+    "settings.common.actions.retry": "Reintentar",
+    "settings.page.usage.title": "Uso",
     "settings.agents.modelSelector.actions.favorite": "Favorito",
     "settings.agents.modelSelector.actions.unfavorite": "No favorito",
     "settings.mcp.sidebar.actions.addServerTitle": "Añadir servidor MCP",
@@ -101,6 +113,10 @@ export const sharedSettingsMessages = {
     "chat.message.userText.collapseAria": "Contraer mensaje del usuario",
   },
   "fr": {
+    'settings.github.page.actions.connect': 'Connectez GitHub',
+    'settings.github.page.status.loadFailed': 'Impossible d’actualiser l’état de connexion GitHub.',
+    'settings.common.actions.retry': 'Réessayer',
+    'settings.page.usage.title': 'Usage',
     "settings.agents.modelSelector.actions.favorite": "Préféré",
     "settings.agents.modelSelector.actions.unfavorite": "Supprimer des favoris",
     "settings.mcp.sidebar.actions.addServerTitle": "Ajouter le serveur MCP",
@@ -134,6 +150,10 @@ export const sharedSettingsMessages = {
     "chat.message.userText.collapseAria": "Réduire le message utilisateur",
   },
   "ja": {
+    'settings.github.page.actions.connect': 'GitHub に接続',
+    'settings.github.page.status.loadFailed': 'GitHub の接続状態を更新できませんでした。',
+    'settings.common.actions.retry': '再試行',
+    'settings.page.usage.title': '使用量',
     "settings.agents.modelSelector.actions.favorite": "お気に入り",
     "settings.agents.modelSelector.actions.unfavorite": "お気に入り解除",
     "settings.mcp.sidebar.actions.addServerTitle": "MCP サーバーを追加",
@@ -167,6 +187,10 @@ export const sharedSettingsMessages = {
     "chat.message.userText.collapseAria": "ユーザーメッセージを折りたたむ",
   },
   "ko": {
+    'settings.github.page.actions.connect': 'GitHub 연결',
+    'settings.github.page.status.loadFailed': 'GitHub 연결 상태를 새로 고칠 수 없습니다.',
+    'settings.common.actions.retry': '다시 시도',
+    'settings.page.usage.title': '사용량',
     "settings.agents.modelSelector.actions.favorite": "즐겨찾기",
     "settings.agents.modelSelector.actions.unfavorite": "즐겨찾기 해제",
     "settings.mcp.sidebar.actions.addServerTitle": "MCP 서버 추가",
@@ -200,6 +224,10 @@ export const sharedSettingsMessages = {
     "chat.message.userText.collapseAria": "사용자 메시지 접기",
   },
   "pl": {
+    'settings.github.page.actions.connect': 'Połącz z GitHub',
+    'settings.github.page.status.loadFailed': 'Nie udało się odświeżyć stanu połączenia z GitHubem.',
+    'settings.common.actions.retry': 'Ponów',
+    'settings.page.usage.title': 'Użycie',
     "settings.agents.modelSelector.actions.favorite": "Ulubione",
     "settings.agents.modelSelector.actions.unfavorite": "Odznacz jako ulubione",
     "settings.mcp.sidebar.actions.addServerTitle": "Dodaj serwer MCP",
@@ -233,6 +261,10 @@ export const sharedSettingsMessages = {
     "chat.message.userText.collapseAria": "Zwiń wiadomość użytkownika",
   },
   "pt-BR": {
+    "settings.github.page.actions.connect": "Conectar GitHub",
+    "settings.github.page.status.loadFailed": "Não foi possível atualizar o status da conexão com o GitHub.",
+    "settings.common.actions.retry": "Tentar novamente",
+    "settings.page.usage.title": "Uso",
     "settings.agents.modelSelector.actions.favorite": "Favorito",
     "settings.agents.modelSelector.actions.unfavorite": "Não favorito",
     "settings.mcp.sidebar.actions.addServerTitle": "Adicionar servidor MCP",
@@ -266,6 +298,10 @@ export const sharedSettingsMessages = {
     "chat.message.userText.collapseAria": "Recolher mensagem do usuário",
   },
   "uk": {
+    "settings.github.page.actions.connect": "Підключити GitHub",
+    "settings.github.page.status.loadFailed": "Не вдалося оновити стан підключення до GitHub.",
+    "settings.common.actions.retry": "Повторити",
+    "settings.page.usage.title": "Використання",
     "settings.agents.modelSelector.actions.favorite": "Додати в обране",
     "settings.agents.modelSelector.actions.unfavorite": "Вилучити з обраного",
     "settings.mcp.sidebar.actions.addServerTitle": "Додати сервер MCP",
@@ -299,6 +335,10 @@ export const sharedSettingsMessages = {
     "chat.message.userText.collapseAria": "Згорнути повідомлення користувача",
   },
   "zh-CN": {
+    'settings.github.page.actions.connect': '连接 GitHub',
+    'settings.github.page.status.loadFailed': '无法刷新 GitHub 连接状态。',
+    'settings.common.actions.retry': '重试',
+    'settings.page.usage.title': '用量',
     "settings.agents.modelSelector.actions.favorite": "收藏",
     "settings.agents.modelSelector.actions.unfavorite": "取消收藏",
     "settings.mcp.sidebar.actions.addServerTitle": "添加 MCP 服务器",
@@ -332,6 +372,10 @@ export const sharedSettingsMessages = {
     "chat.message.userText.collapseAria": "折叠用户消息",
   },
   "zh-TW": {
+    'settings.github.page.actions.connect': '連線 GitHub',
+    'settings.github.page.status.loadFailed': '無法重新整理 GitHub 連線狀態。',
+    'settings.common.actions.retry': '重試',
+    'settings.page.usage.title': '用量',
     "settings.agents.modelSelector.actions.favorite": "收藏",
     "settings.agents.modelSelector.actions.unfavorite": "取消收藏",
     "settings.mcp.sidebar.actions.addServerTitle": "新增 MCP 伺服器",
