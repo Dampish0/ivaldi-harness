@@ -6,7 +6,7 @@ Ivaldi is a local workspace for running, supervising, and reviewing AI coding ag
 
 ## Release status
 
-Ivaldi 1.20.0 is being prepared as the first stable release. The current draft includes an unsigned Windows x64 installer and a VS Code extension package. Source checks and packaging pass, but native installation, restart recovery, and upgrade testing still block a stable declaration.
+Ivaldi 1.20.0 is available as a public preview with an unsigned Windows x64 installer and a VS Code extension package. Source checks and packaging pass, but native installation, restart recovery, and upgrade testing still block a stable declaration.
 
 Releases are built and checked manually. This repository does not use GitHub Actions for CI or deployment, and the desktop app does not install updates automatically.
 
@@ -24,7 +24,7 @@ Releases are built and checked manually. This repository does not use GitHub Act
 
 ### Windows desktop
 
-Download `Ivaldi-1.20.0-win-x64.exe` from the [draft release](https://github.com/Dampish0/ivaldi-harness/releases). The installer includes OpenCode 1.18.23, so it does not require a separate OpenCode installation.
+Download `Ivaldi-1.20.0-win-x64.exe` from the [preview release](https://github.com/Dampish0/ivaldi-harness/releases). The installer includes OpenCode 1.18.23, so it does not require a separate OpenCode installation.
 
 The current Windows package is unsigned. Windows may show an unknown-publisher warning. Check the downloaded file against `SHA256SUMS.txt` from the same release.
 
