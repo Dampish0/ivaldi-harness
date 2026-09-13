@@ -1,4 +1,6 @@
 import React, { useRef, memo } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { MobileDisclosure } from '@/components/ui/MobileDisclosure';
 import { useInputStore } from '@/sync/input-store';
 import type { AttachedFile } from '@/sync/session-ui-store';
 import { useUIStore } from '@/stores/useUIStore';
@@ -396,12 +398,14 @@ export const AttachedVSCodeFileChips = memo(({ onShowPopup }: AttachedFilesListP
 AttachedVSCodeFileChips.displayName = 'AttachedVSCodeFileChips';
 
 export const AttachedFilesList = memo(({ onShowPopup }: AttachedFilesListProps) => {
+  const { isMobile } = useDeviceInfo();
+  const reducedMotion = useReducedMotion();
   const attachedFiles = useInputStore((state) => state.attachedFiles);
   const removeAttachedFile = useInputStore((state) => state.removeAttachedFile);
 
   const localFiles = attachedFiles.filter((file) => file.source !== 'server' && file.source !== 'vscode');
 
-  if (localFiles.length === 0) return null;
+  if (localFiles.length === 0 && !isMobile) return null;
 
   const images = localFiles.filter((f) => f.mimeType.startsWith('image/'));
   const otherFiles = localFiles.filter((f) => !f.mimeType.startsWith('image/'));
@@ -413,11 +417,14 @@ export const AttachedFilesList = memo(({ onShowPopup }: AttachedFilesListProps) 
   })).filter((image) => image.url);
 
   return (
+    <MobileDisclosure enabled={isMobile} open={localFiles.length > 0} resize>
     <div className="pb-4 w-full px-1 space-y-3">
       {/* Images row - inline with previews */}
       {images.length > 0 && (
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="relative flex items-center gap-1.5 flex-wrap">
+          <AnimatePresence initial={false} mode="popLayout">
           {images.map((file, index) => (
+            <motion.div key={file.id} layout={isMobile ? 'position' : false} initial={{ opacity: isMobile ? 0 : 1 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: isMobile && !reducedMotion ? 0.18 : 0 }}>
             <ImagePreview
               key={file.id}
               file={file}
@@ -426,23 +433,30 @@ export const AttachedFilesList = memo(({ onShowPopup }: AttachedFilesListProps) 
               gallery={imageGallery}
               index={index}
             />
+            </motion.div>
           ))}
+          </AnimatePresence>
         </div>
       )}
       
       {/* Other files row - inline text-only */}
       {otherFiles.length > 0 && (
-        <div className="flex items-center gap-x-3 gap-y-1 flex-wrap">
+        <div className="relative flex items-center gap-x-3 gap-y-1 flex-wrap">
+          <AnimatePresence initial={false} mode="popLayout">
           {otherFiles.map((file) => (
+            <motion.div key={file.id} layout={isMobile ? 'position' : false} initial={{ opacity: isMobile ? 0 : 1 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: isMobile && !reducedMotion ? 0.18 : 0 }}>
             <FileChip
               key={file.id}
               file={file}
               onRemove={() => removeAttachedFile(file.id)}
             />
+            </motion.div>
           ))}
+          </AnimatePresence>
         </div>
       )}
     </div>
+    </MobileDisclosure>
   );
 });
 

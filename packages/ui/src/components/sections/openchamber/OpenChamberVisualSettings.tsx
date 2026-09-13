@@ -1209,11 +1209,12 @@ export const OpenChamberVisualSettings: React.FC<OpenChamberVisualSettingsProps>
                             </SettingsTwoColumn>
                         ) : null}
 
-                        {(shouldShow('fontSize') && !isMobile) || shouldShow('terminalFontSize') || shouldShow('editorFontSize') ? (
+                        {shouldShow('fontSize') || shouldShow('terminalFontSize') || shouldShow('editorFontSize') ? (
                             <SettingsTwoColumn>
-                                {shouldShow('fontSize') && !isMobile && (
+                                {shouldShow('fontSize') && (
                                     <SettingsStackedField
                                         label={t('settings.openchamber.visual.field.interfaceFontSize')}
+                                        settingsItem="appearance.interface-font-size"
                                         controlClassName="w-full"
                                     >
                                         <div className={SETTINGS_NUMBER_STEPPER_ROW_CLASS}>

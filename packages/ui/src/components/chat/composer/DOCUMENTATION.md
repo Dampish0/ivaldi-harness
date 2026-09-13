@@ -181,6 +181,12 @@ primary-action contract. An empty prompt shows dictation when capture is availab
 content changes that same slot to Send, and an active turn changes it to Stop.
 Keep that as one primary slot rather than adding a permanent microphone beside
 Send; the compact mobile layout is presentation, not a different send model.
+The pill and editor share the mobile reading size. Mobile primary actions keep
+a 48px hit area with a 36px visible circle through background clipping.
+`mobile.css` animates the incoming editor or pill, footer controls, and action
+icons with finite transform and opacity animations. The native keyboard still
+owns the outer composer's movement. Focus is never delayed for CSS motion and
+an outgoing editor is not retained. Reduced motion skips these animations.
 New chat belongs in navigation, separate from the composer's attachment
 action. The expanded mobile Work footer keeps attachment, model, and the primary
 action in one row. Developer retains its separate model/agent row. Work hides
@@ -198,8 +204,9 @@ identity and omit duplicates, including the current model. Thinking and
 favorite actions apply to the selected model in the footer. `ModelControls`
 still owns model selection, variant resolution, persistence, and recovery.
 Developer retains its detailed picker. `MobileOverlayPanel` uses
-`useMobilePanelPresence` for reversible 180 millisecond opacity and transform
-transitions. A closing sheet is inert and releases Back and focus immediately;
+`useMobilePanelPresence` for the shared 280 millisecond entry and 200 millisecond
+exit. The panel slides from the bottom while its backdrop fades independently.
+A closing sheet is inert and releases Back and focus immediately;
 it remains painted until the exit finishes. Reduced motion removes the exit
 delay. Keyboard restoration must still be checked on hardware when this changes.
 

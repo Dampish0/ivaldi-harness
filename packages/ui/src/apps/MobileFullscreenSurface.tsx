@@ -6,12 +6,9 @@ import { Button } from '@/components/ui/button';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { useMobileModalFocus } from './useMobileModalFocus';
+import { useMobilePanelPresence } from './useMobilePanelPresence';
 
 const SURFACE_ROOT_ID = 'mobile-surface-root';
-const ENTER_DELAY_MS = 16;
-// Enter-slide duration. Heavy content is revealed when this transition actually
-// ends (transitionend); this also feeds the fallback timer.
-const ENTER_DURATION_MS = 200;
 
 const ensureSurfaceRoot = (): HTMLElement => {
   let root = document.getElementById(SURFACE_ROOT_ID);
@@ -73,39 +70,21 @@ export const MobileFullscreenSurface: React.FC<MobileFullscreenSurfaceProps> = (
 }) => {
   const { t } = useI18n();
   const rootRef = React.useRef<HTMLElement | null>(null);
-  const [entered, setEntered] = React.useState(false);
-  const [contentReady, setContentReady] = React.useState(false);
+  const { visible, entered, reducedMotion, durationMs, easing } = useMobilePanelPresence(open);
   const surfaceRef = React.useRef<HTMLElement | null>(null);
+  // A caller may clear its selected plan or project on close. Keep the last
+  // displayed content intact for the exit, then unmount its effects below.
+  const lastContent = React.useRef({ title, subtitle, ariaLabel, trailing, children });
+  if (open) lastContent.current = { title, subtitle, ariaLabel, trailing, children };
+  const displayed = lastContent.current;
 
   if (!rootRef.current) {
     rootRef.current = ensureSurfaceRoot();
   }
 
-  React.useEffect(() => {
-    if (!open) {
-      setEntered(false);
-      return;
-    }
-    const id = window.setTimeout(() => setEntered(true), ENTER_DELAY_MS);
-    return () => window.clearTimeout(id);
-  }, [open]);
+  useMobileModalFocus(surfaceRef, open && visible, disableEscapeDismiss ? null : onClose);
 
-  // Defer mounting heavy children until the enter slide finishes, so the
-  // animation stays smooth instead of competing with a large content render.
-  // Primary trigger is the slide's transitionend (below); this is just a
-  // fallback in case it never fires (reduced motion / interrupted transition).
-  React.useEffect(() => {
-    if (!open) {
-      setContentReady(false);
-      return;
-    }
-    const id = window.setTimeout(() => setContentReady(true), ENTER_DELAY_MS + ENTER_DURATION_MS + 80);
-    return () => window.clearTimeout(id);
-  }, [open]);
-
-  useMobileModalFocus(surfaceRef, open, disableEscapeDismiss ? null : onClose);
-
-  if (!open || !rootRef.current) return null;
+  if (!visible || !rootRef.current) return null;
 
   const isDialog = variant === 'dialog';
 
@@ -113,8 +92,10 @@ export const MobileFullscreenSurface: React.FC<MobileFullscreenSurfaceProps> = (
     <section
       ref={surfaceRef}
       role="dialog"
-      aria-modal="true"
-      aria-label={ariaLabel}
+      aria-modal={open}
+      aria-hidden={!open}
+      inert={!open}
+      aria-label={displayed.ariaLabel}
       tabIndex={-1}
       className={cn(
         'flex flex-col bg-background text-foreground',
@@ -126,28 +107,24 @@ export const MobileFullscreenSurface: React.FC<MobileFullscreenSurfaceProps> = (
         // Scale/fade instead of the push slide: the card is not a navigation
         // step, and a settled `transform: none` keeps it off its own
         // compositing layer (iOS clips those to the safe-area viewport).
-        opacity: entered ? 1 : 0,
-        transform: entered ? 'none' : 'scale(0.97)',
-        transition: `opacity ${ENTER_DURATION_MS}ms ease-out, transform ${ENTER_DURATION_MS}ms cubic-bezier(0.32, 0.72, 0, 1)`,
+        opacity: entered || reducedMotion ? 1 : 0,
+        transform: entered || reducedMotion ? 'none' : 'scale(0.97)',
+        transition: reducedMotion ? 'none' : `opacity ${durationMs}ms ${easing}, transform ${durationMs}ms ${easing}`,
+        pointerEvents: open ? 'auto' : 'none',
       } : {
         paddingTop: 'var(--oc-safe-area-top, 0px)',
         // Push-style enter: slide in from the right edge; settled state drops
         // the transform entirely so the surface isn't kept on a compositing
         // layer (iOS clips those to the safe-area viewport).
-        transform: entered ? 'none' : 'translateX(100%)',
-        transition: `transform ${ENTER_DURATION_MS}ms cubic-bezier(0.32, 0.72, 0, 1)`,
-      }}
-      onTransitionEnd={(event) => {
-        // Reveal content exactly when the enter transition ends — not on a fixed timer.
-        if (entered && event.target === event.currentTarget && event.propertyName === 'transform') {
-          setContentReady(true);
-        }
+        transform: entered || reducedMotion ? 'none' : 'translateX(100%)',
+        transition: reducedMotion ? 'none' : `transform ${durationMs}ms ${easing}`,
+        pointerEvents: open ? 'auto' : 'none',
       }}
     >
       {!headerless ? (
         <header
           className={cn(
-            'flex h-[var(--oc-header-height,56px)] shrink-0 items-center gap-2 px-3',
+            'oc-mobile-toolbar flex shrink-0 items-center gap-1 px-2',
             !noHeaderBorder && 'border-b border-border/70',
           )}
         >
@@ -163,20 +140,15 @@ export const MobileFullscreenSurface: React.FC<MobileFullscreenSurfaceProps> = (
             <Icon name="close" className="size-5" />
           </Button>
           <div className="min-w-0 flex-1 px-1">
-            {title ? <h2 className="truncate typography-ui-label text-foreground">{title}</h2> : null}
-            {subtitle ? <p className="truncate typography-micro text-muted-foreground">{subtitle}</p> : null}
+            {displayed.title ? <h2 className="truncate typography-ui-header font-semibold text-foreground">{displayed.title}</h2> : null}
+            {displayed.subtitle ? <p className="truncate typography-micro text-muted-foreground">{displayed.subtitle}</p> : null}
           </div>
-          {trailing ? <div className="flex shrink-0 items-center gap-1.5">{trailing}</div> : null}
+          {displayed.trailing ? <div className="flex shrink-0 items-center gap-1.5">{displayed.trailing}</div> : null}
         </header>
       ) : null}
       <div className="min-h-0 flex-1 overflow-hidden">
-        {contentReady ? (
-          <div className="h-full" style={{ animation: 'oc-surface-content-in 200ms ease-out' }}>
-            {children}
-          </div>
-        ) : null}
+        {displayed.children}
       </div>
-      <style>{'@keyframes oc-surface-content-in { from { opacity: 0 } to { opacity: 1 } }'}</style>
     </section>
   );
 
@@ -184,10 +156,13 @@ export const MobileFullscreenSurface: React.FC<MobileFullscreenSurfaceProps> = (
 
   return createPortal(
     <div
-      className="oc-keyboard-inset-surface fixed inset-0 z-50 flex items-center justify-center p-4 transition-opacity duration-200 ease-out"
+      className="oc-keyboard-inset-surface fixed inset-0 z-50 flex items-center justify-center p-4"
+      inert={!open}
       style={{
         background: 'color-mix(in srgb, var(--surface-overlay) 45%, transparent)',
         opacity: entered ? 1 : 0,
+        pointerEvents: open ? 'auto' : 'none',
+        transition: reducedMotion ? 'none' : `opacity ${durationMs}ms ${easing}`,
         // 'chat' matches every other mobile overlay (the sessions sidebar keeps
         // its width); 'app' ignores the panels and centers on the window.
         paddingLeft: dialogAlign === 'chat' ? 'max(1rem, var(--oc-chat-inset-left, 0px))' : '1rem',

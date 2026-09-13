@@ -76,6 +76,7 @@ The webview build emits each worker as one self-contained file. VS Code webviews
   - Includes Zen utility model parity handler used by shared notification settings (`/api/zen/models`).
   - Owns managed OpenCode upgrade status and mutation handlers, including capability reporting, upgrade serialization, and process restart after a successful upgrade.
   - Provider handlers cover source lookup, disconnect (`DELETE /api/provider/:id/auth`), and custom provider upsert (`PUT /api/provider`; create/update OpenAI-compatible config with explicit `scope` for user/project/custom layers; requires `env` or stored auth; secrets via OpenCode auth API).
+  - The webview explicitly returns `501` JSON for `/api/provider/:id/editor`. The revision-protected raw-layer editor is currently provided by the web server; VS Code must not forward this route to OpenCode or substitute the legacy replacement PUT.
   - Google quota can read an existing Gemini or Antigravity access token. Refreshing an expired token requires source-specific `IVALDI_*_GOOGLE_CLIENT_ID` and `IVALDI_*_GOOGLE_CLIENT_SECRET` values in the extension process environment; the extension does not distribute third-party OAuth client credentials.
 
 - `opencode-upgrade-runtime.ts`

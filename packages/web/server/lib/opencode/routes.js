@@ -7,6 +7,7 @@ import {
   buildDeferredRestartResponse,
 } from './config-mutation-response.js';
 import { getClaudeCliAuthStatus } from './claude-cli-auth.js';
+import { registerProviderEditorRoutes } from './provider-editor-routes.js';
 
 export const registerOpenCodeRoutes = (app, dependencies) => {
   const {
@@ -38,6 +39,8 @@ export const registerOpenCodeRoutes = (app, dependencies) => {
     }
     return authLibrary;
   };
+
+  registerProviderEditorRoutes(app, { resolveProjectDirectory, getAuthLibrary });
 
   const normalizePendingString = (value) => {
     if (typeof value !== 'string') {

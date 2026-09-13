@@ -56,6 +56,7 @@ import {
 import { isEmbeddedSessionChat } from '@/components/layout/contextPanelEmbeddedChat';
 import { useProviderLogo } from '@/hooks/useProviderLogo';
 import { isCapacitorMobileApp } from '@/apps/mobileNativeChrome';
+import { MobileDisclosure } from '@/components/ui/MobileDisclosure';
 
 
 const CONTAIN_LAYOUT_STYLE = { contain: 'layout' as const, transform: 'translateZ(0)' };
@@ -67,15 +68,16 @@ const INLINE_MESSAGE_ACTIONS_CLASS_NAME = 'mt-2 mb-1 flex items-center justify-s
 const MobileMessageActions: React.FC<{ isMobile: boolean; align?: 'start' | 'end'; children: React.ReactNode }> = ({ isMobile, align = 'start', children }) => {
     const { t } = useI18n();
     const isWorkMode = useProductModeStore((state) => state.mode === 'work');
+    const [open, setOpen] = React.useState(false);
     if (!isMobile || !isWorkMode) return children;
     return (
-        <details className="mt-1" data-mobile-message-actions="true">
-            <summary className={cn('flex min-h-12 w-12 cursor-pointer list-none items-center justify-center rounded-full text-muted-foreground hover:bg-interactive-hover [&::-webkit-details-marker]:hidden', align === 'end' && 'ml-auto')}>
+        <div className="mt-1" data-mobile-message-actions="true">
+            <button type="button" aria-expanded={open} onClick={() => setOpen(!open)} className={cn('flex min-h-12 w-12 cursor-pointer items-center justify-center rounded-full text-muted-foreground hover:bg-interactive-hover', align === 'end' && 'ml-auto')}>
                 <Icon name="more" className="size-5" />
                 <span className="sr-only">{t('mobile.message.actions')}</span>
-            </summary>
-            {children}
-        </details>
+            </button>
+            <MobileDisclosure open={open}>{children}</MobileDisclosure>
+        </div>
     );
 };
 

@@ -28,6 +28,8 @@ Host side (`packages/web/server/lib/relay/`):
 - `e2ee.js`, `tunnel-codec.js` — host-side (JS) mirrors of the shared crypto and framing (see "Two implementations" below).
 
 Client side (`packages/ui/src/lib/relay/`):
+- The React Native candidate reuses these modules through generated, hash-recorded copies in `experiments/mobile-native`. Its `createResponse` adapter supplies streamed response objects because React Native's global `Response` cannot construct a streamed body. Browser, desktop, VS Code and Capacitor consumers keep the default standard `Response` constructor. This changes no relay frame, handshake or encryption format.
+  Native requests serialize their bodies explicitly because React Native Request has no readable body property. The candidate sets `listenToBrowserWakeEvents: false`; AppState owns native foreground recovery. Browser consumers keep their existing online and visibility listeners.
 - `protocol.ts` — the shared contract: constants, frame types, message shapes. The normative source both implementations follow.
 - `crypto.ts`, `handshake.ts` — the E2EE primitives and handshake state machines (initiator + responder).
 - `tunnel-codec.ts` — Layer 3 frame codec, fragmentation, and outbound frame batching.

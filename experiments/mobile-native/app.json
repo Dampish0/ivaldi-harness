@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "Ivaldi Native",
+    "slug": "ivaldi-native-lab",
+    "version": "0.2.11",
+    "orientation": "default",
+    "userInterfaceStyle": "automatic",
+    "android": {
+      "package": "dev.ivaldi.nativecomparison",
+      "versionCode": 13,
+      "softwareKeyboardLayoutMode": "resize"
+    },
+    "plugins": [
+      "expo-font",
+      "expo-secure-store",
+      "expo-localization",
+      "./plugins/with-local-network.cjs",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Scan an Ivaldi pairing code.",
+          "recordAudioAndroid": false
+        }
+      ]
+    ],
+    "scheme": [
+      "ivaldi-native",
+      "ivaldi",
+      "openchamber"
+    ]
+  }
+}

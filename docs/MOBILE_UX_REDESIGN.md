@@ -2,6 +2,9 @@
 
 Device audit and redesign specification, 12 September 2026.
 
+The follow-up [motion review](MOBILE_MOTION_REVIEW.md) measures and addresses
+the animation problems after Android preview 2 was published.
+
 ## Revision after using the first redesign
 
 The first implementation improved basic navigation but the user rejected its

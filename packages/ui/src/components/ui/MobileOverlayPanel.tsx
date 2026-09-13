@@ -1,5 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
+import { motion, useDragControls } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/i18n';
 import { ScrollableOverlay } from './ScrollableOverlay';
@@ -7,7 +8,7 @@ import { Icon } from "@/components/icon/Icon";
 import { Button } from './button';
 import { useMobileBackHandler } from '@/apps/mobileAppContext';
 import { useMobileModalFocus } from '@/apps/useMobileModalFocus';
-import { MOBILE_PANEL_EASING, useMobilePanelPresence } from '@/apps/useMobilePanelPresence';
+import { useMobilePanelPresence } from '@/apps/useMobilePanelPresence';
 
 interface MobileOverlayPanelProps {
   open: boolean;
@@ -21,15 +22,15 @@ interface MobileOverlayPanelProps {
 }
 
 const OVERLAY_ROOT_ID = 'mobile-overlay-root';
-const PANEL_DURATION_MS = 180;
 
 const ensureOverlayRoot = () => {
-  if (typeof document === 'undefined') return null;
-  let root = document.getElementById(OVERLAY_ROOT_ID);
+  const ownerDocument = globalThis.document;
+  if (!ownerDocument) return null;
+  let root = ownerDocument.getElementById(OVERLAY_ROOT_ID);
   if (!root) {
-    root = document.createElement('div');
+    root = ownerDocument.createElement('div');
     root.id = OVERLAY_ROOT_ID;
-    document.body.appendChild(root);
+    ownerDocument.body.appendChild(root);
   }
   return root;
 };
@@ -47,11 +48,15 @@ export const MobileOverlayPanel: React.FC<MobileOverlayPanelProps> = ({
   const { t } = useI18n();
   const overlayRootRef = React.useRef<HTMLElement | null>(null);
   const panelRef = React.useRef<HTMLDivElement | null>(null);
-  const { visible, entered, reducedMotion } = useMobilePanelPresence(open, PANEL_DURATION_MS);
+  const dragControls = useDragControls();
+  const lastContent = React.useRef({ title, children, footer, renderHeader });
+  if (open) lastContent.current = { title, children, footer, renderHeader };
+  const displayed = lastContent.current;
+  const { visible, entered, reducedMotion, durationMs, easing } = useMobilePanelPresence(open);
   useMobileBackHandler('overlay', open, () => { onClose(); return true; });
   useMobileModalFocus(panelRef, open && visible, onClose);
 
-  if (typeof document !== 'undefined' && !overlayRootRef.current) {
+  if (globalThis.document && !overlayRootRef.current) {
     overlayRootRef.current = ensureOverlayRoot();
   }
 
@@ -83,7 +88,7 @@ export const MobileOverlayPanel: React.FC<MobileOverlayPanelProps> = ({
       aria-modal={open}
       aria-hidden={!open}
       inert={!open}
-      aria-label={title}
+      aria-label={displayed.title}
       onClick={onClose}
       // The panel centers over the CHAT column, not the whole app: on a tablet
       // the shell keeps a persistent sessions sidebar, and a sheet centered on
@@ -91,30 +96,39 @@ export const MobileOverlayPanel: React.FC<MobileOverlayPanelProps> = ({
       // column's insets; on phones they are 0 and this is a no-op. The scrim
       // deliberately still covers everything.
       style={{
-        background: 'color-mix(in srgb, var(--surface-overlay) 45%, transparent)',
         paddingLeft: 'var(--oc-chat-inset-left, 0px)',
         paddingRight: 'var(--oc-chat-inset-right, 0px)',
-        opacity: entered ? 1 : 0,
         pointerEvents: open ? 'auto' : 'none',
-        transition: reducedMotion ? 'none' : `opacity ${PANEL_DURATION_MS}ms ${MOBILE_PANEL_EASING}`,
       }}
     >
-        <div
+        <div aria-hidden="true" className="absolute inset-0" style={{
+          background: 'color-mix(in srgb, var(--surface-overlay) 45%, transparent)',
+          opacity: entered ? 1 : 0,
+          transition: reducedMotion ? 'none' : `opacity ${durationMs}ms ${easing}`,
+        }} />
+        <motion.div
           ref={panelRef}
           tabIndex={-1}
-          aria-label={title}
+          aria-label={displayed.title}
           className={cn(
-            'mt-auto flex max-h-[calc(100dvh-0.75rem)] min-h-0 w-full flex-col rounded-t-3xl bg-background shadow-none pwa-overlay-panel',
+            'relative mt-auto flex max-h-[calc(100dvh-0.75rem)] min-h-0 w-full flex-col rounded-t-3xl bg-background shadow-none pwa-overlay-panel',
             'mx-auto max-w-lg',
             className
           )}
+          initial={false} animate={{ y: entered || reducedMotion ? 0 : '100%' }}
+          transition={{ duration: reducedMotion ? 0 : durationMs / 1000, ease: [0.22, 1, 0.36, 1] }}
+          drag={reducedMotion ? false : 'y'} dragListener={false} dragControls={dragControls}
+          dragConstraints={{ top: 0, bottom: 0 }} dragElastic={{ top: 0, bottom: 1 }} dragMomentum={false}
+          onDragEnd={(_, info) => { if (info.offset.y > 80 || info.velocity.y > 500) onClose(); }}
           style={{
-            transform: entered || reducedMotion ? 'none' : 'translateY(16px)',
-            transition: reducedMotion ? 'none' : `transform ${PANEL_DURATION_MS}ms ${MOBILE_PANEL_EASING}`,
+            transform: reducedMotion ? 'none' : undefined,
             paddingBottom: 'var(--oc-safe-area-bottom, 0px)',
           }}
           onClick={(event) => event.stopPropagation()}
         >
+        <div aria-hidden="true" className="flex h-6 shrink-0 items-center justify-center" style={{ touchAction: 'none' }} onPointerDown={(event) => dragControls.start(event)}>
+          <span className="h-1 w-8 rounded-full bg-[var(--interactive-border)]" />
+        </div>
         {(() => {
           const closeButton = (
             <Button
@@ -129,13 +143,13 @@ export const MobileOverlayPanel: React.FC<MobileOverlayPanelProps> = ({
             </Button>
           );
 
-          if (renderHeader) {
-            return renderHeader(closeButton);
+          if (displayed.renderHeader) {
+            return displayed.renderHeader(closeButton);
           }
 
           return (
             <div className="flex items-center justify-between px-5 pb-1 pt-2">
-              <h2 className="text-[18px] font-semibold text-foreground">{title}</h2>
+              <h2 className="min-w-0 typography-ui-header font-semibold text-foreground">{displayed.title}</h2>
               {closeButton}
             </div>
           );
@@ -150,14 +164,14 @@ export const MobileOverlayPanel: React.FC<MobileOverlayPanelProps> = ({
           outerClassName={cn('min-h-0 flex-1', contentMaxHeight)}
           className="px-2 py-2 pwa-overlay-scroll"
         >
-          {children}
+          {displayed.children}
         </ScrollableOverlay>
-        {footer ? (
+        {displayed.footer ? (
           <div className="shrink-0 border-t border-border/40 px-3 py-2">
-            {footer}
+            {displayed.footer}
           </div>
         ) : null}
-      </div>
+      </motion.div>
     </div>
   );
 

@@ -66,6 +66,58 @@ This module provides OpenCode server integration utilities for the web server ru
 - `validateCustomProviderConfig(providerId, config, options?)`: Structural validation for custom provider payloads (id format, http(s) base URL, models, credentials via `env` or `hasStoredAuth`).
 - `removeProviderConfig(providerId, workingDirectory, scope?)`: Removes a provider block from the selected config layer.
 
+## Revision-protected custom provider editor
+
+`provider-editor.js` owns raw-layer edit authority. `createProviderEditor` accepts
+injected synchronous `readLayers` and `writeConfig` dependencies for fixtures.
+Its `read`, `save`, and `remove` operations use the provider ID and captured
+directory. SDK provider catalogs are merged runtime data and are not edit snapshots.
+
+`provider-editor-routes.js` registers `GET`, `PUT`, and `DELETE`
+`/api/provider/:providerId/editor` before the OpenCode proxy. These routes reuse
+the authenticated web server in desktop, web, hosted mobile, Capacitor, and native
+mobile connections. VS Code returns explicit `501` JSON for this route; its legacy
+provider routes remain unchanged. Older hosts are unsupported by native editor
+clients, which must not fall back to the legacy replacement PUT.
+
+- GET returns `{ providerId, scope, revision, config, credentials: { storedAuth, inline } }`.
+  It chooses the existing `custom` > `project` > `user` layer, or `user` with
+  `config: null` when the provider is absent. `config` contains only `npm`, `name`,
+  optional `env`, `options.baseURL`, optional `options.headers`, and model ID/name
+  entries. Inline `options.apiKey` and uneditable extensions are omitted. Header
+  values are editable configuration and are returned to this authenticated form.
+- PUT accepts `{ scope, expectedRevision, credentials, config }`. The scope must
+  match GET. `credentials: 'preserve'` keeps the entire existing env list and inline
+  API key. `'environment'` requires submitted env names and clears the inline key.
+  `'stored-auth'` requires a valid stored OpenCode auth entry and clears env and
+  inline credentials. API key writes remain on the OpenCode SDK auth API.
+- PUT preserves unknown provider/options fields and unknown fields of retained
+  model IDs. Omitted models and headers are explicit removals from this layer.
+  Literal model/header keys such as `__proto__` stay own properties. Model IDs must
+  remain unique after trimming; header names are HTTP tokens, unique without case,
+  and header values cannot contain CR/LF. Supplied inline API keys are rejected.
+- DELETE accepts `{ scope, expectedRevision }`, removes only that layer's provider
+  entry, and keeps auth and other layers. A lower layer can become effective after
+  removal. Successful writes return deferred-restart flags and never restart OpenCode.
+- The opaque revision covers provider entries, alias placement, paths and disabled
+  state across every config layer, including absence. It excludes stored auth so a
+  successful SDK key write does not invalidate the config save. A server restart
+  invalidates revisions. Conflicts return `409`; unsupported editable shapes or
+  ambiguous aliases return `422`; invalid inputs return `400`; unreadable config or
+  auth returns `500`. Responses contain fixed error codes and messages, not raw errors.
+- Validation and the final read/write run synchronously. A final revision check
+  also retains unrelated root settings from that read. This is optimistic conflict
+  detection, not a lock shared with external file editors. The default writer
+  replaces a sibling temporary file, preserves an existing config symlink, and
+  keeps a backup. It preserves JSON data, not JSONC comments or formatting.
+
+Native clients re-read the revision immediately before SDK `auth.set`. A concurrent
+external edit can still occur after that preflight and before the guarded config
+PUT. A successful key write followed by failed/conflicting config persistence is
+an explicit partial save. Clients retain the form, disclose the stored credential,
+and require reload for a conflict rather than replacing the newer revision or
+blindly writing the key again. No automatic auth rollback is attempted.
+
 ## Public exports (shared.js)
 - `OPENCODE_CONFIG_DIR`, `AGENT_DIR`, `COMMAND_DIR`, `SKILL_DIR`, `CONFIG_FILE`: Path constants. `OPENCODE_CONFIG` is resolved at call time for the custom config layer path.
 - `AGENT_SCOPE`, `COMMAND_SCOPE`, `SKILL_SCOPE`: Scope constants with USER and PROJECT values.

@@ -1,5 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
+import { LayoutGroup, motion } from 'motion/react';
 
 import { Icon } from '@/components/icon/Icon';
 import { McpIcon } from '@/components/icons/McpIcon';
@@ -19,10 +20,9 @@ import { useProductModeStore } from '@/stores/useProductModeStore';
 import { MobileChangesSurface } from './MobileChangesSurface';
 import { MobileFilesSurface } from './MobileFilesSurface';
 import { useMobileModalFocus } from './useMobileModalFocus';
-import { MOBILE_PANEL_EASING, useMobilePanelPresence } from './useMobilePanelPresence';
+import { useMobilePanelPresence } from './useMobilePanelPresence';
 
 const DRAWER_ROOT_ID = 'mobile-surface-root';
-const ENTER_DURATION_MS = 220;
 
 export type MobileWorkspaceTab = 'changes' | 'files' | 'terminal' | 'notes' | 'mcp';
 
@@ -123,7 +123,7 @@ export const MobileWorkspaceDrawer: React.FC<{
     : tab;
   const rootRef = React.useRef<HTMLElement | null>(null);
   const surfaceRef = React.useRef<HTMLElement | null>(null);
-  const { visible, entered, reducedMotion } = useMobilePanelPresence(open, ENTER_DURATION_MS);
+  const { visible, entered, reducedMotion, durationMs, easing } = useMobilePanelPresence(open);
   const tabsRef = React.useRef<HTMLDivElement | null>(null);
   const activeTabRef = React.useRef<HTMLButtonElement | null>(null);
 
@@ -186,13 +186,14 @@ export const MobileWorkspaceDrawer: React.FC<{
 
   const body = (
     <>
-      <div className="flex h-[var(--oc-header-height,56px)] shrink-0 items-center gap-1 border-b border-border/60 px-2">
+      <div className="oc-mobile-toolbar flex shrink-0 items-center gap-1 border-b border-border/60 px-2">
         <div
           ref={tabsRef}
           className="scrollbar-none relative flex min-w-0 flex-1 items-center gap-1 overflow-x-auto"
           role="tablist"
           aria-label={t('sortableTabsStrip.aria.tabs')}
         >
+          <LayoutGroup>
           {visible ? tabItems.map((item) => {
             const active = item.id === effectiveTab;
             return (
@@ -208,15 +209,17 @@ export const MobileWorkspaceDrawer: React.FC<{
                 size="default"
                 onClick={() => onTabChange(item.id)}
                 className={cn(
-                  'shrink-0 gap-1.5 text-muted-foreground',
-                  active && 'bg-interactive-selection text-interactive-selection-foreground hover:bg-interactive-selection',
+                  'relative isolate shrink-0 gap-1.5 text-muted-foreground',
+                  active && 'text-interactive-selection-foreground',
                 )}
               >
+                {active ? <motion.span layoutId="mobile-workspace-selection" className="absolute inset-0 -z-10 rounded-md bg-interactive-selection" transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }} /> : null}
                 <span className="flex size-4 shrink-0 items-center justify-center">{item.icon}</span>
                 <span className="typography-ui-label font-medium">{item.label}</span>
               </Button>
             );
           }) : null}
+          </LayoutGroup>
         </div>
         <Button
           type="button"
@@ -230,7 +233,7 @@ export const MobileWorkspaceDrawer: React.FC<{
           <Icon name="close" className="size-5" />
         </Button>
       </div>
-      <div className="min-h-0 flex-1 overflow-hidden">
+      <div className="relative min-h-0 flex-1 overflow-hidden">
         {/* Panes stay MOUNTED once visited (hidden when inactive/closed), so
             reopening the drawer lands exactly where the user left off — an
             open diff, an edited file, an attached terminal. */}
@@ -239,7 +242,7 @@ export const MobileWorkspaceDrawer: React.FC<{
             // A newly requested per-file diff remounts the pane so
             // initialDiffPath applies; plain reopens keep the state.
             key={`${effectiveDirectory}:changes:${pendingChangesDiff?.path ?? ''}:${pendingChangesDiff?.staged ?? false}`}
-            className={cn('h-full', effectiveTab !== 'changes' && 'hidden')}
+            className="oc-mobile-tab-pane h-full" data-active={effectiveTab === 'changes'} inert={effectiveTab !== 'changes'}
           >
             <ErrorBoundary>
               <MobileChangesSurface
@@ -251,28 +254,28 @@ export const MobileWorkspaceDrawer: React.FC<{
           </div>
         ) : null}
         {visitedTabs.has('files') ? (
-          <div className={cn('h-full', effectiveTab !== 'files' && 'hidden')}>
+          <div className="oc-mobile-tab-pane h-full" data-active={effectiveTab === 'files'} inert={effectiveTab !== 'files'}>
             <ErrorBoundary>
               <MobileFilesSurface active={open && effectiveTab === 'files'} />
             </ErrorBoundary>
           </div>
         ) : null}
         {isDeveloperMode && visitedTabs.has('terminal') ? (
-          <div className={cn('h-full', effectiveTab !== 'terminal' && 'hidden')}>
+          <div className="oc-mobile-tab-pane h-full" data-active={effectiveTab === 'terminal'} inert={effectiveTab !== 'terminal'}>
             <ErrorBoundary>
               <TerminalView visible={open && effectiveTab === 'terminal'} />
             </ErrorBoundary>
           </div>
         ) : null}
         {visitedTabs.has('notes') ? (
-          <div className={cn('h-full', effectiveTab !== 'notes' && 'hidden')}>
+          <div className="oc-mobile-tab-pane h-full" data-active={effectiveTab === 'notes'} inert={effectiveTab !== 'notes'}>
             <ErrorBoundary>
               <ProjectContextPanel onActionComplete={onClose} onOpenPlan={onOpenPlan} />
             </ErrorBoundary>
           </div>
         ) : null}
         {visitedTabs.has('mcp') ? (
-          <div className={cn('h-full', effectiveTab !== 'mcp' && 'hidden')}>
+          <div className="oc-mobile-tab-pane h-full" data-active={effectiveTab === 'mcp'} inert={effectiveTab !== 'mcp'}>
             <ErrorBoundary>
               <McpWorkspacePane onOpenMcpSettings={onOpenMcpSettings} />
             </ErrorBoundary>
@@ -320,7 +323,7 @@ export const MobileWorkspaceDrawer: React.FC<{
         // Settled state drops the transform entirely so the drawer isn't kept
         // on a compositing layer (iOS clips those to the safe-area viewport).
         transform: entered || reducedMotion ? 'none' : 'translateX(100%)',
-        transition: reducedMotion ? 'none' : `transform ${ENTER_DURATION_MS}ms ${MOBILE_PANEL_EASING}`,
+        transition: reducedMotion ? 'none' : `transform ${durationMs}ms ${easing}`,
         visibility: visible ? 'visible' : 'hidden',
         pointerEvents: open ? 'auto' : 'none',
       }}

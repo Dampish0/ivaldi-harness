@@ -106,6 +106,23 @@ top. Note that `rotate: 360deg` is *not* equivalent to
 Add a variant to `animation-fixture.html` to measure a property or technique
 that is not listed.
 
+## Attached mobile transitions
+
+`node scripts/profile-mobile-motion.mjs <CDP port> <trigger selector> <panel selector> <output.json> [reduce]`
+uses an existing ADB port forward to the installed Android WebView. Keep the
+phone unlocked and the app foregrounded. Prepare the same UI state for each
+run. The command hit-tests the trigger before sending a touch, captures one
+second of panel geometry, and summarizes a timeline trace with the shared
+metric helpers. Repeat each open and close three times on both builds.
+
+Captures require foreground frame liveness and nonempty trace tasks. Output
+contains geometry and control counts, not text, URLs, or network payloads.
+The per-frame geometry probe adds rendering work, so compare identical runs
+and do not interpret the trace as uninstrumented GPU throughput. The command
+does not manage connections, send prompts, or change application preferences.
+The optional `reduce` argument emulates reduced motion during the capture and
+clears that override before disconnecting.
+
 ## Reading The Results
 
 Every run writes a JSON summary next to any raw capture, so results can be

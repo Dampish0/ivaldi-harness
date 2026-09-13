@@ -23,6 +23,7 @@ const { act } = React;
 const { createRoot } = await import('react-dom/client');
 const { useMobileModalFocus } = await import('./useMobileModalFocus');
 const { MobileOverlayPanel } = await import('@/components/ui/MobileOverlayPanel');
+const { MobileFullscreenSurface } = await import('./MobileFullscreenSurface');
 const { MobileWorkModelPicker } = await import('@/components/chat/MobileWorkModelPicker');
 const { I18nProvider } = await import('@/lib/i18n');
 const { DedicatedMobileAppProvider } = await import('./mobileAppContext');
@@ -116,6 +117,46 @@ test('a retained closed drawer does not steal focus or intercept Escape', async 
   expect(document.body.style.overflow).toBe('auto');
 });
 
+test('navigation skips automatic editing focus but keeps search in its Tab order', async () => {
+  function Navigation({ open }: { open: boolean }) {
+    const ref = React.useRef<HTMLElement | null>(null);
+    useMobileModalFocus(ref, open, () => {});
+    return <section ref={ref} tabIndex={-1} inert={!open} aria-hidden={!open}>
+      <input id="search-chats" aria-label="Search chats" />
+      <button id="new-chat">New chat</button>
+      <button id="settings">Settings</button>
+    </section>;
+  }
+  await render(<Navigation open />);
+  expect(document.activeElement?.id).toBe('new-chat');
+  // Search is still the first item when wrapping forward through the panel.
+  document.getElementById('settings')?.focus();
+  await key('Tab');
+  expect(document.activeElement?.id).toBe('search-chats');
+  await key('Tab', true);
+  expect(document.activeElement?.id).toBe('settings');
+  await render(<Navigation open={false} />);
+  expect(document.activeElement).toBe(trigger);
+});
+
+test('an input-only panel focuses its container until the user starts editing', async () => {
+  function Form() {
+    const ref = React.useRef<HTMLElement | null>(null);
+    useMobileModalFocus(ref, true, () => {});
+    return <section id="form" ref={ref} tabIndex={-1}>
+      <input id="name" aria-label="Name" />
+      <div id="notes" contentEditable tabIndex={0} />
+    </section>;
+  }
+  await render(<Form />);
+  expect(document.activeElement?.id).toBe('form');
+  await key('Tab');
+  expect(document.activeElement?.id).toBe('name');
+  document.getElementById('form')?.focus();
+  await key('Tab', true);
+  expect(document.activeElement?.id).toBe('notes');
+});
+
 test('terminal Escape remains available without dismissing the modal below it', async () => {
   let underlyingCalls = 0;
   const drawer = <Modal key="drawer" name="drawer" onEscape={() => { underlyingCalls += 1; }} />;
@@ -188,11 +229,58 @@ test('reduced motion skips sheet travel and the closing delay', async () => {
   testWindow.happyDOM.settings.device.prefersReducedMotion = 'reduce';
   const panel = (open: boolean) => <MobileOverlayPanel open={open} title="Models" onClose={() => {}}><button>Choice</button></MobileOverlayPanel>;
   await render(panel(true));
-  expect(document.querySelector<HTMLElement>('[role="dialog"]')?.style.transition).toBe('none');
+  expect(document.querySelector<HTMLElement>('.pwa-overlay-panel')?.style.transition).toBe('none');
   expect(document.querySelector<HTMLElement>('.pwa-overlay-panel')?.style.transform).toBe('none');
   await act(async () => root.render(<I18nProvider>{panel(false)}</I18nProvider>));
   expect(document.querySelectorAll('[role="dialog"]').length).toBe(0);
   expect(document.activeElement).toBe(trigger);
+});
+
+test('fullscreen pages enter with content and retain it inert through exit before cleaning up', async () => {
+  let unmounted = 0;
+  function Content() {
+    React.useEffect(() => () => { unmounted += 1; }, []);
+    return <button id="page-action">Page action</button>;
+  }
+  const page = (open: boolean) => <MobileFullscreenSurface open={open} title={open ? 'Plan' : undefined} ariaLabel={open ? 'Plan' : undefined} onClose={() => {}}>{open ? <Content /> : null}</MobileFullscreenSurface>;
+  await render(page(true));
+  expect(document.querySelector('#page-action')).not.toBeNull();
+  await act(async () => root.render(<I18nProvider>{page(false)}</I18nProvider>));
+  expect(document.querySelector('[role="dialog"]')?.getAttribute('aria-hidden')).toBe('true');
+  expect(document.querySelector('[role="dialog"]')?.hasAttribute('inert')).toBe(true);
+  expect(document.querySelector('[role="dialog"]')?.getAttribute('aria-label')).toBe('Plan');
+  expect(document.querySelector('#page-action')).not.toBeNull();
+  expect(unmounted).toBe(0);
+  expect(document.activeElement).toBe(trigger);
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 240)); });
+  expect(document.querySelector('[role="dialog"]')).toBeNull();
+  expect(unmounted).toBe(1);
+});
+
+test('fullscreen reduced motion has no deferred content or retained exit', async () => {
+  testWindow.happyDOM.settings.device.prefersReducedMotion = 'reduce';
+  const page = (open: boolean) => <MobileFullscreenSurface open={open} ariaLabel="Settings" onClose={() => {}}><button id="setting">Setting</button></MobileFullscreenSurface>;
+  await render(page(true));
+  expect(document.querySelector('#setting')).not.toBeNull();
+  expect(document.querySelector<HTMLElement>('[role="dialog"]')?.style.transform).toBe('none');
+  expect(document.querySelector<HTMLElement>('[role="dialog"]')?.style.transition).toBe('none');
+  await act(async () => root.render(<I18nProvider>{page(false)}</I18nProvider>));
+  expect(document.querySelector('[role="dialog"]')).toBeNull();
+  expect(document.activeElement).toBe(trigger);
+});
+
+test('rapid fullscreen reopening preserves the input and cancels its pending unmount', async () => {
+  const page = (open: boolean) => <MobileFullscreenSurface open={open} ariaLabel="Settings" onClose={() => {}}><input id="page-draft" defaultValue="Draft" /></MobileFullscreenSurface>;
+  await render(page(true));
+  const input = document.querySelector<HTMLInputElement>('#page-draft');
+  if (!input) throw new Error('Input did not mount');
+  input.value = 'Retained draft';
+  await act(async () => root.render(<I18nProvider>{page(false)}</I18nProvider>));
+  await render(page(true));
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 240)); });
+  expect(document.querySelector<HTMLInputElement>('#page-draft')?.value).toBe('Retained draft');
+  expect(document.querySelector('[role="dialog"]')?.hasAttribute('inert')).toBe(false);
+  expect(document.body.style.overflow).toBe('hidden');
 });
 
 test('Work promotes the current model, deduplicates favorites, and selects by provider and model identity', async () => {

@@ -297,6 +297,20 @@ const track = (client: RelayTunnelClient): RelayTunnelClient => {
 };
 
 describe('createRelayTunnelClient', () => {
+  test('a native response adapter receives decrypted bytes and HTTP metadata', async () => {
+    let responses = 0;
+    const { client } = await setupClient({}, {
+      createResponse: (body, init) => {
+        responses += 1;
+        return new Response(body, init);
+      },
+    });
+    track(client);
+    const response = await client.fetch('/echo-body', { method: 'POST', body: 'native-response' });
+    expect(response.status).toBe(200);
+    expect(await response.text()).toBe('native-response');
+    expect(responses).toBe(1);
+  });
   test('performs concurrent fetches over one tunnel', async () => {
     const { client } = await setupClient();
     track(client);
@@ -613,4 +627,24 @@ describe('createRelayTunnelClient', () => {
     const health = await client.fetch('/health');
     expect(health.status).toBe(200);
   });
+});
+
+test('a native window without DOM events can reconnect and dispose', async () => {
+  const previous = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  Object.defineProperty(globalThis, 'window', { configurable: true, value: {} });
+  const { client, killWire, connectionCount } = await setupClient({}, { listenToBrowserWakeEvents: false });
+  try {
+    expect((await client.fetch('/health')).status).toBe(200);
+    killWire();
+    expect((await client.fetch('/health')).status).toBe(200);
+    expect(connectionCount()).toBeGreaterThan(1);
+    killWire();
+    await wait(5);
+    client.close();
+    expect(client.getStatus().state).toBe('idle');
+  } finally {
+    client.close();
+    if (previous) Object.defineProperty(globalThis, 'window', previous);
+    else Reflect.deleteProperty(globalThis, 'window');
+  }
 });

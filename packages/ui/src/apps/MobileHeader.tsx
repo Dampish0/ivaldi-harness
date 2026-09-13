@@ -1,4 +1,5 @@
 import React from 'react';
+import { AnimatePresence, motion, useIsPresent, useReducedMotion } from 'motion/react';
 
 import { Icon } from '@/components/icon/Icon';
 import { resolveWorkChatTitle } from '@/components/session/sidebar/utils';
@@ -14,6 +15,14 @@ import { useSession } from '@/sync/sync-context';
 import { useMobileBackHandler } from './mobileAppContext';
 import { getProjectLabel, normalizePath } from './mobilePaths';
 import { MobileSessionMetadataButton } from './MobileSessionMetadata';
+
+function HeaderLabel({ children }: { children: React.ReactNode }) {
+  const present = useIsPresent();
+  const reducedMotion = useReducedMotion();
+  return <motion.span aria-hidden={!present} className="col-start-1 row-start-1 truncate typography-ui-header font-semibold text-foreground"
+    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+    transition={{ duration: reducedMotion ? 0 : 0.16 }}>{children}</motion.span>;
+}
 
 export const MobileHeader: React.FC<{
   onOpenSessions: () => void;
@@ -65,7 +74,7 @@ export const MobileHeader: React.FC<{
 
   return (
     <header className="oc-mobile-header relative z-30 shrink-0 bg-background" style={{ paddingTop: 'var(--oc-safe-area-top, 0px)' }}>
-      <div className="flex h-[var(--oc-header-height,56px)] items-center justify-between gap-2 px-2">
+      <div className="oc-mobile-toolbar flex items-center justify-between gap-1 px-2">
         <Button
           type="button"
           variant="ghost"
@@ -85,13 +94,13 @@ export const MobileHeader: React.FC<{
           effectiveDirectory={effectiveDirectory ?? null}
           isNewSessionDraftOpen={isNewSessionDraftOpen}
           triggerContent={(
-            <span className="flex min-w-0 flex-1 items-baseline gap-2 text-left">
-              <span className="truncate text-[17px] font-medium text-foreground">{primaryLabel}</span>
-              {projectLabel ? <span className="truncate typography-micro text-muted-foreground">{projectLabel}</span> : null}
+            <span className="flex min-w-0 flex-1 flex-col text-left">
+              <span className="grid min-w-0"><AnimatePresence initial={false}><HeaderLabel key={primaryLabel}>{primaryLabel}</HeaderLabel></AnimatePresence></span>
+              {projectLabel ? <span className="truncate typography-meta font-normal text-muted-foreground">{projectLabel}</span> : null}
             </span>
           )}
         />
-        ) : <span className="text-[19px] font-semibold tracking-[-0.025em]">Ivaldi</span>}
+        ) : <span className="typography-ui-header font-semibold">Ivaldi</span>}
         </div>
         {!isWorkMode ? <Button type="button" variant="ghost" size="icon" aria-label={t('mobile.header.workspace')} onClick={() => { closeHeaderMenus(); onOpenWorkspace(); }}>
           <Icon name="folder" className="size-5" />

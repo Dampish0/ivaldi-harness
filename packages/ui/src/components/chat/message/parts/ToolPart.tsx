@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { MobileDisclosure } from '@/components/ui/MobileDisclosure';
 import { useMobileAppActions } from '@/apps/mobileAppContext';
 import { RuntimeAPIContext } from '@/contexts/runtimeAPIContext';
 import { cn } from '@/lib/utils';
@@ -1755,7 +1756,7 @@ const ToolPartContent: React.FC<ToolPartProps> = ({
     const expandedContentRef = React.useRef<HTMLDivElement>(null);
 
     React.useLayoutEffect(() => {
-        if (isTaskTool) {
+        if (isTaskTool || isMobile) {
             return;
         }
 
@@ -1766,7 +1767,7 @@ const ToolPartContent: React.FC<ToolPartProps> = ({
 
         element.style.height = isExpanded ? 'auto' : '0px';
         element.style.overflow = isExpanded ? 'visible' : 'hidden';
-    }, [isExpanded, isTaskTool]);
+    }, [isExpanded, isTaskTool, isMobile]);
 
     const partMetadata = (part as unknown as { metadata?: unknown }).metadata;
     const time = stateWithData.time;
@@ -2203,12 +2204,13 @@ const ToolPartContent: React.FC<ToolPartProps> = ({
             ) : null}
 
             {!isTaskTool ? (
+                <MobileDisclosure enabled={isMobile} open={isExpanded && shouldRenderExpandedContent}>
                 <div
                     ref={expandedContentRef}
                     aria-hidden={!isExpanded}
                     style={{
-                        height: isExpanded ? 'auto' : '0px',
-                        overflow: isExpanded ? 'visible' : 'hidden',
+                        height: isMobile || isExpanded ? 'auto' : '0px',
+                        overflow: isMobile || isExpanded ? 'visible' : 'hidden',
                         overflowAnchor: 'none',
                     }}
                 >
@@ -2231,6 +2233,7 @@ const ToolPartContent: React.FC<ToolPartProps> = ({
                         </div>
                     ) : null}
                 </div>
+                </MobileDisclosure>
             ) : null}
         </div>
     );

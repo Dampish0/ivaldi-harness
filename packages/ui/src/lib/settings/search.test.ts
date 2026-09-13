@@ -18,6 +18,16 @@ const runtimeCtx = {
 };
 
 describe('settings search', () => {
+  test('mobile Work can find interface text scaling', () => {
+    const results = buildSettingsSearchResults({
+      query: 'scaling',
+      runtimeCtx: { ...runtimeCtx, productMode: 'work', isMobile: true },
+      visiblePageSlugs: ['appearance'],
+      t,
+      getPageTitle: (page) => page,
+    });
+    expect(results.some((result) => result.id === 'appearance.interface-font-size')).toBe(true);
+  });
   test('mobile Work can find the interface typeface control', () => {
     const results = buildSettingsSearchResults({
       query: 'typeface',

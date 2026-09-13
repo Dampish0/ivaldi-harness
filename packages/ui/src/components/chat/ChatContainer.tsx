@@ -576,6 +576,7 @@ const DraftWelcome: React.FC<{ exiting?: boolean }> = ({ exiting = false }) => {
                     {t('chat.emptyState.workDraftSubtitle')}
                 </p>
             ) : null}
+            <div className={isMobileSurface ? 'oc-draft-starters-motion w-full' : 'contents'}><div className={isMobileSurface ? 'min-h-0 overflow-hidden' : 'contents'}>
             <DraftPresetChips
                 onSubmit={(starter) => useInputStore.getState().requestPresetSubmit(starter.submitText, starter.ref.type)}
                 className={cn(
@@ -587,6 +588,7 @@ const DraftWelcome: React.FC<{ exiting?: boolean }> = ({ exiting = false }) => {
                             : 'mt-8 max-w-md',
                 )}
             />
+            </div></div>
         </div>
     );
 };

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Native workspace fixture</title>
+  <style>
+    :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+    body { margin: 0; padding: 24px; }
+    h1 { font-size: 24px; }
+    p { line-height: 1.5; overflow-wrap: anywhere; }
+  </style>
+</head>
+<body>
+  <main id="root">
+    <h1>Workspace tools</h1>
+    <p>This is the local native acceptance fixture.</p>
+    <p id="session"></p>
+    <p id="mode"></p>
+    <p id="result" role="status">Checking the authenticated connection...</p>
+  </main>
+  <script>
+    document.getElementById('session').textContent = 'Session: ' + (new URL(location.href).searchParams.get('session') || 'New chat');
+    document.getElementById('mode').textContent = 'Mode: ' + JSON.parse(localStorage.getItem('ivaldi-product-mode')).state.mode;
+    fetch(window.__OPENCHAMBER_API_BASE_URL__ + '/api/__qa/workspace-check', {
+      headers: { Authorization: 'Bearer ' + window.__OPENCHAMBER_CLIENT_TOKEN__ }
+    }).then(response => {
+      if (!response.ok) throw new Error('Connection unavailable');
+      document.getElementById('result').textContent = 'Authenticated request succeeded';
+    }).catch(() => { document.getElementById('result').textContent = 'Authenticated request failed'; });
+  </script>
+</body>
+</html>

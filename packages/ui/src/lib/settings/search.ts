@@ -146,6 +146,12 @@ const SETTINGS_SEARCH_ITEMS: readonly SettingsSearchItem[] = [
     keywords: ['font', 'typeface', 'typography'],
   },
   {
+    id: 'appearance.interface-font-size',
+    page: 'appearance',
+    titleKey: 'settings.openchamber.visual.field.interfaceFontSize',
+    keywords: ['font', 'text size', 'scaling', 'zoom'],
+  },
+  {
     id: 'appearance.terminal-font-size',
     page: 'appearance',
     titleKey: 'settings.openchamber.visual.field.terminalFontSize',

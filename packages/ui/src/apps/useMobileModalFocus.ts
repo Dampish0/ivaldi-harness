@@ -23,7 +23,11 @@ export const useMobileModalFocus = (
     const focusableElements = () => Array.from(surface.querySelectorAll<HTMLElement>(focusableSelector))
       .filter((element) => element.tabIndex >= 0 && !element.hasAttribute('disabled') && !element.closest('[inert], [aria-hidden="true"]') && element.getClientRects().length > 0);
     const frame = requestAnimationFrame(() => {
-      if (isTopmost()) (focusableElements()[0] ?? surface).focus({ preventScroll: true });
+      // Opening navigation is not an intent to type. Keep editable controls in
+      // the Tab order, but never summon the soft keyboard just to enter a modal.
+      const initialControl = focusableElements().find((element) =>
+        !element.matches('input, textarea, select, [contenteditable]:not([contenteditable="false"])'));
+      if (isTopmost()) (initialControl ?? surface).focus({ preventScroll: true });
     });
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!isTopmost() || event.defaultPrevented) return;
@@ -41,7 +45,7 @@ export const useMobileModalFocus = (
       if (!first || !last) {
         event.preventDefault();
         surface.focus({ preventScroll: true });
-      } else if (!surface.contains(document.activeElement) || (event.shiftKey && document.activeElement === first)) {
+      } else if (document.activeElement === surface || !surface.contains(document.activeElement) || (event.shiftKey && document.activeElement === first)) {
         event.preventDefault();
         (event.shiftKey ? last : first).focus({ preventScroll: true });
       } else if (!event.shiftKey && document.activeElement === last) {

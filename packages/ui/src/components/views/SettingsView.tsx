@@ -1,4 +1,5 @@
 import React from 'react';
+import { MobilePageTransition } from '@/components/ui/MobilePageTransition';
 import { useMobileBackHandler } from '@/apps/mobileAppContext';
 import { cn } from '@/lib/utils';
 import {
@@ -1181,7 +1182,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onClose, forceMobile
       {isMobile ? (
         <div
           className={cn(
-            'flex h-[var(--oc-header-height,56px)] shrink-0 items-center gap-2 px-3',
+            'oc-mobile-toolbar flex shrink-0 items-center gap-1 px-2',
             // The root nav list reads as a single quiet page — no divider and
             // no back arrow (the X on the right is the only way out); subpages
             // keep both.
@@ -1203,7 +1204,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onClose, forceMobile
             </Button>
           ) : null}
 
-          <div className="min-w-0 flex-1 px-2 typography-ui-label font-medium text-foreground truncate">
+          <div className="min-w-0 flex-1 px-2 typography-ui-header font-semibold text-foreground truncate">
             {mobileStage === 'nav'
               ? t('settings.view.home.title')
               : (activePageMeta ? getPageTitle(activePageMeta.slug) : t('settings.view.home.title'))}
@@ -1273,7 +1274,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onClose, forceMobile
 
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {useStackedMobileLayout ? (
-          renderMobileStage()
+          <MobilePageTransition route={`${mobileStage}:${settingsSlug}`} depth={mobileStage === 'nav' ? 0 : mobileStage === 'page-content' ? 2 : 1}>
+            {renderMobileStage()}
+          </MobilePageTransition>
         ) : (
           <>
             <div

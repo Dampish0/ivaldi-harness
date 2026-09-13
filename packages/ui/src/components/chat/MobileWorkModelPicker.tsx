@@ -48,8 +48,8 @@ export function MobileWorkModelPicker({ open, groups, selectedProvider, selected
     return (
       <Button key={`${providerId}/${model.id}`} type="button" variant="ghost" aria-pressed={selected} onClick={() => onSelect(providerId, model.id)} className={cn('h-auto min-h-14 w-full justify-start gap-3 rounded-xl px-3 py-3 text-left font-normal', selected && 'bg-interactive-selection text-interactive-selection-foreground')}>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[17px] leading-6">{model.name}</span>
-          {providerName ? <span className="block truncate text-[13px] leading-5 text-muted-foreground">{providerName}</span> : null}
+          <span className="block truncate typography-markdown leading-normal">{model.name}</span>
+          {providerName ? <span className="block truncate typography-meta text-muted-foreground">{providerName}</span> : null}
         </span>
         {selected ? <Icon name="check" className="size-5 shrink-0" /> : null}
       </Button>
@@ -59,7 +59,7 @@ export function MobileWorkModelPicker({ open, groups, selectedProvider, selected
     <MobileOverlayPanel open={open} onClose={onClose} title={t('chat.modelControls.selectModel')} contentMaxHeightClassName="max-h-[min(58dvh,520px)]" renderHeader={(closeButton) => (
       <div className="px-4 pb-3 pt-2">
         <div className="flex items-center justify-between pb-2">
-          <h2 className="text-[18px] font-semibold">{t('chat.modelControls.selectModel')}</h2>
+          <h2 className="typography-ui-header font-semibold">{t('chat.modelControls.selectModel')}</h2>
           {closeButton}
         </div>
         <div className="relative">
@@ -80,17 +80,17 @@ export function MobileWorkModelPicker({ open, groups, selectedProvider, selected
     ) : undefined}>
       <div className="space-y-4 px-1 pb-2" data-mobile-work-models>
         {selectedGroup && selectedChoice ? <section>
-          <h3 className="px-3 pb-1 text-[13px] font-medium text-muted-foreground">{t('chat.modelControls.current')}</h3>
+          <h3 className="px-3 pb-1 typography-meta font-medium text-muted-foreground">{t('chat.modelControls.current')}</h3>
           {renderModel(selectedGroup.id, selectedChoice, selectedGroup.name)}
         </section> : null}
         {favorites.length > 0 ? <section>
-          <h3 className="px-3 pb-1 text-[13px] font-medium text-muted-foreground">{t('chat.modelControls.favorites')}</h3>
+          <h3 className="px-3 pb-1 typography-meta font-medium text-muted-foreground">{t('chat.modelControls.favorites')}</h3>
           {favorites.map((model) => renderModel(model.providerId, model, model.providerName))}
         </section> : null}
         {visibleGroups.map((group) => {
           const models = group.models.filter((model) => !model.favorite && !(group.id === selectedProvider && model.id === selectedModel));
           return models.length > 0 ? <section key={group.id}>
-            <h3 className="px-3 pb-1 text-[13px] font-medium text-muted-foreground">{group.name}</h3>
+            <h3 className="px-3 pb-1 typography-meta font-medium text-muted-foreground">{group.name}</h3>
             {models.map((model) => renderModel(group.id, model))}
           </section> : null;
         })}

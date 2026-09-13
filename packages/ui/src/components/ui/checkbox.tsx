@@ -54,7 +54,7 @@ export const Checkbox = React.memo<CheckboxProps>(function Checkbox({
       <BaseCheckbox.Indicator
         keepMounted
         className={cn(
-          'flex items-center justify-center text-[var(--primary-base)]',
+          'oc-checkbox-indicator flex items-center justify-center text-[var(--primary-base)]',
           // hide when fully unchecked (no state)
           'data-[unchecked]:hidden',
           iconClassName,

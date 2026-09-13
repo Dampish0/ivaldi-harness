@@ -1,4 +1,6 @@
 import React from 'react';
+import { MobileDisclosure } from '@/components/ui/MobileDisclosure';
+import { isMobileSurfaceRuntime } from '@/lib/runtimeSurface';
 import { animate, type AnimationPlaybackControls } from 'motion';
 import type { Part } from '@opencode-ai/sdk/v2';
 import { cn } from '@/lib/utils';
@@ -119,6 +121,7 @@ export const ReasoningTimelineBlock: React.FC<ReasoningTimelineBlockProps> = ({
     const [shouldRenderExpandedContent, setShouldRenderExpandedContent] = React.useState(defaultExpanded === true || canAutoExpand);
     const contentId = React.useId();
     const contentRef = React.useRef<HTMLDivElement>(null);
+    const isMobile = isMobileSurfaceRuntime();
     const contentAnimationRef = React.useRef<AnimationPlaybackControls | null>(null);
     const contentMountedRef = React.useRef(false);
 
@@ -177,6 +180,7 @@ export const ReasoningTimelineBlock: React.FC<ReasoningTimelineBlockProps> = ({
 
     React.useLayoutEffect(() => {
         const element = contentRef.current;
+        if (isMobile) return;
         if (!element) {
             return;
         }
@@ -252,7 +256,7 @@ export const ReasoningTimelineBlock: React.FC<ReasoningTimelineBlockProps> = ({
                 contentAnimationRef.current = null;
             }
         };
-    }, [isExpanded]);
+    }, [isExpanded, isMobile]);
 
     React.useEffect(() => {
         return () => {
@@ -361,14 +365,15 @@ export const ReasoningTimelineBlock: React.FC<ReasoningTimelineBlockProps> = ({
                 </div>
             </div>
 
+            <MobileDisclosure enabled={isMobile} open={isExpanded && shouldRenderExpandedContent}>
             {shouldRenderExpandedContent ? (
                 <div
                     ref={contentRef}
                     id={contentId}
                     aria-hidden={!isExpanded}
                     style={{
-                        height: isExpanded ? 'auto' : '0px',
-                        overflow: isExpanded ? 'visible' : 'hidden',
+                        height: isMobile || isExpanded ? 'auto' : '0px',
+                        overflow: isMobile || isExpanded ? 'visible' : 'hidden',
                         overflowAnchor: 'none',
                     }}
                 >
@@ -410,6 +415,7 @@ export const ReasoningTimelineBlock: React.FC<ReasoningTimelineBlockProps> = ({
                     </div>
                 </div>
             ) : null}
+            </MobileDisclosure>
         </div>
     );
 };

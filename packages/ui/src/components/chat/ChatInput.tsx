@@ -149,6 +149,7 @@ import {
 import { ComposerAutocompletePopups } from './composer/ui/ComposerAutocompletePopups';
 import { ComposerFooter } from './composer/ui/ComposerFooter';
 import { MobilePillComposer } from './composer/ui/MobilePillComposer';
+import { MobileComposerMorph } from './composer/ui/MobileComposerMorph';
 import { ComposerContextChips } from './composer/ui/ComposerContextChips';
 import { WorkPlanSuggestionChip } from './composer/ui/WorkPlanSuggestionChip';
 import { LinkedReferenceRow } from './composer/ui/LinkedReferenceRow';
@@ -2781,7 +2782,7 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
                         isMobileExpanded && 'flex min-h-0 flex-1 flex-col',
                     )}
                 >
-                {isMobile && !mobileComposerExpanded ? (
+                <MobileComposerMorph enabled={isMobile} expanded={mobileComposerExpanded} fullscreen={isMobileExpanded} pill={(
                     <MobilePillComposer
                         message={message}
                         sessionId={currentSessionId}
@@ -2806,7 +2807,7 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
                         onStartDictation={toggleDictation}
                         onAbort={handleAbort}
                     />
-                ) : (
+                )}>
                 <>
                 <SessionGoalRow
                     sessionId={currentSessionId}
@@ -3054,7 +3055,7 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
 
                 </div>
                 </>
-                )}
+                </MobileComposerMorph>
                 {/* Wrapper-level dictation engine + overlay: stays mounted across
                     the pill ↔ composer swap so a recording started from the pill
                     survives the morph. Its absolute overlay covers whichever

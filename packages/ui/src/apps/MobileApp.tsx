@@ -1,4 +1,5 @@
 import React from 'react';
+import { MotionConfig } from 'motion/react';
 
 import { AboutSettings } from '@/components/sections/openchamber/AboutSettings';
 import { OpenCodeUpdateToast } from '@/components/update/OpenCodeUpdateToast';
@@ -79,10 +80,11 @@ type MobileAppProps = {
   apis: RuntimeAPIs;
 };
 
-const SettingsView = lazyWithChunkRecovery(() => Promise.all([
+const loadSettingsView = () => Promise.all([
   ensureSettingsDictionary(),
   import('@/components/views/SettingsView'),
-]).then(([, module]) => ({ default: module.SettingsView })));
+]).then(([, module]) => ({ default: module.SettingsView }));
+const SettingsView = lazyWithChunkRecovery(loadSettingsView);
 
 const NATIVE_RESUME_SYNC_EVENT_THROTTLE_MS = 1_000;
 
@@ -98,6 +100,18 @@ const MobileShell: React.FC<{ onActiveConnectionDeleted: () => void }> = ({ onAc
   const [backNavigation] = React.useState(createMobileBackNavigation);
   const isDeveloperMode = useProductModeStore((state) => state.mode === 'developer');
   const [sessionsSheetOpen, setSessionsSheetOpen] = React.useState(false);
+  const [SettingsComponent, setSettingsComponent] = React.useState<React.ComponentType<React.ComponentProps<typeof SettingsView>>>(() => SettingsView);
+  React.useEffect(() => {
+    if (!sessionsSheetOpen) return;
+    // Load the destination while its navigation is visible, without mounting
+    // Settings or running its data effects behind the conversation.
+    void loadSettingsView().then(
+      // Render the resolved component directly. A fresh lazy boundary can
+      // still commit its empty fallback even when the import is already warm.
+      (module) => setSettingsComponent(() => module.default),
+      () => { /* Opening Settings retains normal chunk recovery. */ },
+    );
+  }, [sessionsSheetOpen]);
   const [activeSurface, setActiveSurface] = React.useState<MobileSurface | null>(null);
   // Phone right drawer with the workspace tabs; the tab persists across
   // open/close so the right-edge swipe reopens where the user left off.
@@ -156,6 +170,16 @@ const MobileShell: React.FC<{ onActiveConnectionDeleted: () => void }> = ({ onAc
   // until it is folded shut, and the shell keeps running across that change.
   const { enabled: isTabletLayout, roomyForPanels } = useTabletLayout();
   const orientation = useOrientation();
+  const mobileFontSize = useUIStore((state) => state.fontSize);
+  React.useLayoutEffect(() => {
+    const root = document.documentElement;
+    root.classList.add('oc-mobile-ui');
+    root.style.setProperty('--oc-mobile-font-scale', String(mobileFontSize / 100));
+    return () => {
+      root.classList.remove('oc-mobile-ui');
+      root.style.removeProperty('--oc-mobile-font-scale');
+    };
+  }, [mobileFontSize]);
   const isPortrait = orientation === 'portrait';
   const hasHardwareKeyboard = useHardwareKeyboard();
   const [sidebarOpen, setSidebarOpen] = React.useState(() => readTabletLayout().roomyForPanels);
@@ -548,14 +572,14 @@ const MobileShell: React.FC<{ onActiveConnectionDeleted: () => void }> = ({ onAc
         )}
 
         {/* Layered above the workspace drawer's Notes tab, which opened it. */}
-        {openPlan ? (
           <MobileFullscreenSurface
-            open
+            open={openPlan !== null}
             variant={surfaceVariant}
             onClose={() => setOpenPlan(null)}
-            ariaLabel={openPlan.title}
-            title={openPlan.title}
+            ariaLabel={openPlan?.title}
+            title={openPlan?.title}
           >
+            {openPlan ? (
             <ErrorBoundary>
               <PlanView
                 projectPlanId={openPlan.id}
@@ -565,12 +589,12 @@ const MobileShell: React.FC<{ onActiveConnectionDeleted: () => void }> = ({ onAc
                 }}
               />
             </ErrorBoundary>
+            ) : null}
           </MobileFullscreenSurface>
-        ) : null}
 
-        {activeSurface === 'instances' && showCapacitorOnlyFeatures ? (
+        {showCapacitorOnlyFeatures ? (
           <MobileFullscreenSurface
-            open
+            open={activeSurface === 'instances'}
             variant={surfaceVariant}
             dialogAlign="app"
             onClose={closeSurface}
@@ -584,9 +608,8 @@ const MobileShell: React.FC<{ onActiveConnectionDeleted: () => void }> = ({ onAc
           </MobileFullscreenSurface>
         ) : null}
 
-        {activeSurface === 'settings' ? (
           <MobileFullscreenSurface
-            open
+            open={activeSurface === 'settings'}
             variant={surfaceVariant}
             dialogAlign="app"
             dialogClassName="max-w-[900px]"
@@ -596,7 +619,7 @@ const MobileShell: React.FC<{ onActiveConnectionDeleted: () => void }> = ({ onAc
           >
             <ErrorBoundary>
               <React.Suspense fallback={null}>
-                <SettingsView
+                <SettingsComponent
                   forceMobile
                   wideMobileLayout
                   isWindowed
@@ -611,11 +634,9 @@ const MobileShell: React.FC<{ onActiveConnectionDeleted: () => void }> = ({ onAc
               </React.Suspense>
             </ErrorBoundary>
           </MobileFullscreenSurface>
-        ) : null}
 
-        {activeSurface === 'update' ? (
           <MobileFullscreenSurface
-            open
+            open={activeSurface === 'update'}
             variant={surfaceVariant}
             dialogAlign="app"
             onClose={closeSurface}
@@ -628,7 +649,6 @@ const MobileShell: React.FC<{ onActiveConnectionDeleted: () => void }> = ({ onAc
               </div>
             </ErrorBoundary>
           </MobileFullscreenSurface>
-        ) : null}
       </div>
     </DedicatedMobileAppProvider>
   );
@@ -1284,6 +1304,7 @@ export function MobileApp({ apis }: MobileAppProps) {
 
   return (
     <ErrorBoundary>
+      <MotionConfig reducedMotion="user">
       <SyncProvider key={runtimeEndpointEpoch} sdk={opencodeClient.getSdkClient()} directory={currentDirectory || ''}>
         <RuntimeAPIProvider apis={apis}>
           <TooltipProvider delayDuration={300} skipDelayDuration={150}>
@@ -1311,6 +1332,7 @@ export function MobileApp({ apis }: MobileAppProps) {
           </TooltipProvider>
         </RuntimeAPIProvider>
       </SyncProvider>
+      </MotionConfig>
     </ErrorBoundary>
   );
 }

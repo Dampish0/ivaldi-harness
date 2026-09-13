@@ -1112,6 +1112,13 @@ const handleLocalApiRequest = async (input: RequestInfo | URL, url: URL, init: R
     }
   }
 
+  if (/^\/api\/provider\/[^/]+\/editor$/.test(pathname)) {
+    return new Response(JSON.stringify({
+      error: 'Revision-protected provider editing is not available in the VS Code runtime.',
+      code: 'PROVIDER_EDITOR_UNSUPPORTED_RUNTIME',
+    }), { status: 501, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
+  }
+
   // Handle provider auth deletion: DELETE /api/provider/:providerId/auth
   const providerAuthMatch = pathname.match(/^\/api\/provider\/([^/]+)\/auth$/);
   if (providerAuthMatch && method === 'DELETE') {

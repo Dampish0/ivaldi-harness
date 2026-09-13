@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { observeNativeKeyboardHeight, resetHardwareKeyboardDetection, startHardwareKeyboardBridge } from '@/lib/hardwareKeyboard';
+import { startAndroidKeyboardMotion } from './androidKeyboardMotion';
 
 /** True when running inside the native Capacitor shell (iOS/Android app). */
 export const isCapacitorMobileApp = (): boolean => {
@@ -89,6 +90,12 @@ export const useNativeMobileChrome = (): void => {
       // double-count — Android gets only the class/event signals below.
       const platform = (window as typeof window & { Capacitor?: { getPlatform?: () => string } }).Capacitor?.getPlatform?.();
       if (platform === 'android') {
+        const stopMotion = await startAndroidKeyboardMotion().catch(() => null);
+        if (stopMotion) {
+          if (disposed) stopMotion();
+          else cleanup.push(stopMotion);
+          return;
+        }
         // Android resizes the WebView natively, so no inset/transform
         // choreography — but the UI still needs the open/closed signal:
         // oc-keyboard-open drives CSS (draft starters, composer padding), and
@@ -403,6 +410,8 @@ export const useNativeMobileLifecycle = (onResume: () => void): void => {
 };
 
 export const useNativeAndroidBackButton = (onBack: () => boolean): void => {
+  const onBackRef = React.useRef(onBack);
+  React.useLayoutEffect(() => { onBackRef.current = onBack; }, [onBack]);
   React.useEffect(() => {
     if (!isCapacitorMobileApp()) return;
 
@@ -412,7 +421,7 @@ export const useNativeAndroidBackButton = (onBack: () => boolean): void => {
     void import('@capacitor/app').then(async ({ App }) => {
       if (disposed) return;
       const listener = await App.addListener('backButton', () => {
-        if (onBack()) return;
+        if (onBackRef.current()) return;
         void App.minimizeApp().catch(() => undefined);
       });
       if (disposed) {
@@ -426,5 +435,5 @@ export const useNativeAndroidBackButton = (onBack: () => boolean): void => {
       disposed = true;
       remove?.();
     };
-  }, [onBack]);
+  }, []);
 };

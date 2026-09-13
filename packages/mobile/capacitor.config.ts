@@ -22,7 +22,7 @@ const config: CapacitorConfig = {
       // (see useNativeMobileChrome). The built-in 'native' resize lands only after
       // the keyboard animation finishes, which looked like a ~1.5s lag.
       resize: 'none',
-      resizeOnFullScreen: true,
+      resizeOnFullScreen: false,
       autoBackdropColor: 'dom',
     },
     StatusBar: {

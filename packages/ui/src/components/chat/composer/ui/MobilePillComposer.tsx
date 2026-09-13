@@ -121,7 +121,7 @@ export function MobilePillComposer(props: MobilePillComposerProps) {
                 >
                     <span
                         className={cn(
-                            'truncate typography-ui-label',
+                            'truncate typography-markdown',
                             message.trim() ? 'text-foreground' : 'text-muted-foreground',
                         )}
                     >
@@ -137,6 +137,7 @@ export function MobilePillComposer(props: MobilePillComposerProps) {
                         type="button"
                         size="icon"
                         variant="destructive"
+                        data-mobile-composer-action="stop"
                         className="size-9 rounded-full"
                         // The pill shows only while the keyboard is down — the
                         // tap must abort in place, never focus/expand the
@@ -160,6 +161,7 @@ export function MobilePillComposer(props: MobilePillComposerProps) {
                     <Button
                         type="button"
                         size="icon"
+                        data-mobile-composer-action="send"
                         variant="ghost"
                         className="size-9 rounded-full bg-foreground text-background hover:bg-foreground/90 active:bg-foreground/80"
                         onMouseDown={(event) => event.preventDefault()}
@@ -170,12 +172,13 @@ export function MobilePillComposer(props: MobilePillComposerProps) {
                         aria-label={t('chat.chatInput.actions.sendMessageAria')}
                         disabled={!canSend}
                     >
-                        <Icon name="arrow-up" className="size-4" />
+                        <Icon key="send" name="arrow-up" className="size-4" />
                     </Button>
                 ) : canStartDictation ? (
                     <Button
                         type="button"
                         size="icon"
+                        data-mobile-composer-action="dictate"
                         variant="ghost"
                         className="size-9 rounded-full bg-foreground text-background hover:bg-foreground/90 active:bg-foreground/80"
                         onMouseDown={(event) => event.preventDefault()}
@@ -186,7 +189,7 @@ export function MobilePillComposer(props: MobilePillComposerProps) {
                         title={t('chat.dictation.start')}
                         aria-label={t('chat.dictation.start')}
                     >
-                        <Icon name="mic" className="size-4" />
+                        <Icon key="dictate" name="mic" className="size-4" />
                     </Button>
                 ) : null}
             </div>

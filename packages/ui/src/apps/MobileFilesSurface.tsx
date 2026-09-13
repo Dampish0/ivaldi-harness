@@ -1,4 +1,5 @@
 import React from 'react';
+import { MobilePageTransition } from '@/components/ui/MobilePageTransition';
 
 import { Icon } from '@/components/icon/Icon';
 import { Button } from '@/components/ui/button';
@@ -207,6 +208,7 @@ const MobileFilesBrowser: React.FC<MobileFilesSurfaceProps & { root: string }> =
     // preview, open-file tabs) — FilesView is already mobile-aware (keyboard
     // nudge, touch menus); this host only adds the back row.
     return (
+      <MobilePageTransition route={route.path} depth={route.path.split('/').length}>
       <div className="flex h-full flex-col overflow-hidden bg-background text-foreground">
         <header className="flex h-[var(--oc-header-height,56px)] shrink-0 items-center gap-2 border-b border-border/70 px-3 text-foreground">
           <Button
@@ -232,6 +234,7 @@ const MobileFilesBrowser: React.FC<MobileFilesSurfaceProps & { root: string }> =
           </ErrorBoundary>
         </div>
       </div>
+      </MobilePageTransition>
     );
   }
 
@@ -239,6 +242,7 @@ const MobileFilesBrowser: React.FC<MobileFilesSurfaceProps & { root: string }> =
   const canGoBack = parentWithinRoot && !query.trim();
 
   return (
+    <MobilePageTransition route={route.directory} depth={route.directory.split('/').length}>
     <div className="flex h-full flex-col overflow-hidden bg-background text-foreground">
       {(onClose || canGoBack) ? (
       <header className="flex h-14 shrink-0 items-center gap-1 border-b border-border/60 px-2 text-foreground">
@@ -352,6 +356,7 @@ const MobileFilesBrowser: React.FC<MobileFilesSurfaceProps & { root: string }> =
         )}
       </ScrollShadow>
     </div>
+    </MobilePageTransition>
   );
 };
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
+import { AnimatePresence, motion, useDragControls, useReducedMotion } from 'motion/react';
 import type { Session } from '@opencode-ai/sdk/v2/client';
 import {
   DndContext,
@@ -26,6 +27,7 @@ import { resolveWorkChatTitle } from '@/components/session/sidebar/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MobileOverlayPanel } from '@/components/ui/MobileOverlayPanel';
+import { MobileDisclosure } from '@/components/ui/MobileDisclosure';
 import { ScrollShadow } from '@/components/ui/ScrollShadow';
 import { toast } from '@/components/ui';
 import { useThemeSystem } from '@/contexts/useThemeSystem';
@@ -63,7 +65,7 @@ import type { WorktreeMetadata } from '@/types/worktree';
 import { MobileDeleteWorktreeDialog } from './MobileDeleteWorktreeDialog';
 import { MobileProjectEditSurface } from './MobileProjectEditSurface';
 import { useMobileModalFocus } from './useMobileModalFocus';
-import { MOBILE_PANEL_EASING, useMobilePanelPresence } from './useMobilePanelPresence';
+import { useMobilePanelPresence } from './useMobilePanelPresence';
 
 type MobileSessionsSheetProps = {
   open: boolean;
@@ -368,12 +370,9 @@ const SessionRenameForm: React.FC<{
 
   return (
     <form
-      // Fixed 36px: the session row's real height is NOT Tailwind's min-h-10 —
-      // mobile.css's global button touch-target rule (min-height: 36px) wins
-      // that specificity fight, so single-line rows resolve to 36px. Pin the
-      // rename state to the same 36px.
+      // Match the reading row's minimum at every text size, including rename.
       className="flex h-9 min-w-0 flex-1 items-center gap-2 pr-2"
-      style={{ paddingLeft: indent }}
+      style={{ paddingLeft: indent, minHeight: 'max(36px, calc(2.25rem * var(--oc-mobile-font-scale, 1)))' }}
       onSubmit={(event) => {
         event.preventDefault();
         commit();
@@ -389,10 +388,8 @@ const SessionRenameForm: React.FC<{
         }}
         aria-label={t('sessions.sidebar.session.rename.save')}
         placeholder={t('sessions.sidebar.session.menu.rename')}
-        // 16px prevents the iOS focus zoom; the bare input keeps the row height.
-        // The inline min-height overrides mobile.css's global 36px input
-        // floor, which otherwise makes the rename row taller than the 40px
-        // session row.
+        // Mobile CSS keeps editing text at least 16px and grows this field
+        // inside the matching reading/rename row when the user enlarges text.
         className="min-w-0 flex-1 bg-transparent text-[16px] typography-ui-label text-foreground outline-none placeholder:text-muted-foreground"
         style={{ minHeight: 0 }}
         enterKeyHint="done"
@@ -643,16 +640,13 @@ const SessionRow: React.FC<{
         ) : (
         <button
           type="button"
-          // Single-line rows: fixed h-9 (36px) to match SessionRenameForm
-          // exactly — min-h-* utilities lose the specificity fight against
-          // mobile.css's global 36px button floor anyway, so make the real
-          // height explicit. Two-line rows (search results with a context
-          // subtitle) keep flexible height.
+          // The inline minimum grows with text size and matches the rename
+          // form. Context subtitles still add their own height.
           className={cn(
             'flex min-w-0 flex-1 items-center gap-2.5 pr-3.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--interactive-focus-ring)] focus-visible:ring-inset',
             contextLabel ? 'min-h-10 py-1' : 'h-9',
           )}
-          style={{ paddingLeft: indent, touchAction: 'manipulation' }}
+          style={{ paddingLeft: indent, touchAction: 'manipulation', minHeight: 'max(36px, calc(2.25rem * var(--oc-mobile-font-scale, 1)))' }}
           onClick={() => {
             // A tap while the actions are out just closes them.
             if (revealedRef.current) {
@@ -667,7 +661,7 @@ const SessionRow: React.FC<{
               <span
                 className={cn(
                   'block min-w-0 flex-1 truncate',
-                  isWorkMode ? 'text-[16px] leading-6' : 'typography-ui-label',
+                  isWorkMode ? 'typography-markdown leading-normal' : 'typography-ui-label',
                   active ? 'text-interactive-selection-foreground' : 'text-foreground',
                 )}
               >
@@ -840,7 +834,7 @@ const SortableProjectRow: React.FC<{
           ) : null}
         </button>
       </div>
-      {expanded && hasWorktrees ? (
+      <MobileDisclosure open={expanded && hasWorktrees}>
         <DndContext sensors={worktreeSensors} collisionDetection={closestCenter} onDragEnd={handleWorktreeDragEnd}>
           <SortableContext
             items={project.worktrees.map((worktree) => normalizePath(worktree.path))}
@@ -853,13 +847,14 @@ const SortableProjectRow: React.FC<{
             </div>
           </SortableContext>
         </DndContext>
-      ) : null}
+      </MobileDisclosure>
     </div>
   );
 };
 
 export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, onOpenChange, variant = 'drawer', footer }) => {
   const { t } = useI18n();
+  const reducedMotion = useReducedMotion();
   const isDeveloperMode = useProductModeStore((state) => state.mode === 'developer');
   const setMode = useProductModeStore((state) => state.setMode);
   const sheetTitle = isDeveloperMode ? t('mobile.sessions.sheet.title') : t('sessions.sidebar.activity.chatsTitle');
@@ -1206,7 +1201,7 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
       const hasChildren = children.length > 0;
       const expanded = Boolean(expandedParents[session.id]);
       return (
-        <React.Fragment key={session.id}>
+        <motion.div key={session.id} layout="position" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: reducedMotion ? 0 : 0.2, ease: [0.22, 1, 0.36, 1] }}>
           <SessionRow
             session={session}
             active={currentSessionId === session.id}
@@ -1226,16 +1221,16 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
             onSubmitRename={(nextTitle) => void handleSubmitRename(session.id, nextTitle)}
             onCancelRename={() => setRenamingSessionId(null)}
           />
-          {hasChildren && expanded
-            ? children.map((child) => renderNode(child, rowIndent + CHILD_INDENT_STEP))
-            : null}
-        </React.Fragment>
+          {hasChildren ? <MobileDisclosure open={expanded}>
+            {children.map((child) => renderNode(child, rowIndent + CHILD_INDENT_STEP))}
+          </MobileDisclosure> : null}
+        </motion.div>
       );
     };
 
     return (
       <div>
-        {visibleRoots.map((session) => renderNode(session, indent))}
+        <AnimatePresence initial={false}>{visibleRoots.map((session) => renderNode(session, indent))}</AnimatePresence>
         {remaining > 0 ? (
           <ShowMoreRow indent={indent} onClick={() => showMoreBucketSessions(bucketKey, visibleRoots.length)} />
         ) : null}
@@ -1735,6 +1730,7 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
                           <span className="shrink-0 typography-micro text-muted-foreground tabular-nums">
                             {node.totalSessions}
                           </span>
+                          <Icon name="arrow-down-s" className={cn('size-4 shrink-0 text-muted-foreground transition-transform duration-200 motion-reduce:transition-none', !projectExpanded && '-rotate-90')} />
                         </button>
                         {isDeveloperMode && node.project.isGitRepo ? (
                           <NewWorktreeIconButton
@@ -1745,8 +1741,7 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
                       </div>
                     </MobileSwipeActionsRow>
 
-                    {projectExpanded ? (
-                      <div className="pb-2">
+                    <MobileDisclosure open={projectExpanded} className="pb-2">
                         {(() => {
                           // Root (project-level) sessions always render as a flat list
                           // at the top — same as a project without worktrees — never
@@ -1845,17 +1840,16 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
                                       </span>
                                     </button>
                                     </MobileSwipeActionsRow>
-                                    {worktreeExpanded
-                                      ? renderBucketSessions(`${node.project.id}::${bucket.key}`, bucket.sessions, PROJECT_SESSION_INDENT)
-                                      : null}
+                                    <MobileDisclosure open={worktreeExpanded}>
+                                      {renderBucketSessions(`${node.project.id}::${bucket.key}`, bucket.sessions, PROJECT_SESSION_INDENT)}
+                                    </MobileDisclosure>
                                   </div>
                                 );
                               })}
                             </>
                           );
                         })()}
-                      </div>
-                    ) : null}
+                    </MobileDisclosure>
                   </section>
                 );
               })}
@@ -1868,10 +1862,10 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
             the header for list actions and stays thumb-reachable. */}
         {footer ? (
           <div
-            className="flex shrink-0 items-center justify-between gap-2 border-t border-border/40 px-2 pt-1.5"
+            className="oc-mobile-toolbar flex shrink-0 items-center justify-between gap-2 border-t border-border/40 px-2"
             style={{ paddingBottom: 'calc(0.375rem + var(--oc-safe-area-bottom, 0px))' }}
           >
-            <Button type="button" variant="ghost" className="min-w-0 justify-start gap-2 text-[15px] font-medium" onClick={() => setListActionsOpen(true)} aria-label={t('mobile.mode.switchAria', { mode: t(isDeveloperMode ? 'sessions.sidebar.header.productMode.developer' : 'sessions.sidebar.header.productMode.work') })}>
+            <Button type="button" variant="ghost" className="min-w-0 justify-start gap-2 typography-ui-label font-medium" onClick={() => setListActionsOpen(true)} aria-label={t('mobile.mode.switchAria', { mode: t(isDeveloperMode ? 'sessions.sidebar.header.productMode.developer' : 'sessions.sidebar.header.productMode.work') })}>
               {t(isDeveloperMode ? 'sessions.sidebar.header.productMode.developer' : 'sessions.sidebar.header.productMode.work')}
               <Icon name="arrow-down-s" className="size-4 text-muted-foreground" />
             </Button>
@@ -1916,7 +1910,7 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
             {(['work', 'developer'] as const).map((option) => (
               <Button key={option} type="button" variant="ghost" className="h-auto w-full justify-start gap-3 rounded-xl py-3 text-left" aria-pressed={isDeveloperMode === (option === 'developer')} onClick={() => { setMode(option); setListActionsOpen(false); }}>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[16px] font-medium">{t(`sessions.sidebar.header.productMode.${option}`)}</span>
+                  <span className="block typography-markdown font-semibold">{t(`sessions.sidebar.header.productMode.${option}`)}</span>
                   <span className="block pt-1 typography-meta font-normal text-muted-foreground">{t(`mobile.mode.${option}Description`)}</span>
                 </span>
                 {isDeveloperMode === (option === 'developer') ? <Icon name="check" className="size-5" /> : null}
@@ -1995,7 +1989,7 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
       onClose={() => onOpenChange(false)}
       ariaLabel={sheetTitle}
     >
-      <div className="flex shrink-0 items-center gap-2 px-4 pb-3 pt-2">
+      <div className="oc-mobile-toolbar flex shrink-0 items-center gap-2 px-4">
         {editingOrder ? <h2 className="min-w-0 flex-1 typography-ui-label font-medium">{sheetTitle}</h2> : searchField}
         {trailingActions ? (
           <div className="flex shrink-0 items-center gap-0.5">{trailingActions}</div>
@@ -2007,7 +2001,6 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
 };
 
 const DRAWER_ROOT_ID = 'mobile-surface-root';
-const DRAWER_ENTER_DURATION_MS = 220;
 
 /** Phone history drawer leaves the chat visible behind a dismissible scrim.
     Slides from the left and closes via the header X, Escape, or the
@@ -2025,7 +2018,8 @@ const MobileSessionsDrawerContainer: React.FC<{
 }> = ({ open, onClose, ariaLabel, children }) => {
   const rootRef = React.useRef<HTMLElement | null>(null);
   const surfaceRef = React.useRef<HTMLDivElement | null>(null);
-  const { visible, entered, reducedMotion } = useMobilePanelPresence(open, DRAWER_ENTER_DURATION_MS);
+  const dragControls = useDragControls();
+  const { visible, entered, reducedMotion, durationMs, easing } = useMobilePanelPresence(open);
   const onCloseRef = React.useRef(onClose);
   React.useEffect(() => {
     onCloseRef.current = onClose;
@@ -2058,14 +2052,18 @@ const MobileSessionsDrawerContainer: React.FC<{
         pointerEvents: open ? 'auto' : 'none',
       }}
     >
-      <button type="button" tabIndex={-1} aria-label={ariaLabel} onClick={onClose} className="absolute inset-0 h-full w-full" style={{ background: 'color-mix(in srgb, var(--surface-overlay) 45%, transparent)', opacity: entered ? 1 : 0, transition: reducedMotion ? 'none' : `opacity ${DRAWER_ENTER_DURATION_MS}ms ${MOBILE_PANEL_EASING}` }} />
-      <div ref={surfaceRef} tabIndex={-1} className="relative flex h-full min-h-0 w-[min(360px,calc(100%-40px))] flex-col rounded-r-2xl bg-background" style={{
+      <button type="button" tabIndex={-1} aria-label={ariaLabel} onClick={onClose} className="absolute inset-0 h-full w-full" style={{ background: 'color-mix(in srgb, var(--surface-overlay) 45%, transparent)', opacity: entered ? 1 : 0, transition: reducedMotion ? 'none' : `opacity ${durationMs}ms ${easing}` }} />
+      <motion.div ref={surfaceRef} tabIndex={-1} className="relative flex h-full min-h-0 w-[min(360px,calc(100%-40px))] flex-col rounded-r-2xl bg-background"
+        drag={reducedMotion ? false : 'x'} dragListener={false} dragControls={dragControls}
+        dragConstraints={{ left: 0, right: 0 }} dragElastic={{ left: 1, right: 0 }} dragMomentum={false}
+        onDragEnd={(_, info) => { if (info.offset.x < -80 || info.velocity.x < -500) onClose(); }}
+        initial={false} animate={{ x: entered || reducedMotion ? 0 : '-100%' }}
+        transition={{ duration: reducedMotion ? 0 : durationMs / 1000, ease: [0.22, 1, 0.36, 1] }} style={{
         paddingTop: 'var(--oc-safe-area-top, 0px)',
-        transform: entered || reducedMotion ? 'none' : 'translateX(-100%)',
-        transition: reducedMotion ? 'none' : `transform ${DRAWER_ENTER_DURATION_MS}ms ${MOBILE_PANEL_EASING}`,
       }}>
         {children}
-      </div>
+        <div aria-hidden="true" className="absolute inset-y-0 left-0 w-2" style={{ touchAction: 'pan-y' }} onPointerDown={(event) => dragControls.start(event)} />
+      </motion.div>
     </section>,
     rootRef.current,
   );

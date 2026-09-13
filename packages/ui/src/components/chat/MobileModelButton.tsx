@@ -23,7 +23,7 @@ export const MobileModelButton: React.FC<MobileModelButtonProps> = ({ onOpenMode
         <Button
             type="button"
             variant="ghost"
-            size="xs"
+            size="sm"
             onClick={onOpenModel}
             // Same guard as PermissionAutoAcceptButton/MobileAgentButton: block
             // the focus transfer so the tap doesn't dismiss the keyboard. With
@@ -36,7 +36,7 @@ export const MobileModelButton: React.FC<MobileModelButtonProps> = ({ onOpenMode
                 }
             }}
             className={cn(
-                'min-w-0 justify-start rounded-md text-muted-foreground hover:text-foreground',
+                'min-w-0 justify-start rounded-full typography-ui-label font-normal text-muted-foreground hover:text-foreground',
                 className
             )}
             title={modelLabel}

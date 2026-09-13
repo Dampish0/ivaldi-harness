@@ -2,9 +2,9 @@
  * The mobile composer's pill ↔ full-composer state machine.
  *
  * With the keyboard closed the composer collapses into a narrow pill; any
- * interaction expands it back. The swap is deliberately instant and
- * synchronized with the keyboard choreography, so the chat compensates
- * keyboard and composer height in a single motion rather than a staircase.
+ * interaction expands it back. The layout swap is synchronous with the
+ * keyboard choreography. CSS animates the incoming inner presentation without
+ * delaying focus or changing the outer keyboard compensation.
  *
  * Most of the code here is not the state machine itself but the corrections
  * that keep it from fighting the platform: mobile browsers dismiss the

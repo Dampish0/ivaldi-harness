@@ -56,6 +56,7 @@ export const ComposerActionButtons = React.memo(function ComposerActionButtons(p
     const sendButton = (
         <Button
             type={isMobile ? 'button' : 'submit'}
+            data-mobile-composer-action={isMobile ? 'send' : undefined}
             size="icon"
             variant="ghost"
             disabled={!canSend || !hasDestination}
@@ -72,7 +73,7 @@ export const ComposerActionButtons = React.memo(function ComposerActionButtons(p
             )}
             aria-label={t('chat.chatInput.actions.sendMessageAria')}
         >
-            <Icon name="arrow-up" className={cn(sendIconSizeClass)} />
+            <Icon key="send" name="arrow-up" className={cn(sendIconSizeClass)} />
         </Button>
     );
 
@@ -84,6 +85,7 @@ export const ComposerActionButtons = React.memo(function ComposerActionButtons(p
                     size="icon"
                     variant="ghost"
                     disabled={dictationActive}
+                    data-mobile-composer-action={isMobile ? 'dictate' : undefined}
                     onMouseDown={(event) => event.preventDefault()}
                     onPointerDownCapture={(event) => {
                         if (event.pointerType === 'touch') event.preventDefault();
@@ -96,7 +98,7 @@ export const ComposerActionButtons = React.memo(function ComposerActionButtons(p
                     title={t('chat.dictation.start')}
                     aria-label={t('chat.dictation.start')}
                 >
-                    <Icon name="mic" className={cn(sendIconSizeClass)} />
+                    <Icon key="dictate" name="mic" className={cn(sendIconSizeClass)} />
                 </Button>
             );
         }
@@ -130,6 +132,7 @@ export const ComposerActionButtons = React.memo(function ComposerActionButtons(p
                 size="icon"
                 variant="destructive"
                 onClick={onAbort}
+                data-mobile-composer-action={isMobile ? 'stop' : undefined}
                 className="size-8 rounded-full supports-[corner-shape:squircle]:rounded-full"
                 aria-label={t('chat.chatInput.actions.stopGeneratingAria')}
             >

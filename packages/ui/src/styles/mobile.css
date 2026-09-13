@@ -3,11 +3,217 @@
 /* Keep touch areas independent of the type and icon sizes. */
 .composer-mobile-footer button,
 .oc-mobile-header button,
-#mobile-surface-root button:not([role="radio"]):not([role="checkbox"]):not([role="switch"]),
-#mobile-overlay-root button:not([role="radio"]):not([role="checkbox"]):not([role="switch"]),
+.oc-mobile-toolbar button,
 [data-mobile-composer-pill] button {
   min-width: 48px !important;
   min-height: 48px !important;
+  touch-action: manipulation;
+}
+
+/* The dedicated app and its body portals share one scale. Declaring these on
+   body keeps desktop root typography overrides from replacing mobile bases. */
+:root.oc-mobile-ui body {
+  --text-markdown: calc(1rem * var(--oc-mobile-font-scale, 1));
+  --text-code: calc(0.875rem * var(--oc-mobile-font-scale, 1));
+  --text-ui-header: calc(1.0625rem * var(--oc-mobile-font-scale, 1));
+  --text-ui-label: calc(0.9375rem * var(--oc-mobile-font-scale, 1));
+  --text-meta: calc(0.8125rem * var(--oc-mobile-font-scale, 1));
+  --text-micro: calc(0.75rem * var(--oc-mobile-font-scale, 1));
+  --text-settings-page-title: calc(1.125rem * var(--oc-mobile-font-scale, 1));
+  font-size: var(--text-ui-label);
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+.oc-mobile-toolbar {
+  min-height: var(--oc-header-height, 56px);
+  padding-block: 4px;
+}
+
+.oc-mobile-toolbar button {
+  height: auto;
+}
+
+#mobile-overlay-root button:not([role="radio"]):not([role="checkbox"]):not([role="switch"]) {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+#mobile-surface-root button,
+#mobile-overlay-root button {
+  touch-action: manipulation;
+}
+
+:root.oc-mobile-ui input[type="text"],
+:root.oc-mobile-ui input:not([type]),
+:root.oc-mobile-ui input[type="search"],
+:root.oc-mobile-ui input[type="email"],
+:root.oc-mobile-ui input[type="password"],
+:root.oc-mobile-ui textarea,
+:root.oc-mobile-ui .oc-mobile-composer .cm-editor {
+  font-size: max(1rem, var(--text-markdown)) !important;
+}
+
+:root.oc-mobile-ui input:not([type]),
+:root.oc-mobile-ui input[type="text"],
+:root.oc-mobile-ui input[type="search"],
+:root.oc-mobile-ui input[type="email"],
+:root.oc-mobile-ui input[type="password"] {
+  min-height: max(36px, calc(1.5em + 0.5rem)) !important;
+}
+
+:root.oc-mobile-ui .oc-draft-center > h1 {
+  font-size: calc(1.625rem * var(--oc-mobile-font-scale, 1));
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+/* A 36px visible circle inside the unchanged 48px primary action hit area. */
+[data-mobile-composer-action] {
+  padding: 6px !important;
+  border-width: 0;
+  background-clip: content-box;
+}
+
+/* The morph owns occupied height; its two layers share one persistent editor.
+   The inactive layer stays measurable but cannot receive focus or pointer input. */
+.oc-composer-morph-pill,
+.oc-composer-morph-full {
+  width: 100%;
+  transition: opacity 140ms ease-out, transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.oc-composer-morph [data-ivaldi-composer],
+.oc-composer-morph [data-mobile-composer-pill] {
+  background: transparent !important;
+  border-color: transparent;
+}
+
+/* Native Android publishes the current IME animation compensation in CSS pixels. */
+:root.oc-android-ime-motion .oc-mobile-composer {
+  transform: translateY(var(--oc-android-keyboard-shift, 0px));
+}
+:root.oc-android-ime-motion .oc-draft-center {
+  transform: translateY(calc(var(--oc-android-keyboard-shift, 0px) / 2));
+}
+:root.oc-android-ime-motion .oc-keyboard-inset-surface,
+:root.oc-android-ime-motion .oc-keyboard-fill-screen {
+  transition: none;
+}
+
+.oc-mobile-tab-pane {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-8px);
+  transition: opacity 160ms ease-out, transform 200ms ease-out, visibility 0s 200ms;
+}
+.oc-mobile-tab-pane[data-active='true'] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition-delay: 0s;
+  animation: oc-tab-enter 200ms ease-out;
+}
+@keyframes oc-tab-enter {
+  from { opacity: 0; transform: translateX(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+:root.oc-mobile-ui .oc-collapsible-panel {
+  height: var(--collapsible-panel-height);
+  overflow: hidden;
+  transition: height 240ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms ease-out;
+}
+:root.oc-mobile-ui .oc-collapsible-panel[data-starting-style],
+:root.oc-mobile-ui .oc-collapsible-panel[data-ending-style] {
+  height: 0;
+  opacity: 0;
+}
+:root.oc-mobile-ui .oc-checkbox-indicator {
+  display: flex;
+  transition: transform 140ms ease-out, opacity 140ms ease-out;
+}
+:root.oc-mobile-ui .oc-checkbox-indicator[data-unchecked] {
+  opacity: 0;
+  transform: scale(0.65);
+}
+.oc-composer-morph[data-expanded='true'] > .oc-composer-morph-pill,
+.oc-composer-morph[data-expanded='false'] > .oc-composer-morph-full {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+.oc-composer-morph[data-expanded='true'] > .oc-composer-morph-full,
+.oc-composer-morph[data-expanded='false'] > .oc-composer-morph-pill {
+  position: relative;
+  opacity: 1;
+}
+.oc-composer-morph[data-fullscreen='true'],
+.oc-composer-morph[data-fullscreen='true'] > .oc-composer-morph-full {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root.oc-mobile-ui button:active {
+    opacity: 0.72;
+  }
+  :root.oc-mobile-ui button {
+    transition-property: transform, opacity;
+    transition-duration: 140ms;
+    transition-timing-function: ease-out;
+  }
+  [data-mobile-composer-action] > svg {
+    animation: oc-composer-action 160ms ease-out;
+  }
+  .oc-mobile-toolbar button:active > svg,
+  [data-mobile-composer-pill] button:active > svg,
+  .composer-mobile-footer button:active > svg {
+    transform: scale(0.9);
+  }
+  .oc-mobile-toolbar button > svg,
+  [data-mobile-composer-pill] button > svg,
+  .composer-mobile-footer button > svg {
+    transition: transform 120ms ease-out;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oc-composer-morph-pill,
+  .oc-composer-morph-full {
+    transition: none;
+  }
+  :root.oc-mobile-ui *,
+  :root.oc-mobile-ui *::before,
+  :root.oc-mobile-ui *::after {
+    animation-duration: 0s !important;
+    transition-duration: 0s !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes oc-composer-expand {
+  from { opacity: 0.55; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes oc-composer-collapse {
+  from { opacity: 0.65; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes oc-composer-controls {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes oc-composer-action {
+  from { opacity: 0; transform: scale(0.75); }
+  to { opacity: 1; transform: none; }
 }
 
 /* General mobile improvements for all mobile devices */
@@ -47,7 +253,7 @@
   :root.mobile-pointer:not(.desktop-runtime) input[type="email"],
   :root.mobile-pointer:not(.desktop-runtime) input[type="password"],
   :root.mobile-pointer:not(.desktop-runtime) textarea {
-    font-size: 16px !important; /* Prevents iOS zoom */
+    font-size: max(1rem, var(--text-markdown)) !important; /* Prevents iOS zoom while respecting larger text. */
   }
 
   /* Prevent keyboard on non-input elements */
@@ -217,35 +423,7 @@
       -webkit-overflow-scrolling: touch;
     }
 
-    /* Mobile typography improvements */
-    .typography-markdown {
-      font-size: 1rem !important;
-    }
 
-    .typography-code {
-      font-size: 0.875rem !important;
-    }
-
-    .typography-ui-header {
-      font-size: 0.9375rem !important;
-    }
-
-    .typography-ui-label {
-      font-size: 0.875rem !important;
-    }
-
-    .typography-meta {
-      font-size: 0.875rem !important;
-    }
-
-    .typography-micro {
-      font-size: 0.8125rem !important;
-    }
-
-    /* Fix font size for tool displays */
-    [class*="tool"], [class*="code"] {
-      font-size: 0.875rem !important;
-    }
   }
 
   /* Fallback for non-iOS standalone mode */
@@ -636,10 +814,23 @@
    A tablet has room to keep them: `oc-keep-draft-starters` is set by the shell
    (portrait, or any orientation with a hardware keyboard — see MobileApp) and
    opts the whole draft screen out of the hiding below. */
-:root:not(.oc-keep-draft-starters).oc-composer-expanded .oc-draft-starters,
-:root:not(.oc-keep-draft-starters).oc-capacitor-app.oc-keyboard-open .oc-draft-starters,
-:root:not(.oc-keep-draft-starters).oc-browser-keyboard-open .oc-draft-starters {
-  display: none;
+.oc-draft-starters-motion {
+  display: grid;
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transition: grid-template-rows 240ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms ease-out;
+}
+.oc-draft-starters-motion .oc-draft-starters {
+  margin-inline: auto;
+}
+:root:not(.oc-keep-draft-starters).oc-composer-expanded .oc-draft-starters-motion,
+:root:not(.oc-keep-draft-starters).oc-capacitor-app.oc-keyboard-open .oc-draft-starters-motion,
+:root:not(.oc-keep-draft-starters).oc-browser-keyboard-open .oc-draft-starters-motion {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: grid-template-rows 240ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms ease-out, visibility 0s 240ms;
 }
 
 /* The draft title (.oc-draft-center) is vertically centered, so it has no
