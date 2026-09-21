@@ -20,7 +20,7 @@ const authorization: OAuthAuthorization = { url: 'https://auth.example/sign-in',
 const sources = (stored: boolean) => ({ auth: { exists: stored }, user: { exists: true }, project: { exists: false }, custom: { exists: false } });
 function setup(overrides: Partial<ProvidersTransport> = {}) {
   let stored = false;
-  let directory: string | undefined = '/project-one';
+  let directory: string | undefined | null = '/project-one';
   const calls = { catalog: 0, methods: 0, source: 0, key: 0, remove: 0, authorize: 0, callback: 0, apply: 0, refresh: 0 };
   const transport: ProvidersTransport = {
     directory: () => directory,
@@ -35,8 +35,84 @@ function setup(overrides: Partial<ProvidersTransport> = {}) {
     refreshModels: async () => { calls.refresh++; },
     ...overrides,
   };
-  return { store: new ProvidersStore(transport), calls, transport, directory(value: string | undefined) { directory = value; } };
+  return { store: new ProvidersStore(transport), calls, transport, directory(value: string | undefined | null) { directory = value; } };
 }
+
+test('unresolved provider scope rejects every read and mutation before any adapter call', async () => {
+  const { store, calls } = setup({ directory: () => null });
+  let configActions = 0;
+  const unavailable = (error: Error) => error instanceof ProviderOperationError;
+  await assert.rejects(store.load(), unavailable);
+  await assert.rejects(store.loadCatalog(), unavailable);
+  await assert.rejects(store.loadMethods(), unavailable);
+  await assert.rejects(store.loadSource('api'), unavailable);
+  assert.equal(store.getSnapshot().sources.api.error, true);
+  await assert.rejects(store.saveApiKey('api', 'synthetic-key'), unavailable);
+  await assert.rejects(store.removeStoredAuth('api'), unavailable);
+  await assert.rejects(store.authorize('oauth', 1, {}), unavailable);
+  await assert.rejects(store.completeOAuth('oauth', 1), unavailable);
+  await assert.rejects(store.apply(), unavailable);
+  await assert.rejects(store.confirmManualRestart(), unavailable);
+  await assert.rejects(store.configurationChange('api', async () => { configActions++; }), unavailable);
+  assert.deepEqual(Object.values(calls), Object.values(calls).map(() => 0));
+  assert.equal(configActions, 0);
+  assert.deepEqual(store.getSnapshot().catalog, { value: null, loading: false, error: true });
+  assert.deepEqual(store.getSnapshot().methods, { value: null, loading: false, error: true });
+  assert.equal(store.getSnapshot().mutation, null);
+});
+
+test('resolved project and resolved host-default can each retry an unresolved catalog', async () => {
+  for (const resolved of ['/restored-project', undefined]) {
+    const fixture = setup();
+    fixture.directory(null);
+    await assert.rejects(fixture.store.load());
+    const requested: Array<string | undefined> = [];
+    fixture.transport.catalog = async directory => { requested.push(directory); return catalog; };
+    fixture.directory(resolved);
+    await fixture.store.load();
+    await fixture.store.saveApiKey('api', 'synthetic-key');
+    assert.deepEqual(requested, [resolved]);
+    assert.deepEqual(fixture.store.getSnapshot().catalog.value, catalog);
+    assert.equal(fixture.store.getSnapshot().catalog.error, false);
+    assert.equal(fixture.calls.key, 1);
+  }
+});
+
+test('scope becoming unresolved discards late reads and blocks loaded provider actions while retaining pending Apply', async () => {
+  const fixture = setup();
+  await fixture.store.load();
+  await fixture.store.saveApiKey('api', 'synthetic-key');
+  const pending = Promise.withResolvers<ProviderCatalog>();
+  fixture.transport.catalog = async () => pending.promise;
+  const old = fixture.store.loadCatalog();
+  const calls = { ...fixture.calls };
+  fixture.directory(null);
+  await assert.rejects(fixture.store.load());
+  await assert.rejects(fixture.store.saveApiKey('api', 'synthetic-replacement'));
+  await assert.rejects(fixture.store.removeStoredAuth('api'));
+  await assert.rejects(fixture.store.apply());
+  const unavailable = fixture.store.getSnapshot();
+  pending.resolve(catalog); await old;
+  assert.strictEqual(fixture.store.getSnapshot(), unavailable);
+  assert.deepEqual(fixture.calls, calls);
+  assert.deepEqual(unavailable.pendingRestart, ['api']);
+  assert.equal(unavailable.applyState, 'pending');
+  assert.equal(unavailable.catalog.value, null);
+});
+
+test('manual restart acknowledgment remains pending while scope is unresolved and can retry after resolution', async () => {
+  const fixture = setup({ apply: async () => ({ success: true, requiresManualRestart: true }) });
+  await fixture.store.load(); await fixture.store.saveApiKey('api', 'synthetic-key');
+  assert.equal(await fixture.store.apply(), 'manual');
+  fixture.directory(null);
+  const calls = { ...fixture.calls };
+  await assert.rejects(fixture.store.confirmManualRestart());
+  assert.deepEqual(fixture.calls, calls);
+  assert.equal(fixture.store.getSnapshot().applyState, 'manual');
+  assert.deepEqual(fixture.store.getSnapshot().pendingRestart, ['api']);
+  fixture.directory('/restored-project');
+  assert.equal(await fixture.store.confirmManualRestart(), 'ready');
+});
 
 test('provider parsing strips credentials, options and paths from snapshots', () => {
   const safe = providerCatalogSchema.parse({ ...catalog, all: [{ ...catalog.all[0], key: 'synthetic-private-key', options: { apiKey: 'synthetic-option-key' } }] });

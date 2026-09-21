@@ -161,6 +161,7 @@ export const dict = {
   'mobile.instances.delete': 'Delete',
   'mobile.instances.deleteAria': 'Delete {label}',
   'mobile.instances.confirmDeleteAria': 'Confirm deleting {label}',
+  'mobile.instances.deleteDescription': "This removes the saved connection from this device. Your server and chats stay available.",
   'mobile.instances.cancelDeleteAria': 'Keep {label}',
   'mobile.instances.cancelEdit': 'Cancel',
   'mobile.instances.label.label': 'Name',

@@ -135,6 +135,7 @@ export const dict = {
   'mobile.instances.delete': 'Löschen',
   'mobile.instances.deleteAria': 'Lösche {label}',
   'mobile.instances.confirmDeleteAria': 'Löschen bestätigen {label}',
+  'mobile.instances.deleteDescription': "Dadurch wird die gespeicherte Verbindung von diesem Gerät entfernt. Dein Server und deine Chats bleiben verfügbar.",
   'mobile.instances.cancelDeleteAria': '{label} behalten',
   'mobile.instances.cancelEdit': 'Abbrechen',
   'mobile.instances.label.label': 'Name',

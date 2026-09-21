@@ -1,11 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { ActivityIndicator, Alert, BackHandler, Keyboard, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, BackHandler, Keyboard, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useI18n, type MessageKey } from '@/lib/i18n';
 import { Button } from './ui';
 import { Folder } from './Folder';
+import { Overlay } from './Overlay';
+import { SettingsScreen } from './SettingsScreen';
 import { useTheme, useTypography } from '../theme';
 import { ConnectionError, connectAddress, inspectPairing, reconnect, redeemPairing, type NativeRuntime } from '../runtime/connection';
 import { forgetConnection, readActiveConnection, readConnections, setActiveConnection } from '../runtime/storage';
@@ -15,11 +17,20 @@ import type { SavedConnection } from '../runtime/schema';
 const errors = { invalidUrl: 'mobile.connect.error.invalidUrl', unreachable: 'mobile.connect.error.unreachable', authRequired: 'mobile.connect.error.authRequired', passwordFailed: 'mobile.connect.error.passwordFailed', invalidPairing: 'mobile.connect.scan.invalid', storage: 'mobile.native.saveFailed' } satisfies { [code in ConnectionError['code']]: MessageKey };
 
 export function Connections({ connected, close, autoRestore = false, incomingLink }: { connected: (runtime: NativeRuntime, pendingLink?: string) => void; close?: () => void; autoRestore?: boolean; incomingLink: string | null }) {
-  const { colors, appearance } = useTheme(); const typography = useTypography(); const { font } = typography; const { t } = useI18n(); const safe = useSafeAreaInsets();
+  const { colors, dark, appearance } = useTheme(); const typography = useTypography(); const { font } = typography; const { t } = useI18n(); const safe = useSafeAreaInsets();
   const [saved, setSaved] = useState<SavedConnection[]>([]);
   const [address, setAddress] = useState(''); const [password, setPassword] = useState(''); const [token, setToken] = useState('');
   const [pairing, setPairing] = useState<{ link: string; label: string; fingerprint?: string } | null>(null);
   const [error, setError] = useState<MessageKey | null>(null); const [scan, setScan] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [removal, setRemoval] = useState<{ id: string; label: string; state: 'closed' | 'confirm' | 'saving' | 'failed' } | null>(null);
+  const removalRequest = useRef<Promise<void> | null>(null);
+  const removalOpen = removal !== null && removal.state !== 'closed';
+  const removalBusy = removal?.state === 'saving';
+  const closeRemoval = useCallback(() => {
+    if (removalRequest.current) return;
+    setRemoval(current => current ? { ...current, state: 'closed' } : null);
+  }, []);
   const [attempts] = useState(() => new ConnectionAttempts<NativeRuntime>(async id => {
     try { await setActiveConnection(id); } catch { throw new ConnectionError('storage'); }
   }));
@@ -46,6 +57,7 @@ export function Connections({ connected, close, autoRestore = false, incomingLin
   const dismiss = useCallback(() => { if (cancelAttempt()) close?.(); }, [cancelAttempt, close]);
   useEffect(() => {
     const listener = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (removalOpen) { closeRemoval(); return true; }
       if (attempts.getSnapshot() !== 'idle') { if (cancelAttempt()) { if (close) close(); else setPairing(null); } return true; }
       if (scan) { setScan(false); return true; }
       if (pairing) { setPairing(null); return true; }
@@ -53,17 +65,17 @@ export function Connections({ connected, close, autoRestore = false, incomingLin
       return false;
     });
     return () => listener.remove();
-  }, [scan, pairing, close, attempts, cancelAttempt, dismiss]);
+  }, [scan, pairing, close, attempts, cancelAttempt, dismiss, removalOpen, closeRemoval]);
   const acceptLink = useCallback((link: string) => {
     try {
       const normalized = link.replace(/^ivaldi-native:/i, 'ivaldi:');
       const inspected = inspectPairing(normalized);
       navigationRevision.current++;
       if (!attempts.replaceWithLink(normalized)) return;
-      setPairing({ link: normalized, ...inspected }); setAddress(''); setScan(false); Keyboard.dismiss(); setError(null);
+      closeRemoval(); setPairing({ link: normalized, ...inspected }); setAddress(''); setScan(false); setSettingsOpen(false); Keyboard.dismiss(); setError(null);
     }
     catch { setError('mobile.connect.scan.invalid'); }
-  }, [attempts]);
+  }, [attempts, closeRemoval]);
   useEffect(() => { if (incomingLink) acceptLink(incomingLink); }, [incomingLink, acceptLink]);
   const run = useCallback(async (operation: () => Promise<NativeRuntime | null>, recovery = false) => {
     if (attempts.getSnapshot() !== 'idle') return;
@@ -115,10 +127,30 @@ export function Connections({ connected, close, autoRestore = false, incomingLin
     if (!mounted.current || revision !== navigationRevision.current) return;
     if (granted) setScan(true); else setError('mobile.connect.scan.permissionDenied');
   };
+  const removeConnection = async () => {
+    if (!removal || !removalOpen || removalRequest.current) return;
+    const target = removal;
+    savedRevision.current++;
+    setRemoval({ ...target, state: 'saving' });
+    const request = forgetConnection(target.id);
+    removalRequest.current = request;
+    try {
+      await request;
+      if (!mounted.current) return;
+      savedRevision.current++;
+      setSaved(current => current.filter(connection => connection.id !== target.id));
+      setRemoval({ ...target, state: 'closed' });
+    } catch {
+      if (mounted.current) setRemoval({ ...target, state: 'failed' });
+    } finally {
+      removalRequest.current = null;
+    }
+  };
   const inputStyle = [styles.input, typography.text(16, 24), { fontFamily: font.regular }, { color: colors.surface.foreground, borderColor: colors.interactive.border, backgroundColor: colors.surface.elevated }];
-  if (scan) return <View style={{ flex: 1, paddingTop: safe.top, paddingBottom: safe.bottom, paddingLeft: safe.left, paddingRight: safe.right }}><Button variant="row" icon="close" label={t('mobile.surface.closeAria')} onPress={() => setScan(false)} /><CameraView style={{ flex: 1 }} barcodeScannerSettings={{ barcodeTypes: ['qr'] }} onBarcodeScanned={event => acceptLink(event.data)} /></View>;
-  return <KeyboardAvoidingView behavior="padding" style={{ flex: 1, paddingTop: safe.top, paddingLeft: safe.left, paddingRight: safe.right }}>
-    <View style={styles.header}><Text style={[styles.headerTitle, typography.text(18, 24), { fontFamily: font.semibold, fontWeight: typography.semiboldWeight }, { color: colors.surface.foreground }]}>{t('mobile.connect.welcome.title')}</Text>{close && <Button icon="close" label={t('mobile.surface.closeAria')} disabled={attemptStatus === 'activating'} onPress={dismiss} testID="connections-close" />}</View>
+  if (scan) return <View style={{ flex: 1, paddingTop: safe.top, paddingBottom: safe.bottom, paddingLeft: safe.left, paddingRight: safe.right }}><StatusBar barStyle={dark ? 'light-content' : 'dark-content'} /><Button variant="row" icon="close" label={t('mobile.surface.closeAria')} onPress={() => setScan(false)} /><CameraView style={{ flex: 1 }} barcodeScannerSettings={{ barcodeTypes: ['qr'] }} onBarcodeScanned={event => acceptLink(event.data)} /></View>;
+  return <View style={{ flex: 1 }}><KeyboardAvoidingView behavior="padding" pointerEvents={removalOpen ? 'none' : 'auto'} accessibilityElementsHidden={removalOpen} importantForAccessibility={removalOpen ? 'no-hide-descendants' : 'auto'} style={{ flex: 1, paddingTop: safe.top, paddingLeft: safe.left, paddingRight: safe.right }}>
+    <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} />
+    <View style={styles.header}><Text style={[styles.headerTitle, typography.text(18, 24), { fontFamily: font.semibold, fontWeight: typography.semiboldWeight }, { color: colors.surface.foreground }]}>{t('mobile.connect.welcome.title')}</Text><Button icon="settings-3" label={t('mobile.nav.settings')} disabled={attemptStatus === 'activating'} onPress={() => { if (cancelAttempt()) setSettingsOpen(true); }} testID="connection-settings" />{close && <Button icon="close" label={t('mobile.surface.closeAria')} disabled={attemptStatus === 'activating'} onPress={dismiss} testID="connections-close" />}</View>
     <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={[styles.page, { gap: 20 * appearance.density / 100, paddingBottom: safe.bottom + 28 }]}>
     {!pairing && <Text style={[typography.text(15, 23), { fontFamily: font.regular }, { color: colors.surface.mutedForeground }]}>{t('mobile.connect.welcome.scanHint')}</Text>}
     {error && <Text accessibilityRole="alert" style={[typography.text(15, 23), { fontFamily: font.regular }, { color: colors.status.error }]}>{t(error)}</Text>}
@@ -142,8 +174,20 @@ export function Connections({ connected, close, autoRestore = false, incomingLin
         </View></Folder>
       </>}
       {saved.length > 0 && <Text style={[styles.section, typography.text(13, 18), { fontFamily: font.semibold, fontWeight: typography.semiboldWeight }, { color: colors.surface.mutedForeground }]}>{t('mobile.connect.saved.title')}</Text>}
-      <View style={{ gap: 4 }}>{saved.map(connection => <View key={connection.id} style={{ flexDirection: 'row', alignItems: 'center' }}><Button variant="row" icon="computer" iconSize={20} style={{ flex: 1 }} label={connection.label} onPress={() => { void run(() => reconnect(connection)); }} /><Button icon="delete-bin" iconSize={18} muted label={t('mobile.instances.confirmDeleteAria', { label: connection.label })} onPress={() => Alert.alert(connection.label, t('mobile.instances.confirmDeleteAria', { label: connection.label }), [{ text: t('gitView.common.cancel'), style: 'cancel' }, { text: t('mobile.instances.confirmDeleteAria', { label: connection.label }), style: 'destructive', onPress: () => { void forgetConnection(connection.id).then(() => readConnections()).then(setSaved).catch(() => setError('mobile.connect.recovery.description')); } }])} /></View>)}</View>
+      <View style={{ gap: 4 }}>{saved.map(connection => <View key={connection.id} style={{ flexDirection: 'row', alignItems: 'center' }}><Button variant="row" icon="computer" iconSize={20} style={{ flex: 1 }} label={connection.label} onPress={() => { void run(() => reconnect(connection)); }} /><Button icon="delete-bin" iconSize={18} muted label={t('mobile.instances.deleteAria', { label: connection.label })} onPress={() => { Keyboard.dismiss(); navigationRevision.current++; setRemoval({ id: connection.id, label: connection.label, state: 'confirm' }); }} /></View>)}</View>
     </>}
-  </ScrollView></KeyboardAvoidingView>;
+  </ScrollView>
+  <SettingsScreen open={settingsOpen} foreground close={() => setSettingsOpen(false)} openConnections={() => setSettingsOpen(false)} server={null} />
+  </KeyboardAvoidingView>
+    <Overlay open={removalOpen} kind="sheet" fitContent dismissible={!removalBusy} onClose={closeRemoval}>
+      <View style={{ paddingHorizontal: 24, paddingBottom: 16, gap: 16 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}><Text accessibilityRole="header" numberOfLines={3} style={[typography.text(20, 28), { flex: 1, fontFamily: font.semibold, fontWeight: typography.semiboldWeight, color: colors.surface.foreground }]}>{t('mobile.instances.deleteAria', { label: removal?.label ?? '' })}</Text><Button icon="close" label={t('mobile.surface.closeAria')} disabled={removalBusy} onPress={closeRemoval} testID="connection-delete-close" /></View>
+        <Text style={[typography.text(15, 23), { fontFamily: font.regular, color: colors.surface.mutedForeground }]}>{t('mobile.instances.deleteDescription')}</Text>
+        {removal?.state === 'failed' && <Text accessibilityRole="alert" style={[typography.text(15, 23), { fontFamily: font.regular, color: colors.status.error }]}>{t('mobile.native.saveFailed')}</Text>}
+        <Button variant="destructive" label={t(removalBusy ? 'common.loading' : removal?.state === 'failed' ? 'settings.common.actions.retry' : 'mobile.instances.delete')} disabled={removalBusy} onPress={() => { void removeConnection(); }} testID="connection-delete-confirm" />
+        <Button variant="row" label={t('settings.common.actions.cancel')} disabled={removalBusy} onPress={closeRemoval} testID="connection-delete-cancel"><Text style={[typography.text(16, 22), { flex: 1, textAlign: 'center', fontFamily: font.regular, color: colors.surface.foreground }]}>{t('settings.common.actions.cancel')}</Text></Button>
+      </View>
+    </Overlay>
+  </View>;
 }
 const styles = StyleSheet.create({ page: { flexGrow: 1, width: '100%', maxWidth: 560, alignSelf: 'center', paddingHorizontal: 24, paddingTop: 28, gap: 20 }, header: { minHeight: 64, paddingLeft: 24, paddingRight: 12, flexDirection: 'row', alignItems: 'center', gap: 12 }, headerTitle: { flex: 1 }, pairing: { gap: 16, padding: 20, borderRadius: 20 }, section: { marginTop: 12 }, input: { minHeight: 48, borderWidth: StyleSheet.hairlineWidth, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 12 } });

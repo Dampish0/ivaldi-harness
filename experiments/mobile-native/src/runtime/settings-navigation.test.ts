@@ -1,6 +1,23 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { getSettingsParent, reconcileSettingsMode, settingsSearchPath, type SettingsPage } from './settings-navigation.ts';
+import { getSettingsParent, isSettingsDestinationAvailable, reconcileSettingsMode, settingsSearchPath, type SettingsPage, type SettingsDestination } from './settings-navigation.ts';
+
+test('disconnected Settings exposes device pages and their complete search paths only', () => {
+  const device: SettingsDestination[] = ['appearance', 'theme', 'font', 'text-size', 'density', 'language', 'chat', 'connections'];
+  const server: SettingsDestination[] = ['general', 'mode', 'sessions', 'default-model', 'default-agent', 'default-effort', 'advanced', 'providers', 'provider-custom', 'settings-project'];
+  for (const mode of ['work', 'developer'] as const) {
+    for (const destination of device) {
+      assert.equal(isSettingsDestinationAvailable(destination, false, mode), true, destination);
+      if (destination !== 'connections') {
+        for (const page of settingsSearchPath(destination, mode)) {
+          if (page !== 'home' && page !== 'provider-detail' && page !== 'provider-auth') assert.equal(isSettingsDestinationAvailable(page, false, mode), true);
+        }
+      }
+    }
+    for (const destination of server) assert.equal(isSettingsDestinationAvailable(destination, false, mode), false, destination);
+    for (const destination of [...device, ...server]) assert.equal(isSettingsDestinationAvailable(destination, true, mode), destination !== 'advanced' || mode === 'work', destination);
+  }
+});
 
 test('provider search has the same complete ancestry as Work and Developer navigation', () => {
   assert.equal(getSettingsParent('providers', 'work'), 'advanced');

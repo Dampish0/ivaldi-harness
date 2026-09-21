@@ -8,7 +8,7 @@ const projects = [{ id: 'first', path: '/projects/first', label: 'First' }, { id
 function setup(initial = JSON.stringify({ projects })) {
   let response = initial;
   let failure = false;
-  let directory: string | undefined = '/chats/current';
+  let directory: string | undefined | null = '/chats/current';
   let wait: Promise<void> = Promise.resolve();
   const calls: { path: string; init: RequestInit | undefined }[] = [];
   const runtime: Pick<NativeRuntime, 'json'> = {
@@ -26,10 +26,34 @@ function setup(initial = JSON.stringify({ projects })) {
     store: createSettingsProjectsStore(runtime, options), runtime, options, calls,
     respond: (body: string) => { response = body; },
     fail: (value: boolean) => { failure = value; },
-    directory: (value: string | undefined) => { directory = value; },
+    directory: (value: string | undefined | null) => { directory = value; },
     wait: (value: Promise<void>) => { wait = value; },
   };
 }
+
+test('an unresolved current chat stays null while an explicit registered Settings project remains usable', async () => {
+  const fixture = setup();
+  fixture.directory(null);
+  assert.equal(fixture.store.getDirectory(), null);
+  await fixture.store.load();
+  assert.equal(fixture.store.getDirectory(), null);
+  assert.equal(fixture.store.select('second'), true);
+  assert.equal(fixture.store.getDirectory(), projects[1].path);
+  fixture.directory('/recovered-chat');
+  assert.equal(fixture.store.getDirectory(), projects[1].path);
+  assert.equal(fixture.store.select(null), true);
+  assert.equal(fixture.store.getDirectory(), '/recovered-chat');
+  fixture.directory(undefined);
+  assert.equal(fixture.store.getDirectory(), undefined);
+});
+
+test('registry removal falls back to unresolved current chat without inventing a default scope', async () => {
+  const fixture = setup();
+  await fixture.store.load(); fixture.store.select('second'); fixture.directory(null);
+  fixture.respond('{"projects":[]}'); await fixture.store.load();
+  assert.equal(fixture.store.getSnapshot().selectedId, null);
+  assert.equal(fixture.store.getDirectory(), null);
+});
 
 test('loads only the registered project projection without activating or writing', async () => {
   const fixture = setup(JSON.stringify({ projects: [{ ...projects[0], icon: 'folder', defaultModel: 'provider/model' }, projects[1]], activeProjectId: 'first', privateSetting: 'excluded' }));
@@ -191,7 +215,7 @@ test('dispose aborts a read and ignored late success cannot change or notify the
   assert.strictEqual(fixture.store.getSnapshot(), snapshot);
   assert.equal(notifications, 1);
   assert.equal(fixture.store.select(null), false);
-  assert.equal(fixture.store.getDirectory(), undefined);
+  assert.equal(fixture.store.getDirectory(), null);
   await assert.rejects(fixture.store.load(), /unavailable/);
   assert.equal(fixture.calls.length, 1);
 });
@@ -219,4 +243,110 @@ test('disposed late failure cannot affect a replacement runtime or retain its se
   assert.strictEqual(replacement.getSnapshot(), current);
   assert.equal(current.selectedId, null);
   assert.equal(replacement.getDirectory(), '/chats/current');
+});
+
+test('closing the picker cancels its load without applying a late project removal', async () => {
+  const fixture = setup();
+  await fixture.store.load();
+  fixture.store.select('second');
+  const list = fixture.store.getSnapshot().projects;
+  const response = Promise.withResolvers<void>();
+  fixture.respond(JSON.stringify({ projects: [projects[0]] }));
+  fixture.wait(response.promise);
+  const loading = fixture.store.load();
+  await Promise.resolve();
+  const { cancelLoad } = fixture.store;
+  cancelLoad();
+  assert.equal(fixture.calls[1].init?.signal?.aborted, true);
+  assert.deepEqual(fixture.store.getSnapshot(), { projects: list, selectedId: 'second', ready: true, loading: false, error: null });
+  const cancelled = fixture.store.getSnapshot();
+  let notifications = 0;
+  fixture.store.subscribe(() => { notifications++; });
+  response.resolve();
+  await assert.rejects(loading, /cancelled/);
+  assert.strictEqual(fixture.store.getSnapshot(), cancelled);
+  assert.equal(fixture.store.getDirectory(), projects[1].path);
+  assert.equal(notifications, 0);
+});
+
+test('cancellation before the request starts performs no read or authoritative empty update', async () => {
+  const fixture = setup();
+  const loading = fixture.store.load();
+  fixture.store.cancelLoad();
+  await assert.rejects(loading, /cancelled/);
+  assert.equal(fixture.calls.length, 0);
+  assert.deepEqual(fixture.store.getSnapshot(), { projects: [], selectedId: null, ready: false, loading: false, error: null });
+  await fixture.store.load();
+  assert.equal(fixture.calls.length, 1);
+  assert.equal(fixture.store.getSnapshot().ready, true);
+});
+
+test('reopening starts a fresh request before the cancelled request settles', async () => {
+  for (const oldFirst of [true, false]) {
+    const fixture = setup();
+    await fixture.store.load();
+    fixture.store.select('second');
+    const oldResponse = Promise.withResolvers<void>();
+    fixture.respond('{"projects":[]}');
+    fixture.wait(oldResponse.promise);
+    const oldLoad = fixture.store.load();
+    await Promise.resolve();
+    fixture.store.cancelLoad();
+    const newResponse = Promise.withResolvers<void>();
+    fixture.respond(JSON.stringify({ projects }));
+    fixture.wait(newResponse.promise);
+    const newLoad = fixture.store.load();
+    await Promise.resolve();
+    assert.equal(fixture.calls.length, 3);
+    assert.equal(fixture.calls[2].init?.signal?.aborted, false);
+    if (oldFirst) {
+      oldResponse.resolve();
+      await assert.rejects(oldLoad, /cancelled/);
+      assert.equal(fixture.store.getSnapshot().loading, true);
+      assert.strictEqual(fixture.store.load(), newLoad);
+    }
+    newResponse.resolve();
+    await newLoad;
+    const committed = fixture.store.getSnapshot();
+    if (!oldFirst) {
+      oldResponse.resolve();
+      await assert.rejects(oldLoad, /cancelled/);
+      assert.strictEqual(fixture.store.getSnapshot(), committed);
+    }
+    assert.equal(committed.selectedId, 'second');
+    assert.equal(committed.loading, false);
+    assert.equal(committed.error, null);
+    assert.equal(fixture.store.getDirectory(), projects[1].path);
+  }
+});
+
+test('a cancelled request failure cannot publish an error over a new successful load', async () => {
+  const fixture = setup();
+  const response = Promise.withResolvers<void>();
+  fixture.wait(response.promise);
+  fixture.fail(true);
+  const loading = fixture.store.load();
+  await Promise.resolve();
+  fixture.store.cancelLoad();
+  fixture.fail(false);
+  fixture.wait(Promise.resolve());
+  await fixture.store.load();
+  fixture.store.select('second');
+  const committed = fixture.store.getSnapshot();
+  response.resolve();
+  await assert.rejects(loading, /Fixture read failed/);
+  assert.strictEqual(fixture.store.getSnapshot(), committed);
+  assert.equal(committed.error, null);
+});
+
+test('cancelLoad without an active request preserves the snapshot and read failure', async () => {
+  const fixture = setup();
+  fixture.fail(true);
+  await assert.rejects(fixture.store.load());
+  const failed = fixture.store.getSnapshot();
+  let notifications = 0;
+  fixture.store.subscribe(() => { notifications++; });
+  fixture.store.cancelLoad();
+  assert.strictEqual(fixture.store.getSnapshot(), failed);
+  assert.equal(notifications, 0);
 });

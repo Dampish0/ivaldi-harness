@@ -36,9 +36,9 @@ const failureKeys = {
   busy: 'common.loading', unavailable: 'mobile.native.customProvider.loadFailed',
 } satisfies { [reason in CustomProviderErrorReason]: MessageKey };
 
-export function CustomProviderSettings({ ref, store, providers, providerID, compactEditing, back, close, saved, removed }: {
-  ref: React.Ref<CustomProviderNavigation>; store: CustomProvidersStore; providers: ProvidersStore;
-  providerID: string | null; compactEditing: boolean; back: () => void; close: () => void; saved: (providerID: string) => void; removed: () => void;
+export function CustomProviderSettings({ ref, store, providers, providerID, compactEditing, back, close, saved, removed, directory, active }: {
+  ref: React.Ref<CustomProviderNavigation>; store: CustomProvidersStore; providers: ProvidersStore; active: boolean;
+  providerID: string | null; compactEditing: boolean; back: () => void; close: () => void; saved: (providerID: string) => void; removed: () => void; directory: string | undefined | null;
 }) {
   const { t } = useI18n(); const { colors } = useTheme(); const { font, text } = useTypography();
   const state = useSyncExternalStore(providers.subscribe, providers.getSnapshot);
@@ -59,7 +59,8 @@ export function CustomProviderSettings({ ref, store, providers, providerID, comp
   const baseline = useRef(JSON.stringify(form)); const alive = useRef(true);
   const pending = useRef(false); const readRequest = useRef<AbortController | null>(null);
   const scroll = useRef<ScrollView>(null); const rootOffset = useRef(0);
-  const busy = state.mutation !== null || loadState === 'loading';
+  const busy = state.mutation !== null || loadState === 'loading' || directory === null;
+  const scopeChanged = editor !== undefined && directory !== null && editor.directory !== directory;
   const dirty = credentialPending || JSON.stringify(form) !== baseline.current;
   const selectedModel = page.kind === 'model' ? form.models.find(item => item.row === page.row) : undefined;
   const selectedHeader = page.kind === 'header' ? form.headers.find(item => item.row === page.row) : undefined;
@@ -80,9 +81,13 @@ export function CustomProviderSettings({ ref, store, providers, providerID, comp
     }
   }, [store]);
   useEffect(() => {
-    alive.current = true; if (providerID) void load(providerID);
+    alive.current = true;
     return () => { alive.current = false; readRequest.current?.abort(); };
-  }, [providerID, load]);
+  }, [store]);
+  useEffect(() => {
+    // Recovery can start the first read, but must never replace an edited form.
+    if (active && providerID && directory !== null && !editor && !dirty) void load(providerID);
+  }, [active, directory, providerID, editor, dirty, load]);
   useEffect(() => {
     setShowBusy(false); if (!state.mutation) return;
     const timer = setTimeout(() => setShowBusy(true), 500); return () => clearTimeout(timer);
@@ -113,7 +118,7 @@ export function CustomProviderSettings({ ref, store, providers, providerID, comp
     }
   };
   const submit = async () => {
-    if (pending.current || busy) return;
+    if (pending.current || busy || scopeChanged) return;
     Keyboard.dismiss();
     const errors = validateCustomProviderForm(form, editor, credentialPending || !editor);
     const modelIndex = errors.models.findIndex(item => item.id || item.name);
@@ -140,7 +145,7 @@ export function CustomProviderSettings({ ref, store, providers, providerID, comp
     ]);
   };
   const remove = () => {
-    if (!editor?.exists || busy) return;
+    if (!editor?.exists || busy || scopeChanged) return;
     Keyboard.dismiss();
     Alert.alert(t('mobile.native.customProvider.removeTitle'), t('mobile.native.customProvider.removeDetail', { scope: t(scopeLabels[editor.scope]) }), [
       { text: t('settings.providers.page.actions.cancel'), style: 'cancel' },
@@ -154,16 +159,16 @@ export function CustomProviderSettings({ ref, store, providers, providerID, comp
   };
   const title = t(page.kind === 'protocol' ? 'settings.providers.page.custom.field.protocol.label' : page.kind === 'model' ? 'mobile.native.customProvider.model' : page.kind === 'header' ? 'mobile.native.customProvider.header' : editor?.exists ? 'settings.providers.page.custom.editTitle' : 'settings.providers.page.custom.title');
   const pageKey = page.kind === 'model' || page.kind === 'header' ? `${page.kind}:${page.row}` : page.kind;
-  const conflict = failure === 'conflict' || failure === 'credentialSavedConflict';
+  const conflict = scopeChanged || failure === 'conflict' || failure === 'credentialSavedConflict';
 
   return <Animated.View key={pageKey} entering={direction === 0 ? undefined : (direction > 0 ? FadeInRight : FadeInLeft).duration(220).reduceMotion(ReduceMotion.System)} exiting={FadeOut.duration(100).reduceMotion(ReduceMotion.System)} style={styles.page}>
-    <SettingsHeader title={title} back={onBack} close={() => leave(close)} hidden={compactEditing} disabled={state.mutation !== null} />
+    <SettingsHeader title={title} back={onBack} close={() => leave(close)} hidden={compactEditing && directory !== null} disabled={state.mutation !== null} />
     {showBusy && <Text accessibilityLiveRegion="polite" style={[secondary, styles.notice]}>{t('settings.common.actions.saving')}</Text>}
-    {failure && !compactEditing && <View style={styles.notice}>
-      <Text accessibilityRole="alert" style={[secondary, { color: colors.status.error }]}>{t(loadState === 'failed' && failure === 'request' ? 'mobile.native.customProvider.loadFailed' : failure === 'request' && failureOperation === 'remove' ? 'mobile.native.customProvider.removeFailed' : failureKeys[failure])}</Text>
+    {(failure || scopeChanged) && !compactEditing && directory !== null && <View style={styles.notice}>
+      <Text accessibilityRole="alert" style={[secondary, { color: colors.status.error }]}>{t(scopeChanged ? 'mobile.native.customProvider.conflict' : loadState === 'failed' && failure === 'request' ? 'mobile.native.customProvider.loadFailed' : failure === 'request' && failureOperation === 'remove' ? 'mobile.native.customProvider.removeFailed' : failureKeys[failure ?? 'unavailable'])}</Text>
       {conflict && <Button variant="setting" icon="restart" label={t('mobile.native.customProvider.reload')} onPress={reload} disabled={busy} testID="custom-provider-reload" />}
     </View>}
-    {loadState !== 'ready' ? <View style={styles.notice}>
+    {directory === null ? <View style={styles.notice}><Text accessibilityLiveRegion="polite" style={secondary}>{t('common.unavailable')}</Text></View> : loadState !== 'ready' ? <View style={styles.notice}>
       {loadState === 'loading' ? <Text style={secondary}>{t('common.loading')}</Text> : <Button variant="setting" icon="restart" label={t('settings.common.actions.retry')} onPress={() => { void load(editor?.providerID ?? providerID ?? form.providerID.trim()); }} testID="custom-provider-load-retry" />}
     </View> : <SettingsForm key={pageKey} scrollRef={scroll} compactEditing={compactEditing} contentContainerStyle={styles.content} contentOffset={{ x: 0, y: page.kind === 'form' ? rootOffset.current : 0 }} onScroll={event => { if (page.kind === 'form') rootOffset.current = event.nativeEvent.contentOffset.y; }} testID={`settings-page-custom-${page.kind}`}>
       {page.kind === 'form' && <>

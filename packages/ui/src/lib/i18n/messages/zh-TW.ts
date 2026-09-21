@@ -164,6 +164,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'mobile.instances.delete': '刪除',
   'mobile.instances.deleteAria': '刪除 {label}',
   'mobile.instances.confirmDeleteAria': '確認刪除 {label}',
+  'mobile.instances.deleteDescription': "這將從此裝置移除已儲存的連線。你的伺服器和聊天仍然可用。",
   'mobile.instances.cancelDeleteAria': '保留 {label}',
   'mobile.instances.cancelEdit': '取消',
   'mobile.instances.label.label': '名稱',

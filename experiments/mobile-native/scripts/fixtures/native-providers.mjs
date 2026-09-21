@@ -12,6 +12,9 @@ const oauthInput = z.object({
 const callbackInput = z.object({ method: z.union([z.literal(1), z.literal(2)]), code: z.string().optional() }).strict()
   .refine(value => value.method === 1 ? value.code === undefined : value.code === 'native-qa-code');
 const reloadInput = z.object({ reloadMode: z.enum(['managed', 'manual']), simulateRestart: z.boolean().default(false) }).strict();
+const catalogControlInput = z.object({ currentBuild: z.boolean().optional(), nativeVariants: z.enum(['standard', 'updated', 'none']).optional() }).strict()
+  .refine(value => value.currentBuild !== undefined || value.nativeVariants !== undefined);
+const sessionAvailabilityInput = z.object({ sessionId: z.enum(['ses_native_qa', 'ses_visual_18']), available: z.boolean() }).strict();
 const projectRegistryInput = z.object({ registered: z.array(z.enum(['native-qa/current', 'native-qa/alternate'])).max(2) }).strict()
   .refine(value => new Set(value.registered).size === value.registered.length);
 const fixtureProjects = [
@@ -52,8 +55,13 @@ export function createProviderFixture({ origin, catalog, answer, body, applyNext
   let appliedStored = new Set();
   const registeredProjects = new Set(fixtureProjects.map(project => project.id));
   const projects = () => fixtureProjects.filter(project => registeredProjects.has(project.id)).map(project => ({ ...project }));
+  let currentBuild = true; let nativeVariants = 'standard';
+  const alternateSession = { id: 'ses_visual_18', title: 'QA Alternate conversation', directory: fixtureProjects[1].path, model: { providerID: 'qa-custom-alternate', id: 'qa/alternate' }, agent: 'qa-alternate', time: { created: Date.now() - 18, updated: Date.now() - 18 } };
+  const unavailableSessions = new Set();
+  const sessionAvailable = sessionID => !unavailableSessions.has(sessionID);
   const agents = directory => [
-    { name: 'build', mode: 'primary' }, { name: 'plan', mode: 'primary' },
+    ...currentBuild || directory !== fixtureProjects[0].path ? [{ name: 'build', mode: 'primary' }] : [],
+    { name: 'plan', mode: 'primary' },
     ...directory === fixtureProjects[1].path ? [{ name: 'qa-alternate', mode: 'primary' }] : [],
   ];
   const configs = new Map([['project:C:/IvaldiNativeQA/alternate', { fixtureMarker: true, provider: {
@@ -88,18 +96,35 @@ export function createProviderFixture({ origin, catalog, answer, body, applyNext
   const customSources = (provider, directory) => Object.fromEntries(['user', 'project', 'custom'].map(scope => [scope, { exists: Object.hasOwn(layerConfig(scope, directory).provider ?? {}, provider), path: configPath(scope, directory) }]));
   const effectiveCatalog = directory => {
     const custom = customCatalog(directory);
-    return { all: [...catalog.all, ...custom], connected: [...catalog.connected, ...custom.filter(provider => provider.env.length > 0 || provider.options.apiKey || appliedStored.has(provider.id)).map(provider => provider.id)], default: { ...catalog.default, ...Object.fromEntries(custom.map(provider => [provider.id, Object.keys(provider.models)[0]])) } };
+    const base = directory === fixtureProjects[0].path && nativeVariants !== 'standard' ? catalog.all.map(provider => provider.id === 'qa' ? { ...provider, models: { ...provider.models, native: { ...provider.models.native, variants: nativeVariants === 'updated' ? { low: {}, medium: {} } : {} } } } : provider) : catalog.all;
+    return { all: [...base, ...custom], connected: [...catalog.connected, ...custom.filter(provider => provider.env.length > 0 || provider.options.apiKey || appliedStored.has(provider.id)).map(provider => provider.id)], default: { ...catalog.default, ...Object.fromEntries(custom.map(provider => [provider.id, Object.keys(provider.models)[0]])) } };
   };
   let authorization = null;
   let reloadMode = 'managed';
-  const counts = { catalogReads: 0, agentReads: 0, registryChanges: 0, authReads: 0, sourceReads: 0, saves: 0, deletions: 0, authorizations: 0, callbacks: 0, reloads: 0, browserOpens: 0, simulatedRestarts: 0, configReads: 0, configWrites: 0, configDeletes: 0, configSeeds: 0 };
+  const counts = { catalogReads: 0, agentReads: 0, catalogChanges: 0, registryChanges: 0, sessionAvailabilityChanges: 0, authReads: 0, sourceReads: 0, saves: 0, deletions: 0, authorizations: 0, callbacks: 0, reloads: 0, browserOpens: 0, simulatedRestarts: 0, configReads: 0, configWrites: 0, configDeletes: 0, configSeeds: 0 };
   const catalogDirectories = new Map(); const agentDirectories = new Map();
   const apply = () => { catalog.connected = ['qa', ...[...stored].filter(provider => Object.hasOwn(methods, provider))]; appliedStored = new Set(stored); appliedConfigs = structuredClone(configs); };
-  const snapshot = () => ({ ...counts, reloadMode, stored: [...stored].sort(), connected: effectiveCatalog('C:/IvaldiNativeQA/project').connected, pendingAuthorization: authorization?.method ?? null, registeredProjects: [...registeredProjects], catalogDirectories: Object.fromEntries(catalogDirectories), agentDirectories: Object.fromEntries(agentDirectories), configurations: [...configs].flatMap(([scope, root]) => Object.entries(root.provider ?? {}).map(([providerID, config]) => ({ scope, providerID, modelIDs: Object.keys(config.models), extraProviderPreserved: config.fixtureMetadata === true, extraOptionsPreserved: config.options.timeout === 12345, extraModelPreserved: config.models['qa/kept']?.limit?.context === 16384 }))) });
+  const snapshot = () => ({ ...counts, reloadMode, catalogState: { currentBuild, nativeVariants }, unavailableSessions: [...unavailableSessions].sort(), stored: [...stored].sort(), connected: effectiveCatalog('C:/IvaldiNativeQA/project').connected, pendingAuthorization: authorization?.method ?? null, registeredProjects: [...registeredProjects], catalogDirectories: Object.fromEntries(catalogDirectories), agentDirectories: Object.fromEntries(agentDirectories), configurations: [...configs].flatMap(([scope, root]) => Object.entries(root.provider ?? {}).map(([providerID, config]) => ({ scope, providerID, modelIDs: Object.keys(config.models), extraProviderPreserved: config.fixtureMetadata === true, extraOptionsPreserved: config.options.timeout === 12345, extraModelPreserved: config.models['qa/kept']?.limit?.context === 16384 }))) });
   const known = provider => Object.hasOwn(methods, provider) || customId.safeParse(provider).success;
   const fail = (response, message, status = 400) => answer(response, { error: message }, status);
 
   async function handlePublic(request, response, url) {
+    if (url.pathname === '/__qa/session-availability' && request.method === 'POST') {
+      const parsed = sessionAvailabilityInput.safeParse(await body(request, 4096));
+      if (!parsed.success) { fail(response, 'Invalid session availability fixture control'); return true; }
+      if (parsed.data.available) unavailableSessions.delete(parsed.data.sessionId);
+      else unavailableSessions.add(parsed.data.sessionId);
+      counts.sessionAvailabilityChanges++;
+      answer(response, snapshot()); return true;
+    }
+    if (url.pathname === '/__qa/catalog' && request.method === 'POST') {
+      const parsed = catalogControlInput.safeParse(await body(request, 4096));
+      if (!parsed.success) { fail(response, 'Invalid catalog fixture control'); return true; }
+      if (parsed.data.currentBuild !== undefined) currentBuild = parsed.data.currentBuild;
+      if (parsed.data.nativeVariants !== undefined) nativeVariants = parsed.data.nativeVariants;
+      counts.catalogChanges++;
+      answer(response, snapshot()); return true;
+    }
     if (url.pathname === '/__qa/projects' && request.method === 'POST') {
       const parsed = projectRegistryInput.safeParse(await body(request, 4096));
       if (!parsed.success) { fail(response, 'Invalid project registry fixture control'); return true; }
@@ -279,5 +304,5 @@ export function createProviderFixture({ origin, catalog, answer, body, applyNext
     fail(response, 'Unsupported provider fixture action', 405); return true;
   }
 
-  return { handle, handlePublic, snapshot, catalog: effectiveCatalog, projects, agents };
+  return { handle, handlePublic, snapshot, catalog: effectiveCatalog, projects, agents, alternateSession, sessionAvailable };
 }

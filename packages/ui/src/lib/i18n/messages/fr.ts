@@ -2970,6 +2970,7 @@ export const dict = {
   'mobile.instances.delete': 'Supprimer',
   'mobile.instances.deleteAria': 'Supprimer {label}',
   'mobile.instances.confirmDeleteAria': 'Confirmer la suppression de {label}',
+  'mobile.instances.deleteDescription': "La connexion enregistrée sera supprimée de cet appareil. Votre serveur et vos conversations resteront disponibles.",
   'mobile.instances.cancelDeleteAria': 'Conserver {label}',
   'mobile.instances.cancelEdit': 'Annuler',
   'mobile.instances.label.label': 'Nom',

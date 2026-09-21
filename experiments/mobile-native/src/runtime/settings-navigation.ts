@@ -6,6 +6,16 @@ export type SettingsPage =
 export type SettingsDestination = Exclude<SettingsPage, 'home' | 'provider-detail' | 'provider-auth'> | 'connections';
 type SettingsMode = 'work' | 'developer';
 
+/** Device preferences do not depend on a successful server connection. */
+export function isSettingsDestinationAvailable(destination: SettingsDestination, connected: boolean, mode: SettingsMode) {
+  switch (destination) {
+    case 'appearance': case 'theme': case 'font': case 'text-size': case 'density': case 'language': case 'chat': case 'connections':
+      return true;
+    case 'advanced': return connected && mode === 'work';
+    default: return connected;
+  }
+}
+
 /** Native destinations follow the visibility and reachability policy in shared lib/productMode.ts. */
 export function getSettingsParent(destination: SettingsDestination, mode: SettingsMode) {
   switch (destination) {

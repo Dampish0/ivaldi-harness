@@ -179,6 +179,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'mobile.instances.delete': '削除',
   'mobile.instances.deleteAria': '{label} を削除',
   'mobile.instances.confirmDeleteAria': '{label} の削除を確定',
+  'mobile.instances.deleteDescription': "このデバイスから保存済みの接続を削除します。サーバーとチャットは引き続き利用できます。",
   'mobile.instances.cancelDeleteAria': '{label} を残す',
   'mobile.surface.closeAria': '閉じる',
   'mobile.header.openWorkspaceAria': 'ワークスペースパネルを開く',

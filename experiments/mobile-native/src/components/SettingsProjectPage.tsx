@@ -6,9 +6,11 @@ import type { SettingsProjectsStore } from '../runtime/settings-projects';
 import { Button, Icon } from './ui';
 import { SettingsSection } from './SettingsControls';
 
-export function SettingsProjectPage({ store, choose, busy, compactSearch, onSearchFocus }: {
+export function SettingsProjectPage({ store, choose, busy, compactSearch, onSearchFocus, active, currentProjectAvailable }: {
   store: SettingsProjectsStore; choose: (projectID: string | null) => void; busy: boolean;
   compactSearch: boolean; onSearchFocus: (focused: boolean) => void;
+  active: boolean;
+  currentProjectAvailable: boolean;
 }) {
   const state = useSyncExternalStore(store.subscribe, store.getSnapshot);
   const { t, locale } = useI18n(); const { colors, appearance } = useTheme(); const { font, text } = useTypography();
@@ -17,7 +19,7 @@ export function SettingsProjectPage({ store, choose, busy, compactSearch, onSear
   const normalized = query.trim().toLocaleLowerCase(locale);
   const projects = state.projects.filter(project => `${project.label ?? ''} ${project.path}`.toLocaleLowerCase(locale).includes(normalized));
   const secondary = [text(14, 21), { fontFamily: font.regular, color: colors.surface.mutedForeground }];
-  useEffect(() => { void store.load().catch(() => {}); }, [store]);
+  useEffect(() => { if (!active) return; void store.load().catch(() => {}); return store.cancelLoad; }, [store, active]);
   return <FlatList ref={list} data={projects} keyExtractor={item => item.id} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag"
     initialNumToRender={12} maxToRenderPerBatch={8} windowSize={5} contentContainerStyle={[styles.content, { paddingBottom: 32 * appearance.density / 100 }]} testID="settings-page-settings-project"
     ListHeaderComponent={<>
@@ -31,8 +33,8 @@ export function SettingsProjectPage({ store, choose, busy, compactSearch, onSear
         {query.length > 0 && <Button icon="close" label={t('settings.view.search.clear')} onPress={() => setQuery('')} testID="settings-project-search-clear" animateIcon={false} />}
       </View>
       {!compactSearch && <SettingsSection title={t('mobile.native.settingsProject')} info={t('mobile.native.settingsProjectDescription')}>
-        <Button variant="setting" showSelection selected={state.selectedId === null} label={t('mobile.native.settingsProjectCurrent')} onPress={() => choose(null)} disabled={busy || state.loading} testID="settings-project-current">
-          <View style={styles.rowText}><Text style={[text(16, 23), { fontFamily: font.regular, color: colors.surface.foreground }]}>{t('mobile.native.settingsProjectCurrent')}</Text><Text style={secondary}>{t('mobile.native.settingsProjectCurrentDescription')}</Text></View>
+        <Button variant="setting" showSelection selected={state.selectedId === null} label={t('mobile.native.settingsProjectCurrent')} onPress={() => choose(null)} disabled={busy || state.loading || !currentProjectAvailable} testID="settings-project-current">
+          <View style={styles.rowText}><Text style={[text(16, 23), { fontFamily: font.regular, color: colors.surface.foreground }]}>{t('mobile.native.settingsProjectCurrent')}</Text><Text style={secondary}>{t(currentProjectAvailable ? 'mobile.native.settingsProjectCurrentDescription' : 'common.unavailable')}</Text></View>
         </Button>
       </SettingsSection>}
       {state.loading && <Text accessibilityLiveRegion="polite" style={[secondary, styles.notice]}>{t('common.loading')}</Text>}

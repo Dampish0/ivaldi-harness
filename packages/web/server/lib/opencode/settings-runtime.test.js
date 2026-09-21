@@ -5,6 +5,9 @@ import os from 'os';
 import path from 'path';
 import { createProjectIdFromPath } from '../projects/project-id.js';
 import { createSettingsRuntime } from './settings-runtime.js';
+import express from 'express';
+import request from 'supertest';
+import { registerOpenCodeRoutes } from './routes.js';
 
 const createRuntime = async (overrides = {}) => {
   const tempRoot = await fsPromises.mkdtemp(path.join(os.tmpdir(), 'oc-settings-runtime-'));
@@ -77,6 +80,202 @@ describe('settings runtime', () => {
 
       await expect(runtime.readSettingsFromDisk()).resolves.toEqual(preferences);
       await expect(fsPromises.readFile(settingsFilePath, 'utf8')).resolves.toBe(JSON.stringify(preferences, null, 2));
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('allows retry after a failed save without replaying the failed change', async () => {
+    let failWrite = true;
+    const observed = [];
+    const { runtime, settingsFilePath, cleanup } = await createRuntime({
+      fsPromises: {
+        ...fsPromises,
+        rename: async (...args) => {
+          if (failWrite) throw Object.assign(new Error('Synthetic settings write failure'), { code: 'EIO' });
+          return fsPromises.rename(...args);
+        },
+      },
+      mergePersistedSettings: (current, changes) => ({ ...current, ...changes }),
+      onSettingsChanged: (settings) => observed.push(settings),
+    });
+    const previous = { defaultModel: 'qa/native', defaultAgent: 'build' };
+    try {
+      await fsPromises.writeFile(settingsFilePath, JSON.stringify(previous));
+      await expect(runtime.persistSettings({ defaultModel: 'qa/failed' })).rejects.toThrow('Synthetic settings write failure');
+      expect(JSON.parse(await fsPromises.readFile(settingsFilePath, 'utf8'))).toEqual(previous);
+      expect(observed).toEqual([]);
+
+      failWrite = false;
+      await expect(runtime.persistSettings({ defaultAgent: 'plan' })).resolves.toEqual({ ...previous, defaultAgent: 'plan' });
+      await expect(runtime.persistSettings({ defaultModel: 'qa/retried' })).resolves.toEqual({ defaultModel: 'qa/retried', defaultAgent: 'plan' });
+      expect(JSON.parse(await fsPromises.readFile(settingsFilePath, 'utf8'))).toEqual({ defaultModel: 'qa/retried', defaultAgent: 'plan' });
+      expect(observed).toEqual([{ ...previous, defaultAgent: 'plan' }, { defaultModel: 'qa/retried', defaultAgent: 'plan' }]);
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps later queued saves ordered when their predecessor fails', async () => {
+    const started = Promise.withResolvers();
+    const release = Promise.withResolvers();
+    let attempts = 0;
+    const observed = [];
+    const { runtime, settingsFilePath, cleanup } = await createRuntime({
+      fsPromises: {
+        ...fsPromises,
+        rename: async (...args) => {
+          attempts++;
+          if (attempts === 1) {
+            started.resolve();
+            await release.promise;
+            throw Object.assign(new Error('Synthetic queued write failure'), { code: 'EIO' });
+          }
+          return fsPromises.rename(...args);
+        },
+      },
+      mergePersistedSettings: (current, changes) => ({ ...current, ...changes }),
+      onSettingsChanged: (settings) => observed.push(settings),
+    });
+    let pending;
+    try {
+      await fsPromises.writeFile(settingsFilePath, JSON.stringify({ defaultModel: 'qa/native' }));
+      const first = runtime.persistSettings({ defaultModel: 'qa/failed' });
+      await started.promise;
+      const second = runtime.persistSettings({ defaultAgent: 'plan' });
+      const third = runtime.persistSettings({ defaultModel: 'qa/last' });
+      pending = Promise.allSettled([first, second, third]);
+      expect(attempts).toBe(1);
+      release.resolve();
+      expect(await pending).toEqual([
+        { status: 'rejected', reason: expect.objectContaining({ message: 'Synthetic queued write failure' }) },
+        { status: 'fulfilled', value: { defaultModel: 'qa/native', defaultAgent: 'plan' } },
+        { status: 'fulfilled', value: { defaultModel: 'qa/last', defaultAgent: 'plan' } },
+      ]);
+      expect(attempts).toBe(3);
+      expect(observed).toEqual([{ defaultModel: 'qa/native', defaultAgent: 'plan' }, { defaultModel: 'qa/last', defaultAgent: 'plan' }]);
+      expect(JSON.parse(await fsPromises.readFile(settingsFilePath, 'utf8'))).toEqual({ defaultModel: 'qa/last', defaultAgent: 'plan' });
+    } finally {
+      release.resolve();
+      await pending;
+      await cleanup();
+    }
+  });
+
+  it.each(['{broken', 'null', '42', '[]'])('preserves malformed settings %s until the file is repaired', async (raw) => {
+    const observed = [];
+    const { runtime, settingsFilePath, cleanup } = await createRuntime({
+      mergePersistedSettings: (current, changes) => ({ ...current, ...changes }),
+      onSettingsChanged: (settings) => observed.push(settings),
+    });
+    try {
+      await fsPromises.writeFile(settingsFilePath, raw);
+      await expect(runtime.persistSettings({ defaultAgent: 'plan' })).rejects.toThrow();
+      await expect(runtime.readSettingsFromDiskMigrated()).rejects.toThrow();
+      expect(await fsPromises.readFile(settingsFilePath, 'utf8')).toBe(raw);
+      expect(observed).toEqual([]);
+      await fsPromises.writeFile(settingsFilePath, JSON.stringify({ defaultModel: 'qa/native' }));
+      await expect(runtime.persistSettings({ defaultAgent: 'plan' })).resolves.toEqual({ defaultModel: 'qa/native', defaultAgent: 'plan' });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('preserves existing settings on a read failure and permits recovery', async () => {
+    let failRead = true;
+    const previous = { defaultModel: 'qa/native', defaultAgent: 'build' };
+    const observed = [];
+    const { runtime, settingsFilePath, cleanup } = await createRuntime({
+      fsPromises: {
+        ...fsPromises,
+        readFile: async (...args) => {
+          if (failRead) throw Object.assign(new Error('Synthetic settings read failure'), { code: 'EACCES' });
+          return fsPromises.readFile(...args);
+        },
+      },
+      mergePersistedSettings: (current, changes) => ({ ...current, ...changes }),
+      onSettingsChanged: (settings) => observed.push(settings),
+    });
+    try {
+      await fsPromises.writeFile(settingsFilePath, JSON.stringify(previous));
+      await expect(runtime.persistSettings({ defaultAgent: 'plan' })).rejects.toThrow('Synthetic settings read failure');
+      await expect(runtime.readSettingsFromDiskMigrated()).rejects.toThrow('Synthetic settings read failure');
+      expect(JSON.parse(await fsPromises.readFile(settingsFilePath, 'utf8'))).toEqual(previous);
+      expect(observed).toEqual([]);
+      failRead = false;
+      await expect(runtime.persistSettings({ defaultAgent: 'plan' })).resolves.toEqual({ ...previous, defaultAgent: 'plan' });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('serializes a migration read with a later save so neither replaces the other', async () => {
+    const started = Promise.withResolvers();
+    const release = Promise.withResolvers();
+    let reads = 0;
+    const { runtime, settingsFilePath, cleanup } = await createRuntime({
+      fsPromises: {
+        ...fsPromises,
+        readFile: async (...args) => {
+          reads++;
+          if (reads === 1) { started.resolve(); await release.promise; }
+          return fsPromises.readFile(...args);
+        },
+      },
+      mergePersistedSettings: (current, changes) => ({ ...current, ...changes }),
+    });
+    let pending;
+    try {
+      await fsPromises.writeFile(settingsFilePath, JSON.stringify({ defaultModel: 'qa/native' }));
+      const migration = runtime.readSettingsFromDiskMigrated();
+      await started.promise;
+      const save = runtime.persistSettings({ defaultAgent: 'plan' });
+      pending = Promise.allSettled([migration, save]);
+      await new Promise(resolve => setImmediate(resolve));
+      expect(reads).toBe(1);
+      release.resolve();
+      const outcomes = await pending;
+      expect(outcomes.map(outcome => outcome.status)).toEqual(['fulfilled', 'fulfilled']);
+      expect(JSON.parse(await fsPromises.readFile(settingsFilePath, 'utf8'))).toMatchObject({
+        defaultModel: 'qa/native', defaultAgent: 'plan', notifyOnCompletion: true,
+      });
+    } finally {
+      release.resolve();
+      await pending;
+      await cleanup();
+    }
+  });
+
+  it('keeps Settings HTTP failures recoverable without restarting the host', async () => {
+    let failWrite = true;
+    const { runtime, settingsFilePath, cleanup } = await createRuntime({
+      fsPromises: {
+        ...fsPromises,
+        rename: async (...args) => {
+          if (failWrite) throw Object.assign(new Error('Synthetic HTTP settings failure'), { code: 'EIO' });
+          return fsPromises.rename(...args);
+        },
+      },
+      mergePersistedSettings: (current, changes) => ({ ...current, ...changes }),
+    });
+    const app = express();
+    app.use(express.json());
+    registerOpenCodeRoutes(app, { ...runtime, formatSettingsResponse: settings => settings });
+    try {
+      await fsPromises.writeFile(settingsFilePath, JSON.stringify({ defaultModel: 'qa/native' }));
+      await request(app).put('/api/config/settings').send({ defaultAgent: 'plan' }).expect(500);
+      expect(JSON.parse(await fsPromises.readFile(settingsFilePath, 'utf8'))).toEqual({ defaultModel: 'qa/native' });
+      failWrite = false;
+      const saved = await request(app).put('/api/config/settings').send({ defaultAgent: 'plan' }).expect(200);
+      expect(saved.body).toEqual({ defaultModel: 'qa/native', defaultAgent: 'plan' });
+      await fsPromises.writeFile(settingsFilePath, '{broken');
+      const failedRead = await request(app).get('/api/config/settings').expect(500);
+      expect(failedRead.body).toEqual({ error: 'Failed to read settings' });
+      expect(await fsPromises.readFile(settingsFilePath, 'utf8')).toBe('{broken');
+      await fsPromises.writeFile(settingsFilePath, JSON.stringify(saved.body));
+      const restored = await request(app).get('/api/config/settings').expect(200);
+      expect(restored.body).toMatchObject(saved.body);
+      expect(restored.body.notifyOnCompletion).toBe(true);
     } finally {
       await cleanup();
     }

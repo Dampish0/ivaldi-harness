@@ -24,14 +24,21 @@ export function ModelPicker({ open, models, model, variants, setVariants, favori
   const previousVariants = useRef<ModelChoice | null>(null);
   const progress = useSharedValue(0);
   const available = availability.available;
-  const showEffort = available && variants !== null;
-  const effort = available ? variants ?? previousVariants.current : null;
-  useLayoutEffect(() => { if (!available) previousVariants.current = null; else if (variants) previousVariants.current = variants; }, [available, variants]);
+  const effortIdentity = variants ?? previousVariants.current;
+  const effort = available && effortIdentity ? models.find(item => item.id === effortIdentity.id && item.providerID === effortIdentity.providerID && item.variants.length > 0) ?? null : null;
+  const hasEffort = effort !== null;
+  const showEffort = variants !== null && hasEffort;
+  useLayoutEffect(() => {
+    if (!effort) {
+      previousVariants.current = null;
+      progress.value = 0;
+      if (variants) setVariants(null);
+    } else if (variants) previousVariants.current = effort;
+  }, [effort, variants, setVariants, progress]);
   useLayoutEffect(() => { if (open) { setQuery(''); progress.value = 0; } }, [open, progress]);
-  useEffect(() => { if (!available && variants) setVariants(null); }, [available, variants, setVariants]);
-  useEffect(() => { if (open) progress.value = available ? withTiming(showEffort ? 1 : 0, movement) : 0; }, [open, available, showEffort, progress]);
-  const modelPageStyle = useAnimatedStyle(() => ({ opacity: available ? 1 - progress.value : 1, transform: [{ translateX: available ? -24 * progress.value : 0 }] }));
-  const effortPageStyle = useAnimatedStyle(() => ({ opacity: available ? progress.value : 0, transform: [{ translateX: 36 * (1 - progress.value) }] }));
+  useEffect(() => { if (open) progress.value = hasEffort ? withTiming(showEffort ? 1 : 0, movement) : 0; }, [open, hasEffort, showEffort, progress]);
+  const modelPageStyle = useAnimatedStyle(() => ({ opacity: hasEffort ? 1 - progress.value : 1, transform: [{ translateX: hasEffort ? -24 * progress.value : 0 }] }));
+  const effortPageStyle = useAnimatedStyle(() => ({ opacity: hasEffort ? progress.value : 0, transform: [{ translateX: 36 * (1 - progress.value) }] }));
   const keyOf = (item: ModelChoice) => item.providerID + '/' + item.id;
   const isSelected = (item: ModelChoice) => item.id === model?.modelID && item.providerID === model.providerID;
   const hidden = new Set(hiddenModels);
@@ -68,8 +75,10 @@ export function ModelPicker({ open, models, model, variants, setVariants, favori
         <View style={styles.titleRow}><Text style={[typography.text(18, 24), { fontFamily: font.semibold, fontWeight: typography.semiboldWeight, color: colors.surface.foreground }]}>{t('chat.unifiedControls.effort.title')}</Text></View>
       </View>
       {effort && <FlatList data={['', ...effort.variants]} keyExtractor={item => item || 'default'} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}
-        ListHeaderComponent={<Button variant="row" icon="arrow-left" label={effort.name} onPress={() => setVariants(null)} testID="model-effort-back" />}
-        renderItem={({ item }) => <Button variant="row" showSelection selected={isSelected(effort) && (model?.variant ?? '') === item} label={item || t('chat.modelControls.default')} onPress={() => select({ providerID: effort.providerID, modelID: effort.id, variant: item || undefined })} testID={'model-effort-' + (item || 'default')} />} />}
+        ListHeaderComponent={<Button variant="row" icon="arrow-left" label={effort.name} disabled={!showEffort} onPress={() => setVariants(null)} testID="model-effort-back" />}
+        renderItem={({ item }) => <Button variant="row" showSelection selected={isSelected(effort) && (model?.variant ?? '') === item} disabled={!showEffort} label={item || t('chat.modelControls.default')} onPress={() => {
+          if (showEffort && (!item || effort.variants.includes(item))) select({ providerID: effort.providerID, modelID: effort.id, variant: item || undefined });
+        }} testID={'model-effort-' + (item || 'default')} />} />}
     </Animated.View>
     <Button icon="close" label={t('mobile.surface.closeAria')} onPress={close} testID="sheet-close" style={styles.close} />
   </View>;

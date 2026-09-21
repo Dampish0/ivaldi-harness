@@ -8,7 +8,7 @@ import { SettingsForm, SettingsInput, SettingsRow, SettingsSection, SettingsTogg
 import type { ModelVisibilityStore } from '../runtime/model-visibility';
 
 export type ProviderPage = 'providers' | 'provider-detail' | 'provider-auth';
-export function ProviderSettings({ page, store, providerID, methodIndex, go, openCustom, compactSearch, compactAuth, onSearchFocus, offset, onScroll, query, setQuery, modelVisibility, save, busy: settingsBusy, projectLabel, openProject }: {
+export function ProviderSettings({ page, store, providerID, methodIndex, go, openCustom, compactSearch, compactAuth, onSearchFocus, offset, onScroll, query, setQuery, modelVisibility, save, busy: settingsBusy, projectLabel, openProject, directory, active }: {
   page: ProviderPage; store: ProvidersStore; providerID: string | null; methodIndex: number | null;
   go: (page: ProviderPage, providerID?: string, methodIndex?: number) => void;
   openCustom: (providerID?: string) => void;
@@ -16,7 +16,7 @@ export function ProviderSettings({ page, store, providerID, methodIndex, go, ope
   offset: number; onScroll: (offset: number) => void;
   query: string; setQuery: (value: string) => void;
   modelVisibility: ModelVisibilityStore; save: (operation: () => Promise<void>) => void; busy: boolean;
-  projectLabel: string; openProject: () => void;
+  projectLabel: string; openProject: () => void; directory: string | undefined | null; active: boolean;
 }) {
   const state = useSyncExternalStore(store.subscribe, store.getSnapshot);
   const visibility = useSyncExternalStore(modelVisibility.subscribe, modelVisibility.getSnapshot);
@@ -28,10 +28,10 @@ export function ProviderSettings({ page, store, providerID, methodIndex, go, ope
   const [showBusy, setShowBusy] = useState(false);
   const input = useRef<TextInput>(null); const list = useRef<FlatList<NativeProvider>>(null);
   const request = useRef(0);
-  const catalog = state.catalog.value?.all ?? [];
+  const catalog = directory === null ? [] : state.catalog.value?.all ?? [];
   // A successful config or credential write can precede OpenCode's next catalog.
   // Keep its explicit pending identity reachable until Apply returns live data.
-  const pendingProviders: NativeProvider[] = state.pendingRestart.filter(id => !catalog.some(item => item.id === id)).map(id => ({ id, name: id, models: {} }));
+  const pendingProviders: NativeProvider[] = directory === null ? [] : state.pendingRestart.filter(id => !catalog.some(item => item.id === id)).map(id => ({ id, name: id, models: {} }));
   const availableProviders = [...catalog, ...pendingProviders];
   const provider = availableProviders.find(item => item.id === providerID);
   const declared = providerID ? state.methods.value?.[providerID] ?? [] : [];
@@ -40,15 +40,17 @@ export function ProviderSettings({ page, store, providerID, methodIndex, go, ope
   const prompts = method?.prompts ?? [];
   const [answers, setAnswers] = useState(() => defaultPromptValues(prompts));
   const source = providerID ? state.sources[providerID] : undefined;
-  const busy = state.mutation !== null || settingsBusy || visibility.saving;
+  const operationBusy = state.mutation !== null || settingsBusy || visibility.saving;
+  const busy = operationBusy || directory === null;
   const primary = [text(16, 23), { fontFamily: font.regular, color: colors.surface.foreground }];
   const secondary = [text(14, 21), { fontFamily: font.regular, color: colors.surface.mutedForeground }];
-  useEffect(() => { if (page === 'providers') void store.load().catch(() => {}); }, [page, store]);
-  useEffect(() => { if (providerID) void store.loadSource(providerID).catch(() => {}); }, [providerID, store]);
+  useEffect(() => { if (active) void store.load().catch(() => {}); }, [active, directory, store]);
+  useEffect(() => { if (active && providerID) void store.loadSource(providerID).catch(() => {}); }, [active, directory, providerID, store]);
+  useEffect(() => { setAuthorization(null); setCode(''); }, [directory]);
   useEffect(() => {
     const owner = request;
     return () => { owner.current++; if (page === 'provider-auth') store.cancelOAuth(); };
-  }, [page, store]);
+  }, [directory, page, store]);
   useEffect(() => {
     setShowBusy(false);
     if (!state.mutation) return;
@@ -90,12 +92,13 @@ export function ProviderSettings({ page, store, providerID, methodIndex, go, ope
     const normalized = query.trim().toLocaleLowerCase();
     const providers = availableProviders.filter(item => `${item.name} ${item.id}`.toLocaleLowerCase().includes(normalized)).sort((a, b) => Number(connected.has(b.id)) - Number(connected.has(a.id)) || a.name.localeCompare(b.name));
     return <FlatList ref={list} data={providers} keyExtractor={item => item.id} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" initialNumToRender={12} maxToRenderPerBatch={8} windowSize={5} contentOffset={{ x: 0, y: offset }} onScroll={event => onScroll(event.nativeEvent.contentOffset.y)} scrollEventThrottle={32} contentContainerStyle={styles.content} testID="settings-page-providers"
-      ListHeaderComponent={<>{search}{!compactSearch && <SettingsSection><SettingsRow title={t('mobile.native.settingsProject')} value={projectLabel} icon="folder-3" onPress={openProject} disabled={busy} testID="providers-settings-project" /></SettingsSection>}{feedback}{pending}{state.catalog.loading && <Text style={[secondary, styles.notice]}>{t('common.loading')}</Text>}{state.catalog.error && <View style={styles.notice}><Text accessibilityRole="alert" style={secondary}>{t('settings.providers.page.state.unableToLoadProviderList')}</Text><Button variant="setting" icon="restart" label={t('settings.common.actions.retry')} onPress={() => perform(() => store.load())} disabled={busy || state.catalog.loading} testID="providers-load-retry" /></View>}</>}
-      ListEmptyComponent={!state.catalog.loading && state.catalog.value ? <Text style={[secondary, styles.notice]}>{t('settings.providers.page.connect.noProvidersFound')}</Text> : null}
+      ListHeaderComponent={<>{search}{!compactSearch && <SettingsSection><SettingsRow title={t('mobile.native.settingsProject')} value={projectLabel} icon="folder-3" onPress={openProject} disabled={operationBusy} testID="providers-settings-project" /></SettingsSection>}{feedback}{pending}{directory === null ? <Text accessibilityLiveRegion="polite" style={[secondary, styles.notice]}>{t('common.unavailable')}</Text> : <>{state.catalog.loading && <Text style={[secondary, styles.notice]}>{t('common.loading')}</Text>}{state.catalog.error && <View style={styles.notice}><Text accessibilityRole="alert" style={secondary}>{t('settings.providers.page.state.unableToLoadProviderList')}</Text><Button variant="setting" icon="restart" label={t('settings.common.actions.retry')} onPress={() => perform(() => store.load())} disabled={busy || state.catalog.loading} testID="providers-load-retry" /></View>}</>}</>}
+      ListEmptyComponent={directory !== null && !state.catalog.loading && state.catalog.value ? <Text style={[secondary, styles.notice]}>{t('settings.providers.page.connect.noProvidersFound')}</Text> : null}
       ListFooterComponent={<SettingsSection><SettingsRow title={t('settings.providers.page.custom.optionLabel')} icon="add" onPress={() => openCustom()} disabled={busy} testID="provider-custom-create" /></SettingsSection>}
       renderItem={({ item }) => <SettingsRow title={item.name} value={compactSearch ? undefined : state.pendingRestart.includes(item.id) ? t('settings.view.pendingRestart.saved') : connected.has(item.id) ? t('settings.providers.page.auth.connected') : undefined} icon="robot" onPress={() => go('provider-detail', item.id)} testID={`provider-${item.id}`} />} />;
   }
-  if (!provider || !providerID) return <View style={styles.notice}><Text style={secondary}>{t('settings.providers.page.state.unableToLoadProviderList')}</Text><Button variant="setting" icon="restart" label={t('settings.common.actions.retry')} onPress={() => perform(() => store.load())} testID="provider-load-retry" /></View>;
+  if (directory === null) return <View style={styles.notice}><Text accessibilityLiveRegion="polite" style={secondary}>{t('common.unavailable')}</Text></View>;
+  if (!provider || !providerID) return <View style={styles.notice}><Text style={secondary}>{t(state.catalog.loading ? 'common.loading' : 'settings.providers.page.state.unableToLoadProviderList')}</Text><Button variant="setting" icon="restart" label={t('settings.common.actions.retry')} onPress={() => perform(() => store.load())} disabled={busy || state.catalog.loading} testID="provider-load-retry" /></View>;
   if (page === 'provider-detail') {
     const models = Object.values(provider.models);
     const modelKeys = models.map(item => `${providerID}/${item.id}`);

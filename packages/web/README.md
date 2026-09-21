@@ -14,6 +14,8 @@ bun run start:web
 
 For development, run `bun run dev:web:hmr`. See the [root README](../../README.md) for prerequisites and the [release checklist](../../docs/RELEASE_READINESS.md) for validation status. These instructions do not require a published npm package.
 
+The [fast HMR bridge](../../scripts/fast-hmr-bundle.mjs) resolves shared UI `?url` imports through both `@/` and `@ivaldi/ui/`. It resolves the filesystem path without the query and leaves the URL module to Vite, so local fonts load in development as well as production.
+
 ## CLI
 
 The primary packaged executable is `ivaldi`. `openchamber` remains an alias for existing scripts. From a source checkout:

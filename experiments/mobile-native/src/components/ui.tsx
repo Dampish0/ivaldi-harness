@@ -12,9 +12,10 @@ export function Icon({ name, size = 22, color }: { name: IconName; size?: number
   return <SvgXml xml={icons[name]} width={size} height={size} color={color ?? colors.surface.foreground} />;
 }
 
-export function Button({ label, icon, onPress, selected = false, variant = 'ghost', style, disabled, testID, children, labelLines = 2, showSelection = false, iconSize = 22, muted = false, animateIcon = true, checked }: {
+export function Button({ label, icon, onPress, onLongPress, longPressLabel, selected = false, variant = 'ghost', style, disabled, testID, children, labelLines = 2, showSelection = false, iconSize = 22, muted = false, animateIcon = true, checked }: {
   label: string; icon?: IconName; onPress: () => void; selected?: boolean;
-  variant?: 'ghost' | 'primary' | 'row' | 'setting' | 'compact' | 'surface' | 'action'; style?: StyleProp<ViewStyle>; disabled?: boolean;
+  onLongPress?: () => void; longPressLabel?: string;
+  variant?: 'ghost' | 'primary' | 'row' | 'setting' | 'compact' | 'surface' | 'action' | 'destructive'; style?: StyleProp<ViewStyle>; disabled?: boolean;
   testID?: string; children?: React.ReactNode;
   labelLines?: number; showSelection?: boolean; iconSize?: number; muted?: boolean; animateIcon?: boolean;
   checked?: boolean;
@@ -23,22 +24,25 @@ export function Button({ label, icon, onPress, selected = false, variant = 'ghos
   const { font, text, semiboldWeight } = useTypography();
   const opacity = useSharedValue(1);
   const feedback = useAnimatedStyle(() => ({ opacity: opacity.value }));
-  const foreground = variant === 'primary' || variant === 'action' ? colors.primary.foreground : muted ? colors.surface.mutedForeground : colors.surface.foreground;
+  const action = variant === 'action' || variant === 'destructive';
+  const foreground = variant === 'destructive' ? colors.status.errorForeground : variant === 'primary' || action ? colors.primary.foreground : muted ? colors.surface.mutedForeground : colors.surface.foreground;
   return (
     <Animated.View style={[feedback, style]}>
       <Pressable accessibilityRole={checked === undefined ? 'button' : 'checkbox'} accessibilityLabel={label} accessibilityState={checked === undefined ? { selected, disabled } : { checked, disabled }} testID={testID}
-        disabled={disabled} onPress={onPress}
+        disabled={disabled} onPress={onPress} onLongPress={onLongPress}
+        accessibilityActions={onLongPress ? [{ name: 'longpress', label: longPressLabel }] : undefined}
+        onAccessibilityAction={onLongPress ? event => { if (event.nativeEvent.actionName === 'longpress') onLongPress(); } : undefined}
         onPressIn={() => { opacity.value = withTiming(0.55, { duration: 80 }); }}
         onPressOut={() => { opacity.value = withTiming(1, { duration: 130 }); }}
-        style={[styles.button, variant === 'row' || variant === 'action' || variant === 'setting' ? styles.row : variant === 'compact' ? styles.compact : styles.icon, variant === 'action' && styles.action, variant === 'setting' && { minHeight: 56, paddingVertical: 14 * appearance.density / 100 }, {
-          backgroundColor: variant === 'action' ? colors.primary.base : selected && variant !== 'setting' ? colors.interactive.selection : variant === 'surface' ? colors.surface.elevated : 'transparent',
+        style={[styles.button, variant === 'row' || action || variant === 'setting' ? styles.row : variant === 'compact' ? styles.compact : styles.icon, action && styles.action, variant === 'setting' && { minHeight: 56, paddingVertical: 14 * appearance.density / 100 }, {
+          backgroundColor: variant === 'destructive' ? colors.status.error : variant === 'action' ? colors.primary.base : selected && variant !== 'setting' ? colors.interactive.selection : variant === 'surface' ? colors.surface.elevated : 'transparent',
           opacity: disabled && variant !== 'primary' ? 0.4 : 1,
         }]}>
         {showSelection && <View style={styles.selection}>{selected && <Icon name="check" size={20} />}</View>}
         {icon && <View style={variant === 'primary' ? [styles.primary, { backgroundColor: disabled ? colors.interactive.border : colors.primary.base }] : { width: iconSize, height: iconSize }}>
           <Animated.View key={icon} entering={animateIcon ? FadeIn.duration(160) : undefined} exiting={animateIcon ? FadeOut.duration(120) : undefined} style={styles.iconLayer}><Icon name={icon} size={variant === 'primary' ? 20 : iconSize} color={variant === 'primary' && disabled ? colors.surface.mutedForeground : foreground} /></Animated.View>
         </View>}
-        {children ?? (variant === 'row' || variant === 'setting' || variant === 'action' ? <Text numberOfLines={variant === 'setting' ? undefined : labelLines} style={[styles.label, text(16, 22), { fontFamily: font.regular, color: foreground }, variant === 'action' && { fontFamily: font.semibold, fontWeight: semiboldWeight }]}>{label}</Text> : null)}
+        {children ?? (variant === 'row' || variant === 'setting' || action ? <Text numberOfLines={variant === 'setting' ? undefined : labelLines} style={[styles.label, text(16, 22), { fontFamily: font.regular, color: foreground }, action && { fontFamily: font.semibold, fontWeight: semiboldWeight }]}>{label}</Text> : null)}
       </Pressable>
     </Animated.View>
   );

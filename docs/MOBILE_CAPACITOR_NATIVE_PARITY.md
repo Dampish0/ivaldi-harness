@@ -1,8 +1,40 @@
 # Mobile app comparison: Capacitor and React Native
 
-Reviewed 13 September 2026. Settings is the main subject; the final comparison table covers other migration gaps.
+Updated 15 September 2026. Settings is the main subject; the final comparison table covers other migration gaps.
 
-## Implementation status for 0.2.10
+The [current workflow plan](MOBILE_NATIVE_GAP_PLAN.md) covers 0.2.14 and the remaining migration priorities. The sections below retain their original version attribution.
+
+## Form refinements in 0.2.14
+
+Short native action and rename sheets now fit their content, including larger text and local errors. Long rename values show their beginning before focus and select the old title when tapped. Saved-connection deletion uses Ivaldi's typography, colors and controls, with a concise Delete action and a localized explanation. The [visual review](MOBILE_NATIVE_VISUAL_REVIEW.md#short-forms-and-confirmations-version-0214) records installed layout, focus and failure checks. This closes the form refinements identified in 0.2.13; project management and the missing Settings workflows remain open.
+
+## Sidebar actions in 0.2.13
+
+Native now supports rename, archive and restore from the chosen sidebar row. Long press opens its actions without activating the chat; the selected row has an overflow control. The drawer retains its search behind the sheet, and failure keeps the entered title or archive intent available for retry. The same mutation handling serves chat-header actions. Installed Android checks cover draft/model preservation, deletion during a pending write, stale list reads, lost responses and large-text keyboard layout. See the [visual review](MOBILE_NATIVE_VISUAL_REVIEW.md#targeted-sidebar-actions-version-0213) for build identity and limits.
+
+This closes one history-management gap. Registered-project metadata, child chats, worktree grouping, project configuration and the missing Settings pages remain open. Large-text sheet sizing and the initial display of long rename values also need another layout pass.
+
+## Implementation status for 0.2.11
+
+Native Settings now follows desktop's Work/Developer navigation for the pages implemented so far. Work puts provider configuration under Advanced. Developer keeps Models and Providers on the root page. Mode stays inside General, and search opens the complete parent path so Back returns through the expected pages. The mode choice changes organization without discarding provider editor state.
+
+Settings also has an independent project picker. It reads the host's registered projects, supports search, and leaves the current chat, draft and model selection untouched. The picker is available from Workspace on the Settings root and from the provider list. Current chat project follows the chat or new-chat draft; an explicit project survives closing Settings until the connection changes. Failed registry reads retain the previous selection and expose Retry. Confirmed removal of that registered project returns to the current chat. This restores configuration context selection, but does not add project registration, naming, icons, defaults or worktree management.
+
+Provider configuration and chat now have separate catalog scopes. Applying provider changes refreshes Settings for its selected project and chat for the chat's actual directory. Old-directory results cannot populate model or agent pickers. Each catalog reports loading and failure separately while retaining usable same-directory data. New-chat preparation obtains and adopts its target catalogs; ordinary Retry preserves explicit model and agent choices. Sessions defaults remain server-wide and use the current chat catalog, independently of the provider project picker.
+
+An unresolved restored chat cannot use the host's default configuration directory. Provider operations stay unavailable until the chat resolves or a registered Settings project is selected. Recovery reloads the relevant catalog and keeps custom-provider form edits intact.
+
+Installed acceptance and APK details are recorded in the [visual review](MOBILE_NATIVE_VISUAL_REVIEW.md). Project management, agent editing, quota details, MCP, plugins, skills and other missing Settings pages still require migration. The independent project selector does not complete those workflows.
+
+### Next configuration workflows
+
+The [current gap plan](MOBILE_NATIVE_GAP_PLAN.md) tracks the remaining migration by workflow. Native 0.2.12 adds device Settings to the connection screen, with the same appearance, chat-display and language pages. Its disconnected navigation and search omit server-only controls. See the visual review for installed acceptance rather than treating source implementation as proof.
+
+Desktop Projects edits registered-project metadata and, in Developer mode, project actions and worktrees. Native can reuse the registry read and authenticated host-folder browsing. Existing Add registers and activates a folder, while existing metadata persistence replaces the whole registry without revision protection. Native project management needs focused mutations that preserve unrelated entries, reject stale edits and keep registration separate from chat activation. Removing a registration must leave its host directory intact.
+
+Desktop Agents includes definitions, permissions, scoped overrides, built-in resets and explicit Apply. Its current general editor loads effective values, while persistence may touch multiple Markdown, JSON and prompt files. The native editor needs exact source identity, editable own values, inherited hints and revision checks so saving does not turn inherited values into overrides or overwrite unrelated fields. Malformed or split-source definitions need explicit handling, and every operation must carry the selected Settings directory. The guarded provider editor supplies the existing pattern for those contracts.
+
+## Earlier implementation status for 0.2.10
 
 Models and Providers now includes a native custom-provider editor. It provides provider ID/name, OpenAI Chat Completions, OpenAI Responses and Anthropic Messages protocols, base URL, API-key or environment credentials, and separate model/header detail pages. These pages reuse the Settings header and focused-field form handling used by sign-in. Validation identifies the affected field or row, and leaving unsaved changes requires an explicit discard. This section records implemented source and fixture behavior; installed 0.2.10 acceptance belongs in the [visual review](MOBILE_NATIVE_VISUAL_REVIEW.md).
 
@@ -48,7 +80,7 @@ The sections beginning with Finding preserve the 0.2.4 baseline and the requirem
 
 The native provider flow now includes supported custom-provider protocol, base URL, model and header configuration. Remaining provider work includes quota and usage credentials, richer model metadata and controls for advanced configuration fields. Unknown fields survive supported edits, while definitions that cannot be projected safely remain unavailable in the native editor.
 
-Source metadata identifies saved auth and user/project/custom configuration without exposing paths or values. The guarded editor can update or remove the winning layer for the current directory on supported hosts; native still has no independent project-scope or layer selector. Host-managed Claude CLI sign-in remains separate from stored OpenCode credentials. Future provider work should reuse the owning server contracts and preserve the distinction between sign-in, configuration, quota and explicit Apply.
+Source metadata identifies saved auth and user/project/custom configuration without exposing paths or values. The guarded editor can update or remove the winning layer for the selected Settings project on supported hosts; native still has no layer selector. Host-managed Claude CLI sign-in remains separate from stored OpenCode credentials. Future provider work should reuse the owning server contracts and preserve the distinction between sign-in, configuration, quota and explicit Apply.
 
 ## Finding
 
@@ -236,7 +268,7 @@ These findings are source review, not new end-to-end acceptance results.
 | --- | --- | --- |
 | Core chat | Existing sessions, models, agents, streaming and approvals. | Native implementations exist. Previous acceptance evidence is in the migration and visual review documents. |
 | Files and tools | Dedicated Files, Notes and MCP tabs, plus Changes and Terminal in Developer mode; visited panes retain state. | Entire web mobile app on direct connections. The WebView is recreated after closing. |
-| History and projects | Child chats, worktree groups, row actions and project management/reordering. | Root-session directory groups, animated folders, archive groups and project chats. No equivalent native project editor, worktree manager or full history row actions. Current-chat rename/archive exists separately. |
+| History and projects | Child chats, worktree groups, row actions and project management/reordering. | Root-session directory groups, animated folders, archives and project chats. Version 0.2.13 adds targeted row rename/archive/restore. Child/worktree organization, a native project editor and the remaining history actions are still missing. |
 | Follow-ups while working | Queueing and steering in the shared composer. | The controller refuses Send while the session is busy. Stop is available; a native follow-up queue is missing. |
 | Composer features | Mentions, slash commands, goal/plan entry and permission-mode controls. | Text, local file attachments, model/effort/agent selection, Send and Stop. These richer input workflows have not been migrated. |
 | Messages and attachments | User message actions such as fork/revert/context pinning, broader previews and document preparation. | Copy, reasoning/tool disclosures and local or embedded PNG/JPEG/WebP previews. Remote/Markdown images, document extraction and user-message action parity remain incomplete. |

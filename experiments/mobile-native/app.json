@@ -2,12 +2,12 @@
   "expo": {
     "name": "Ivaldi Native",
     "slug": "ivaldi-native-lab",
-    "version": "0.2.11",
+    "version": "0.2.14",
     "orientation": "default",
     "userInterfaceStyle": "automatic",
     "android": {
       "package": "dev.ivaldi.nativecomparison",
-      "versionCode": 13,
+      "versionCode": 16,
       "softwareKeyboardLayoutMode": "resize"
     },
     "plugins": [

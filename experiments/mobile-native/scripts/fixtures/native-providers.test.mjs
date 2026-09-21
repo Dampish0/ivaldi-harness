@@ -7,7 +7,7 @@ import { createProviderFixture } from './native-providers.mjs';
 
 async function setup(t) {
   const token = randomUUID();
-  const catalog = { all: [{ id: 'qa', name: 'Native QA', models: { native: { id: 'native', name: 'Native fixture' }, second: { id: 'second', name: 'Second fixture' } } }], connected: ['qa'], default: { qa: 'native' } };
+  const catalog = { all: [{ id: 'qa', name: 'Native QA', models: { native: { id: 'native', name: 'Native fixture', variants: { low: {}, high: {} } }, second: { id: 'second', name: 'Second fixture' } } }], connected: ['qa'], default: { qa: 'native' } };
   const controls = new Map();
   const answer = (response, value, status = 200) => { response.writeHead(status, { 'Content-Type': 'application/json' }); response.end(JSON.stringify(value)); };
   const body = async (request, limit) => {
@@ -23,11 +23,20 @@ async function setup(t) {
     return false;
   };
   const fixture = createProviderFixture({ origin: 'http://127.0.0.1', catalog, answer, body, applyNextControl });
+  const sessions = [{ id: 'ses_native_qa', directory: 'C:/IvaldiNativeQA/project', title: 'Native acceptance', model: { id: 'native', providerID: 'qa', variant: 'high' }, agent: 'build', time: { created: 1, updated: 1 } }, fixture.alternateSession];
   const server = createServer(async (request, response) => {
     try {
       const url = new URL(request.url, 'http://127.0.0.1');
       if (await fixture.handlePublic(request, response, url)) return;
       if (request.headers.authorization !== `Bearer ${token}`) return answer(response, { error: 'Unauthorized' }, 401);
+      if (url.pathname === '/api/experimental/session' && request.method === 'GET') return answer(response, sessions.filter(session => fixture.sessionAvailable(session.id)));
+      const sessionRoute = url.pathname.match(/^\/api\/session\/([^/]+)$/);
+      if (sessionRoute && request.method === 'GET') {
+        if (await applyNextControl('session-get', response)) return;
+        if (!fixture.sessionAvailable(sessionRoute[1])) return answer(response, { error: 'Synthetic session is temporarily unavailable' }, 503);
+        const session = sessions.find(item => item.id === sessionRoute[1]);
+        return answer(response, session ?? { error: 'Missing session' }, session ? 200 : 404);
+      }
       if (url.pathname === '/api/config/settings' && request.method === 'GET') {
         if (!await applyNextControl('settings-read', response)) answer(response, { defaultModel: 'qa/native', defaultVariant: 'high', defaultAgent: 'build', showReasoning: true, projects: fixture.projects() });
         return;
@@ -40,7 +49,7 @@ async function setup(t) {
   const origin = `http://127.0.0.1:${server.address().port}`;
   const request = (path, init = {}) => fetch(origin + path, { ...init, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...init.headers } });
   const sdk = createOpencodeClient({ baseUrl: origin + '/api', headers: { Authorization: `Bearer ${token}` }, throwOnError: true });
-  return { sdk, request, controls, snapshot: fixture.snapshot, origin };
+  return { sdk, request, controls, snapshot: fixture.snapshot, origin, alternateSession: fixture.alternateSession };
 }
 
 test('SDK catalog and methods preserve original QA choices and mixed OAuth method indexes', async t => {
@@ -405,4 +414,112 @@ test('project registry and scoped reads expose failures and retain independent r
   assert.equal((await delayedAlternate).data.all.some(provider => provider.id === 'qa-custom-alternate'), true);
   const viaHeader = await (await request('/api/provider?directory=' + encodeURIComponent(initial.projects[0].path), { headers: { 'x-opencode-directory': initial.projects[1].path } })).json();
   assert.equal(viaHeader.all.some(provider => provider.id === 'qa-custom-alternate'), true);
+});
+
+test('alternate visual chat has a valid project-specific model and agent', async t => {
+  const { sdk, alternateSession } = await setup(t);
+  assert.equal(alternateSession.id, 'ses_visual_18');
+  assert.equal(alternateSession.title, 'QA Alternate conversation');
+  assert.equal(alternateSession.directory, 'C:/IvaldiNativeQA/alternate');
+  assert.deepEqual(alternateSession.model, { providerID: 'qa-custom-alternate', id: 'qa/alternate' });
+  const catalog = (await sdk.provider.list({ directory: alternateSession.directory })).data;
+  assert.equal(catalog.connected.includes(alternateSession.model.providerID), true);
+  assert.equal(catalog.all.find(provider => provider.id === alternateSession.model.providerID).models[alternateSession.model.id].name, 'QA Alternate model');
+  assert.equal((await sdk.app.agents({ directory: alternateSession.directory })).data.some(agent => agent.name === alternateSession.agent), true);
+  assert.equal((await sdk.app.agents({ directory: 'C:/IvaldiNativeQA/project' })).data.some(agent => agent.name === alternateSession.agent), false);
+  assert.equal((await sdk.provider.list({ directory: 'C:/IvaldiNativeQA/project' })).data.connected.includes(alternateSession.model.providerID), false);
+});
+
+test('catalog controls reject arbitrary values and remove or restore only the current project build agent', async t => {
+  const { sdk, request, snapshot, controls } = await setup(t);
+  const current = 'C:/IvaldiNativeQA/project'; const alternate = 'C:/IvaldiNativeQA/alternate';
+  const update = value => request('/__qa/catalog', { method: 'POST', body: JSON.stringify(value) });
+  for (const value of [{}, { currentBuild: 'false' }, { nativeVariants: ['high'] }, { nativeVariants: 'unrecognized' }, { currentBuild: false, directory: alternate }]) assert.equal((await update(value)).status, 400);
+  assert.deepEqual(snapshot().catalogState, { currentBuild: true, nativeVariants: 'standard' });
+  assert.equal(snapshot().catalogChanges, 0);
+  const initialAlternate = (await sdk.app.agents({ directory: alternate })).data;
+  assert.equal((await update({ currentBuild: false })).status, 200);
+  controls.set('agent-list', { fail: true });
+  await assert.rejects(sdk.app.agents({ directory: current }));
+  assert.deepEqual((await sdk.app.agents({ directory: current })).data.map(agent => agent.name), ['plan']);
+  assert.deepEqual((await sdk.app.agents({ directory: alternate })).data, initialAlternate);
+  await update({ currentBuild: true });
+  assert.deepEqual((await sdk.app.agents({ directory: current })).data.map(agent => agent.name), ['build', 'plan']);
+  assert.equal(snapshot().catalogChanges, 2);
+});
+
+test('current model variants can refresh and disappear without changing other-directory catalogs or defaults', async t => {
+  const { sdk, request, snapshot } = await setup(t);
+  const current = 'C:/IvaldiNativeQA/project'; const alternate = 'C:/IvaldiNativeQA/alternate';
+  const initialCurrent = (await sdk.provider.list({ directory: current })).data;
+  const initialAlternate = (await sdk.provider.list({ directory: alternate })).data;
+  const update = nativeVariants => request('/__qa/catalog', { method: 'POST', body: JSON.stringify({ nativeVariants }) });
+  await update('updated');
+  assert.deepEqual(Object.keys((await sdk.provider.list({ directory: current })).data.all[0].models.native.variants), ['low', 'medium']);
+  assert.deepEqual(Object.keys(initialCurrent.all[0].models.native.variants), ['low', 'high']);
+  await update('none');
+  assert.deepEqual((await sdk.provider.list({ directory: current })).data.all[0].models.native.variants, {});
+  assert.deepEqual((await sdk.provider.list({ directory: alternate })).data, initialAlternate);
+  assert.equal((await (await request('/api/config/settings')).json()).defaultVariant, 'high');
+  await update('standard');
+  assert.deepEqual((await sdk.provider.list({ directory: current })).data, initialCurrent);
+  assert.deepEqual(snapshot().catalogState, { currentBuild: true, nativeVariants: 'standard' });
+  assert.equal(snapshot().reloads, 0);
+});
+
+test('failed scope reads contain no catalog and fresh same-directory reads recover the current choices', async t => {
+  const { sdk, request, controls, snapshot } = await setup(t);
+  const current = 'C:/IvaldiNativeQA/project'; const alternate = 'C:/IvaldiNativeQA/alternate';
+  const preceding = (await sdk.provider.list({ directory: alternate })).data;
+  controls.set('provider-list', { fail: true });
+  const failed = await request('/api/provider?directory=' + encodeURIComponent(current));
+  assert.equal(failed.status, 503);
+  assert.deepEqual(await failed.json(), { error: 'Requested fixture failure' });
+  assert.equal(preceding.connected.includes('qa-custom-alternate'), true);
+  await request('/__qa/catalog', { method: 'POST', body: JSON.stringify({ nativeVariants: 'updated', currentBuild: false }) });
+  const recovered = (await sdk.provider.list({ directory: current })).data;
+  assert.deepEqual(recovered.connected, ['qa']);
+  assert.deepEqual(Object.keys(recovered.all[0].models.native.variants), ['low', 'medium']);
+  controls.set('agent-list', { fail: true });
+  await assert.rejects(sdk.app.agents({ directory: current }));
+  assert.deepEqual((await sdk.app.agents({ directory: current })).data.map(agent => agent.name), ['plan']);
+  assert.equal(snapshot().catalogDirectories[current], 2);
+  assert.equal(snapshot().agentDirectories[current], 2);
+});
+
+test('session availability hides only approved seeds and restores the exact original directory and choices', async t => {
+  const { sdk, request, snapshot, origin } = await setup(t);
+  const initial = (await sdk.experimental.session.list({ roots: true })).data;
+  const alternate = initial.find(session => session.id === 'ses_visual_18');
+  const update = value => request('/__qa/session-availability', { method: 'POST', body: JSON.stringify(value) });
+  for (const value of [{ sessionId: 'ses_visual_19', available: false }, { sessionId: 'ses_visual_18', available: 'false' }, { sessionId: 'ses_visual_18', available: false, directory: 'C:/IvaldiNativeQA/project' }]) assert.equal((await update(value)).status, 400);
+  assert.equal(snapshot().sessionAvailabilityChanges, 0);
+  assert.equal((await update({ sessionId: alternate.id, available: false })).status, 200);
+  assert.deepEqual((await sdk.experimental.session.list({ roots: true })).data.map(session => session.id), ['ses_native_qa']);
+  const unavailable = await request(`/api/session/${alternate.id}`);
+  assert.equal(unavailable.status, 503);
+  assert.deepEqual(await unavailable.json(), { error: 'Synthetic session is temporarily unavailable' });
+  assert.deepEqual((await sdk.session.get({ sessionID: 'ses_native_qa' })).data, initial[0]);
+  assert.equal((await fetch(origin + `/api/session/${alternate.id}`)).status, 401);
+  assert.deepEqual(snapshot().unavailableSessions, ['ses_visual_18']);
+  await update({ sessionId: alternate.id, available: true });
+  assert.deepEqual((await sdk.session.get({ sessionID: alternate.id })).data, alternate);
+  assert.deepEqual((await sdk.experimental.session.list({ roots: true })).data, initial);
+  assert.deepEqual(snapshot().unavailableSessions, []);
+  assert.equal(snapshot().catalogReads, 0); assert.equal(snapshot().saves, 0); assert.equal(snapshot().configWrites, 0);
+});
+
+test('session availability remains unavailable after a one-shot lookup failure and restores independently per seed', async t => {
+  const { sdk, request, controls } = await setup(t);
+  const update = (sessionId, available) => request('/__qa/session-availability', { method: 'POST', body: JSON.stringify({ sessionId, available }) });
+  await update('ses_native_qa', false); await update('ses_visual_18', false);
+  assert.deepEqual((await sdk.experimental.session.list()).data, []);
+  controls.set('session-get', { fail: true });
+  assert.equal((await request('/api/session/ses_native_qa')).status, 503);
+  assert.equal((await request('/api/session/ses_native_qa')).status, 503);
+  await update('ses_visual_18', true);
+  assert.deepEqual((await sdk.experimental.session.list()).data.map(session => session.id), ['ses_visual_18']);
+  assert.equal((await request('/api/session/ses_native_qa')).status, 503);
+  await update('ses_native_qa', true);
+  assert.equal((await sdk.session.get({ sessionID: 'ses_native_qa' })).data.directory, 'C:/IvaldiNativeQA/project');
 });

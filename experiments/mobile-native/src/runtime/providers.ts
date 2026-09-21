@@ -43,7 +43,7 @@ export interface ProvidersSnapshot {
   applyState: 'idle' | 'pending' | 'manual' | 'refresh';
 }
 export interface ProvidersTransport {
-  directory(): string | undefined;
+  directory(): string | undefined | null;
   catalog(directory: string | undefined, signal: AbortSignal): Promise<ProviderCatalog>;
   methods(directory: string | undefined, signal: AbortSignal): Promise<z.infer<typeof providerAuthMethodsSchema>>;
   source(providerID: string, directory: string | undefined, signal: AbortSignal): Promise<ProviderSources>;
@@ -94,7 +94,7 @@ export class ProvidersStore {
   private readonly transport: ProvidersTransport;
   private readonly lifetime = new AbortController();
   private readonly listeners = new Set<() => void>();
-  private directory: string | undefined;
+  private directory: string | undefined | null;
   private revision = 0;
   private credentialRevision = 0;
   private state: ProvidersSnapshot = { catalog: { value: null, loading: false, error: false }, methods: { value: null, loading: false, error: false }, sources: {}, mutation: null, error: null, pendingRestart: [], applyState: 'idle' };
@@ -115,6 +115,10 @@ export class ProvidersStore {
       this.cancelOAuth(); this.directory = directory; this.revision++; this.catalogLoad = null; this.methodsLoad = null; this.sourceLoads.clear();
       this.publish({ catalog: { value: null, loading: false, error: false }, methods: { value: null, loading: false, error: false }, sources: {} });
     }
+    if (directory === null) {
+      this.publish({ catalog: { value: null, loading: false, error: true }, methods: { value: null, loading: false, error: true }, sources: {} });
+      throw new ProviderOperationError('unavailable');
+    }
     return directory;
   }
   private invalidateReads() {
@@ -129,7 +133,8 @@ export class ProvidersStore {
 
   loadCatalog = (): Promise<void> => {
     if (this.lifetime.signal.aborted) return Promise.reject(new ProviderOperationError('unavailable'));
-    const directory = this.scope();
+    let directory: string | undefined;
+    try { directory = this.scope(); } catch (error) { return Promise.reject(error); }
     if (this.catalogLoad) return this.catalogLoad;
     const revision = this.revision;
     this.publish({ catalog: { ...this.state.catalog, loading: true, error: false } });
@@ -146,7 +151,8 @@ export class ProvidersStore {
   };
   loadMethods = (): Promise<void> => {
     if (this.lifetime.signal.aborted) return Promise.reject(new ProviderOperationError('unavailable'));
-    const directory = this.scope();
+    let directory: string | undefined;
+    try { directory = this.scope(); } catch (error) { return Promise.reject(error); }
     if (this.methodsLoad) return this.methodsLoad;
     const revision = this.revision;
     this.publish({ methods: { ...this.state.methods, loading: true, error: false } });
@@ -167,7 +173,12 @@ export class ProvidersStore {
   };
   loadSource = (providerID: string): Promise<void> => {
     if (this.lifetime.signal.aborted) return Promise.reject(new ProviderOperationError('unavailable'));
-    const directory = this.scope();
+    let directory: string | undefined;
+    try { directory = this.scope(); }
+    catch (error) {
+      this.publish({ sources: { ...this.state.sources, [providerID]: { value: null, loading: false, error: true } } });
+      return Promise.reject(error);
+    }
     const existing = this.sourceLoads.get(providerID);
     if (existing) return existing;
     const revision = this.revision;
@@ -187,13 +198,14 @@ export class ProvidersStore {
   private async mutate<Result>(operation: ProviderOperation, providerID: string | null, action: (signal: AbortSignal) => Promise<Result>): Promise<Result> {
     if (this.lifetime.signal.aborted) throw new ProviderOperationError('unavailable');
     if (this.mutation) throw new ProviderOperationError('busy');
+    const directory = this.scope();
     const controller = new AbortController();
     this.mutation = controller;
     this.publish({ mutation: { kind: operation, providerID }, error: null });
     try { return await action(controller.signal); }
     catch (cause) {
       const error = cause instanceof ProviderOperationError ? cause : new ProviderOperationError('request');
-      if (!controller.signal.aborted) this.publish({ error: { operation, providerID, code: error.code, field: error.field } });
+      if (!controller.signal.aborted && directory === this.transport.directory()) this.publish({ error: { operation, providerID, code: error.code, field: error.field } });
       throw error;
     } finally { if (this.mutation === controller) { this.mutation = null; this.publish({ mutation: null }); } }
   }
@@ -251,7 +263,7 @@ export class ProvidersStore {
         this.invalidateReads();
         if (providerID !== 'claude-code') this.pending(providerID);
         await this.loadSource(providerID).catch(() => undefined);
-        if (providerID === 'claude-code') {
+        if (providerID === 'claude-code' && flow.directory === this.transport.directory()) {
           const refreshed = await Promise.allSettled([this.loadCatalog(), this.transport.refreshModels()]);
           if (refreshed.some(result => result.status === 'rejected') && this.state.pendingRestart.length === 0) this.publish({ applyState: 'refresh' });
         }
@@ -326,7 +338,7 @@ export class ProvidersStore {
   dispose = () => { this.cancelOAuth(); this.mutation?.abort(); this.lifetime.abort(); this.listeners.clear(); };
 }
 
-export function createProvidersStore(runtime: Pick<NativeRuntime, 'sdk' | 'json'>, options: { directory?: () => string | undefined; refreshModels: () => Promise<void> }): ProvidersStore {
+export function createProvidersStore(runtime: Pick<NativeRuntime, 'sdk' | 'json'>, options: { directory?: () => string | undefined | null; refreshModels: () => Promise<void> }): ProvidersStore {
   return new ProvidersStore({
     directory: () => options.directory?.(),
     catalog: async (directory, signal) => providerCatalogSchema.parse((await runtime.sdk.provider.list({ directory }, { signal, throwOnError: true })).data),

@@ -7,6 +7,8 @@ import * as DocumentPicker from 'expo-document-picker';
 import { useI18n, type MessageKey } from '@/lib/i18n';
 import { useTheme, useTypography } from '../theme';
 import { ChatController, emptyDraft } from '../runtime/chat';
+import { chatCatalogDirectory } from '../runtime/model-refresh';
+import type { SessionMutationResult } from '../runtime/session-mutations';
 import { SessionDefaultsStore, resolveSessionDefaults, sessionDefaultsSchema } from '../runtime/session-defaults';
 import type { NativeRuntime } from '../runtime/connection';
 import type { Message, ModelChoice, ModelSelection, SessionStatus } from '../runtime/schema';
@@ -29,13 +31,15 @@ import type { ModelVisibilityStore } from '../runtime/model-visibility';
 import type { PreviewImage } from './ImageAttachment';
 
 type Sheet = 'models' | 'actions' | 'agents' | 'rename';
+type SessionActionIntent = { type: 'rename'; title: string } | { type: 'archive'; archived: boolean };
+type SessionActionFailure = { result: Exclude<SessionMutationResult, 'saved'>; intent: SessionActionIntent };
 const errorKeys = { load: 'chat.container.sessionLoadError.description', send: 'mobile.native.sendFailed', uncertain: 'mobile.native.sendUncertain', stop: 'mobile.native.stopFailed', attachment: 'chat.chatInput.toast.attachFileFailed', storage: 'mobile.native.saveFailed', action: 'mobile.native.actionFailed', sessionMissing: 'mobile.native.session.missing' } satisfies { [key: string]: MessageKey };
 
 export function ChatScreen({ runtime, foreground, openConnections, modelVisibility }: { runtime: NativeRuntime; foreground: boolean; openConnections: () => void; modelVisibility: ModelVisibilityStore }) {
   const controller = useMemo(() => new ChatController(runtime), [runtime]);
   const directory = useCallback(() => {
     const current = controller.getSnapshot();
-    return current.activeId ? current.sessions.find(session => session.id === current.activeId)?.directory : current.draftDirectory ?? undefined;
+    return current.preferencesReady ? chatCatalogDirectory(current) : null;
   }, [controller]);
   const settingsProjects = useMemo(() => createSettingsProjectsStore(runtime, { currentDirectory: directory }), [runtime, directory]);
   const providers = useMemo(() => createProvidersStore(runtime, { directory: settingsProjects.getDirectory, refreshModels: controller.refreshModels }), [runtime, controller, settingsProjects]);
@@ -51,6 +55,7 @@ export function ChatScreen({ runtime, foreground, openConnections, modelVisibili
   const visibility = useSyncExternalStore(modelVisibility.subscribe, modelVisibility.getSnapshot);
   const availableModels = state.modelCatalog.available ? state.models : [];
   const availableAgents = state.agentCatalog.available ? state.agents : [];
+  const unavailableAgent = state.agentCatalog.available && state.agent !== '' && !state.agents.includes(state.agent);
   const refreshCatalog = () => { void controller.refreshModels().catch(() => {}); };
   const [newChatState, setNewChatState] = useState<'loading' | 'failed' | null>(null);
   const [showNewChatProgress, setShowNewChatProgress] = useState(false);
@@ -59,6 +64,13 @@ export function ChatScreen({ runtime, foreground, openConnections, modelVisibili
   const [drawer, setDrawer] = useState(false); const [sheet, setSheet] = useState<Sheet | null>(null); const [lastSheet, setLastSheet] = useState<Sheet>('models');
   const [modelEffort, setModelEffort] = useState<ModelChoice | null>(null);
   const [rename, setRename] = useState(''); const [workspace, setWorkspace] = useState(false);
+  const [actionTargetId, setActionTargetId] = useState<string | null>(null);
+  const [actionOrigin, setActionOrigin] = useState<'chat' | 'sidebar'>('chat');
+  const [actionBusy, setActionBusy] = useState(false);
+  const [actionError, setActionError] = useState<SessionActionFailure | null>(null);
+  const actionRequest = useRef<Promise<SessionMutationResult> | null>(null);
+  const renameInput = useRef<TextInput>(null);
+  const [renameEditing, setRenameEditing] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [endVisible, setEndVisible] = useState(true);
   const [preview, setPreview] = useState<PreviewImage | null>(null);
@@ -79,8 +91,11 @@ export function ChatScreen({ runtime, foreground, openConnections, modelVisibili
   const recoverySpace = useAnimatedStyle(() => ({ marginBottom: extraPadding.value + Math.abs(keyboardHeight.value) }));
   const safe = useSafeAreaInsets(); const { t } = useI18n();
   const active = state.sessions.find(chat => chat.id === state.activeId); const messages = state.activeId ? state.messages.get(state.activeId) ?? [] : [];
+  const actionTarget = state.sessions.find(chat => chat.id === actionTargetId);
+  const compactRename = lastSheet === 'rename' && width > height && renameEditing;
   const draft = state.drafts[state.activeId ?? 'new'] ?? emptyDraft;
   const model = state.models.find(item => item.id === state.model?.modelID && item.providerID === state.model.providerID);
+  const modelName = model?.name ?? t(state.modelCatalog.status === 'loading' ? 'common.loading' : 'common.unavailable');
   const permissions = state.permissions.filter(item => item.sessionID === state.activeId);
   const questions = state.questions.filter(item => item.sessionID === state.activeId);
   const status = state.activeId ? state.statuses.get(state.activeId) : undefined; const pending = status?.type === 'busy' || status?.type === 'retry';
@@ -96,7 +111,14 @@ export function ChatScreen({ runtime, foreground, openConnections, modelVisibili
     scroll.current?.scrollToOffset({ offset: Math.max(0, contentHeight.current + extraPadding.value + Math.abs(keyboardHeight.value) - viewportHeight.current), animated: !reduceMotion });
   };
   const closeWorkspace = useCallback(() => { Keyboard.dismiss(); setWorkspace(false); void controller.retry(); }, [controller]);
-  const closeSheet = useCallback(() => { Keyboard.dismiss(); setSheet(null); }, []);
+  const closeSheet = useCallback(() => { if (actionRequest.current) return; renameInput.current?.blur(); Keyboard.dismiss(); setSheet(null); }, []);
+  const backToActions = useCallback(() => { if (actionRequest.current) return; renameInput.current?.blur(); Keyboard.dismiss(); setLastSheet('actions'); setSheet('actions'); setActionError(null); }, []);
+  useEffect(() => {
+    if (sheet !== 'rename') { renameInput.current?.blur(); setRenameEditing(false); return; }
+    const shown = Keyboard.addListener('keyboardDidShow', () => { if (renameInput.current?.isFocused()) setRenameEditing(true); });
+    const hidden = Keyboard.addListener('keyboardDidHide', () => setRenameEditing(false));
+    return () => { shown.remove(); hidden.remove(); };
+  }, [sheet]);
   const prepareNewChat = useCallback(async (directory?: string, startup = false) => {
     const request = ++newChatRequest.current.revision;
     const revision = controller.getChatSelectionRevision();
@@ -109,7 +131,7 @@ export function ChatScreen({ runtime, foreground, openConnections, modelVisibili
       if (revision === controller.getChatSelectionRevision()) {
         const resolved = resolveSessionDefaults(saved, catalog?.models ?? current.models, catalog?.agents ?? current.agents, current.model, current.agent);
         if (startup) controller.applyNewChatDefaults(resolved, revision);
-        else if (controller.startNewChat(directory, resolved)) { initialScroll.current = null; readingHistory.current = false; }
+        else if (catalog && controller.startNewChat(directory, resolved, catalog)) { initialScroll.current = null; readingHistory.current = false; }
       }
       setNewChatState(null);
     } catch { if (request === newChatRequest.current.revision) setNewChatState('failed'); }
@@ -122,14 +144,31 @@ export function ChatScreen({ runtime, foreground, openConnections, modelVisibili
     const revision = controller.getChatSelectionRevision();
     void controller.start().then(() => { if (active && controller.getSnapshot().activeId === null && revision === controller.getChatSelectionRevision()) void prepareNewChat(undefined, true); });
     const listener = AppState.addEventListener('change', status => { if (status === 'active') void controller.resume(); else controller.pause(); });
-    return () => { active = false; requestOwner.revision++; listener.remove(); controller.dispose(); if (refocusTimer.current) clearTimeout(refocusTimer.current); };
+    return () => { active = false; requestOwner.revision++; actionRequest.current = null; listener.remove(); controller.dispose(); if (refocusTimer.current) clearTimeout(refocusTimer.current); };
   }, [controller, prepareNewChat]);
-  useEffect(() => { const listener = BackHandler.addEventListener('hardwareBackPress', () => { if (workspace) { closeWorkspace(); return true; } if (sheet === 'models' && modelEffort) { setModelEffort(null); return true; } if (sheet === 'agents' || sheet === 'rename') { setLastSheet('actions'); setSheet('actions'); return true; } if (sheet) { closeSheet(); return true; } if (drawer) { setDrawer(false); return true; } return false; }); return () => listener.remove(); }, [drawer, sheet, modelEffort, closeSheet, workspace, closeWorkspace]);
+  useEffect(() => { const listener = BackHandler.addEventListener('hardwareBackPress', () => { if (actionRequest.current && sheet) return true; if (workspace) { closeWorkspace(); return true; } if (sheet === 'models' && modelEffort) { setModelEffort(null); return true; } if (sheet === 'agents' || sheet === 'rename') { backToActions(); return true; } if (sheet) { closeSheet(); return true; } if (drawer) { setDrawer(false); return true; } return false; }); return () => listener.remove(); }, [drawer, sheet, modelEffort, closeSheet, backToActions, workspace, closeWorkspace]);
   const dismissInput = useCallback(() => { if (refocusTimer.current) clearTimeout(refocusTimer.current); input.current?.blur(); Keyboard.dismiss(); }, []);
-  useEffect(() => { if (!foreground) { dismissInput(); setDrawer(false); setSheet(null); setPreview(null); setWorkspace(false); } }, [foreground, dismissInput]);
+  useEffect(() => { if (!foreground) { actionRequest.current = null; setActionBusy(false); renameInput.current?.blur(); dismissInput(); setDrawer(false); setSheet(null); setPreview(null); setWorkspace(false); } }, [foreground, dismissInput]);
   const previewImage = useCallback((image: PreviewImage) => { dismissInput(); setPreview(image); }, [dismissInput]);
   useEffect(() => { setPreview(null); }, [state.activeId]);
   const openSheet = (kind: Sheet) => { shouldRefocus.current = input.current?.isFocused() ?? false; dismissInput(); setDrawer(false); if (kind === 'models') setModelEffort(null); setLastSheet(kind); setSheet(kind); };
+  const openActions = (id: string | null, origin: 'chat' | 'sidebar') => {
+    if (actionRequest.current) return;
+    dismissInput();
+    if (origin === 'chat') setDrawer(false);
+    setActionTargetId(id); setActionOrigin(origin); setRename(state.sessions.find(chat => chat.id === id)?.title ?? ''); setActionError(null);
+    setLastSheet('actions'); setSheet('actions');
+  };
+  const mutateSession = async (intent: SessionActionIntent) => {
+    if (!actionTarget || actionRequest.current) return;
+    renameInput.current?.blur(); Keyboard.dismiss(); setActionError(null); setActionBusy(true);
+    const request = intent.type === 'rename' ? controller.rename(actionTarget.id, intent.title) : controller.archive(actionTarget.id, intent.archived);
+    actionRequest.current = request;
+    const result = await request;
+    if (actionRequest.current !== request) return;
+    actionRequest.current = null; setActionBusy(false);
+    if (result === 'saved') closeSheet(); else setActionError({ result, intent });
+  };
   const openWorkspace = () => { dismissInput(); closeSheet(); setDrawer(false); setWorkspace(true); };
   const cancelNewChat = () => { newChatRequest.current.revision++; setNewChatState(null); };
   const newChat = (directory?: string) => { dismissInput(); setDrawer(false); void prepareNewChat(directory); };
@@ -141,15 +180,15 @@ export function ChatScreen({ runtime, foreground, openConnections, modelVisibili
     try { const result = await DocumentPicker.getDocumentAsync({ multiple: true, copyToCacheDirectory: true }); if (result.canceled || controller.getSnapshot().activeId !== owner) return; const current = controller.getSnapshot().drafts[owner ?? 'new'] ?? emptyDraft; controller.setDraft({ ...current, attachments: [...current.attachments, ...result.assets.map(file => ({ uri: file.uri, name: file.name, mime: file.mimeType ?? 'application/octet-stream', size: file.size ?? 0 }))] }); } catch { controller.reportAttachmentError(); }
   };
   const header = (title: string) => <View style={styles.sheetHeader}>
-    {(lastSheet === 'agents' || lastSheet === 'rename') && <Button icon="arrow-left" label={t('mobile.header.actions')} onPress={() => openSheet('actions')} testID="sheet-back" />}
-    <Text style={[text(18, 24), { fontFamily: font.semibold, fontWeight: semiboldWeight, color: colors.surface.foreground, flex: 1 }]}>{title}</Text><Button icon="close" label={t('mobile.surface.closeAria')} onPress={() => closeSheet()} testID="sheet-close" />
+    {(lastSheet === 'agents' || lastSheet === 'rename') && <Button icon="arrow-left" label={t('mobile.header.actions')} disabled={actionBusy} onPress={backToActions} testID="sheet-back" />}
+    <Text numberOfLines={2} style={[text(18, 24), { fontFamily: font.semibold, fontWeight: semiboldWeight, color: colors.surface.foreground, flex: 1 }]}>{title}</Text><Button icon="close" label={t('mobile.surface.closeAria')} disabled={actionBusy} onPress={closeSheet} testID="sheet-close" />
   </View>;
   return <View style={[styles.root, { backgroundColor: colors.surface.background }]}>
     <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} />
     <View onLayout={event => { mainHeight.value = event.nativeEvent.layout.height; }} style={[styles.main, { paddingTop: safe.top, paddingLeft: safe.left, paddingRight: safe.right }]} accessibilityElementsHidden={obscured} importantForAccessibility={obscured ? 'no-hide-descendants' : 'auto'}>
       <Animated.View style={[styles.header, headerMotion]}><Button icon="menu-2" label={t('sessions.sidebar.activity.chatsTitle')} onPress={() => { dismissInput(); setDrawer(true); }} testID="open-sidebar" />
-        <Animated.View key={active?.id ?? 'new'} entering={FadeIn.duration(180)} style={{ flex: 1, minWidth: 0 }}><Button variant="compact" label={t('chat.modelControls.selectModel') + ': ' + (model?.name ?? t('mobile.models.unavailable'))} onPress={() => openSheet('models')} testID="model-picker-trigger"><View style={styles.headerTitle}><Text numberOfLines={1} style={[text(18, 24), { fontFamily: font.semibold, fontWeight: semiboldWeight, color: colors.surface.foreground }]}>{active?.title ?? 'Ivaldi'}</Text><View style={styles.headerModel}><Text numberOfLines={1} style={[styles.modelName, text(13, 18), { fontFamily: font.regular, color: colors.surface.mutedForeground }]}>{model?.name ?? t('mobile.models.unavailable')}</Text><Icon name="arrow-down-s" size={14} color={colors.surface.mutedForeground} /></View></View></Button></Animated.View>
-        <Button icon="more" label={t('mobile.header.actions')} onPress={() => { setRename(active?.title ?? ''); openSheet('actions'); }} testID="chat-actions" />
+        <Animated.View key={active?.id ?? 'new'} entering={FadeIn.duration(180)} style={{ flex: 1, minWidth: 0 }}><Button variant="compact" label={t('chat.modelControls.selectModel') + ': ' + modelName} onPress={() => openSheet('models')} testID="model-picker-trigger"><View style={styles.headerTitle}><Text numberOfLines={1} style={[text(18, 24), { fontFamily: font.semibold, fontWeight: semiboldWeight, color: colors.surface.foreground }]}>{active?.title ?? 'Ivaldi'}</Text><View style={styles.headerModel}><Text numberOfLines={1} style={[styles.modelName, text(13, 18), { fontFamily: font.regular, color: colors.surface.mutedForeground }]}>{modelName}</Text><Icon name="arrow-down-s" size={14} color={colors.surface.mutedForeground} /></View></View></Button></Animated.View>
+        <Button icon="more" label={t('mobile.header.actions')} onPress={() => openActions(state.activeId, 'chat')} testID="chat-actions" />
       </Animated.View>
       {state.stream !== 'live' && <Text accessibilityLiveRegion="polite" style={[styles.connection, text(12, 18), { fontFamily: font.regular, color: colors.surface.mutedForeground }]}>{t(state.stream === 'connecting' ? 'mobile.connect.connecting' : 'mobile.connect.recovery.description')}</Text>}
       {(newChatState === 'failed' || newChatState === 'loading' && showNewChatProgress) && <Animated.View entering={FadeIn.duration(140)} exiting={FadeOut.duration(100)} style={styles.notice}>
@@ -157,6 +196,7 @@ export function ChatScreen({ runtime, foreground, openConnections, modelVisibili
         <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>{newChatState === 'failed' && <Button variant="compact" label={t('settings.common.actions.retry')} onPress={() => { void prepareNewChat(newChatIntent.current.directory, newChatIntent.current.startup); }} testID="new-chat-retry"><Text style={[text(14, 21), { fontFamily: font.regular, color: colors.surface.foreground }]}>{t('settings.common.actions.retry')}</Text></Button>}<Button variant="compact" label={t('settings.common.actions.cancel')} onPress={cancelNewChat} testID="new-chat-cancel"><Text style={[text(14, 21), { fontFamily: font.regular, color: colors.surface.foreground }]}>{t('settings.common.actions.cancel')}</Text></Button></View>
       </Animated.View>}
       {state.error && !(state.sessionRecovery && (state.error === 'sessionMissing' || state.error === 'load' || state.error === 'action')) && <View style={styles.notice}><Text accessibilityRole="alert" style={[text(14, 21), { fontFamily: font.regular, color: colors.status.error }]}>{t(errorKeys[state.error])}</Text><Button variant="row" label={t('chat.container.sessionLoadError.retry')} onPress={() => { void controller.retry(); }} /></View>}
+      {unavailableAgent && <View style={styles.notice}><Text accessibilityRole="alert" style={[text(14, 21), { fontFamily: font.regular, color: colors.surface.mutedForeground }]}>{state.agent}: {t('common.unavailable')}</Text><Button variant="row" icon="chat-3" label={t('chat.modelControls.selectAgent')} onPress={() => openSheet('agents')} testID="select-available-agent" /></View>}
       {state.loading || active && state.loadingHistory === active.id && !messages.length ? <View style={styles.empty}><ActivityIndicator color={colors.surface.foreground} /></View> : state.sessionRecovery ? <Animated.View style={[styles.recoveryViewport, recoverySpace]}><ScrollView contentContainerStyle={styles.recovery} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" testID="session-recovery">
         <Text accessibilityRole="alert" style={[text(16, 24), { fontFamily: font.regular, color: colors.surface.mutedForeground }]}>{t(state.sessionRecovery.reason === 'missing' ? 'mobile.native.session.missing' : 'mobile.native.session.unavailable')}</Text>
         {state.error === 'action' && <Text accessibilityRole="alert" style={[text(14, 21), { fontFamily: font.regular, color: colors.status.error }]}>{t('mobile.native.actionFailed')}</Text>}
@@ -171,26 +211,43 @@ export function ChatScreen({ runtime, foreground, openConnections, modelVisibili
         onContentSizeChange={(_width, height) => { contentHeight.current = height; const follow = () => scroll.current?.scrollToOffset({ offset: Math.max(0, height + extraPadding.value + Math.abs(keyboardHeight.value) - viewportHeight.current), animated: false }); if (!active) return; if (initialScroll.current !== active.id) { initialScroll.current = active.id; const offset = positions.current.get(active.id); if (offset !== undefined) scroll.current?.scrollToOffset({ offset, animated: false }); else follow(); } else if (!readingHistory.current) follow(); }}
         ListHeaderComponent={active && state.hasMoreHistory.get(active.id) ? <Button variant="row" label={t('mobile.native.loadEarlier')} onPress={() => { readingHistory.current = true; if (active) void controller.loadHistory(active.id, messages.length + 100); }} /> : null}
         ListFooterComponent={<View>{permissions.map(permission => <PermissionCard key={permission.id} permission={permission} controller={controller} />)}{questions.map(question => <QuestionCard key={question.id} question={question} controller={controller} />)}{status && status.type !== 'idle' && state.stream === 'live' && permissions.length === 0 && questions.length === 0 && <ResponseActivity status={status} animate={endVisible && !obscured} />}</View>} />}
-      <Composer editable={newChatState !== 'loading'} previewImage={previewImage} obscured={obscured} inputRef={input} draft={draft.text} setDraft={text => controller.setDraft({ ...draft, text })} pending={pending || state.submission?.sessionId === state.activeId && state.submission?.state === 'uncertain'} disabled={state.loading || !model || !state.modelCatalog.available || !state.agentCatalog.available || state.submission !== null || state.stream !== 'live' || state.sessionRecovery !== null || newChatState === 'loading'} send={() => { readingHistory.current = false; atEnd.current = true; void controller.send(newDirectory); }} stop={() => { void controller.stop(); }} attachments={draft.attachments} addAttachment={() => { void attach(); }} removeAttachment={uri => controller.setDraft({ ...draft, attachments: draft.attachments.filter(file => file.uri !== uri) })} extraPadding={extraPadding} />
+      <Composer editable={newChatState !== 'loading'} previewImage={previewImage} obscured={obscured} inputRef={input} draft={draft.text} setDraft={text => controller.setDraft({ ...draft, text })} pending={pending || state.submission?.sessionId === state.activeId && state.submission?.state === 'uncertain'} disabled={state.loading || !model || !state.modelCatalog.available || !state.agentCatalog.available || unavailableAgent || state.submission !== null || state.stream !== 'live' || state.sessionRecovery !== null || newChatState === 'loading'} send={() => { readingHistory.current = false; atEnd.current = true; void controller.send(newDirectory); }} stop={() => { void controller.stop(); }} attachments={draft.attachments} addAttachment={() => { void attach(); }} removeAttachment={uri => controller.setDraft({ ...draft, attachments: draft.attachments.filter(file => file.uri !== uri) })} extraPadding={extraPadding} />
       <LatestButton visible={!endVisible && messages.length > 0 && !obscured && !state.loading} onPress={jumpToLatest} extraPadding={extraPadding} keyboardHeight={keyboardHeight} keyboardProgress={keyboardProgress} mainHeight={mainHeight} />
     </View>
     {preview && <ImagePreview image={preview} close={() => setPreview(null)} />}
-    <Overlay open={drawer} kind="drawer" onClose={() => { dismissInput(); setDrawer(false); }}><Sidebar open={drawer} sessions={state.sessions} activeId={state.activeId} select={selectChat} newChat={() => newChat()} mode={state.mode} close={() => { dismissInput(); setDrawer(false); }} openMode={() => { dismissInput(); setDrawer(false); setSettingsOpen(true); }} connection={runtime.connection.label} newProjectChat={newChat} /></Overlay>
-    <Overlay open={sheet !== null} kind="sheet" preferredHeight={lastSheet === 'rename' ? 260 * fontScale + safe.bottom : lastSheet === 'actions' ? (active ? 380 : 260) * fontScale + safe.bottom : 560} onClose={() => closeSheet()}>
-      {lastSheet === 'models' ? <ModelPicker hiddenModels={visibility.hidden} open={sheet === 'models'} models={availableModels} model={state.model} variants={modelEffort} setVariants={setModelEffort} select={selectModel} close={() => closeSheet()} favorites={state.favorites} favorite={key => controller.favorite(key)} availability={state.modelCatalog} retry={refreshCatalog} /> : <>
-        {header(t(lastSheet === 'actions' ? 'mobile.header.actions' : lastSheet === 'agents' ? 'chat.modelControls.selectAgent' : 'sessions.sidebar.session.menu.rename'))}
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 16 }} keyboardShouldPersistTaps="handled">
-        {lastSheet === 'agents' && <><CatalogStatus availability={state.agentCatalog} retry={refreshCatalog} />{availableAgents.map(agent => <Button key={agent} variant="row" showSelection label={agent} selected={agent === state.agent} onPress={() => { cancelNewChat(); controller.setAgent(agent); closeSheet(); }} />)}</>}
-        {lastSheet === 'rename' && <View style={{ paddingHorizontal: 12, paddingTop: 8, gap: 20 }}><TextInput disableFullscreenUI value={rename} onChangeText={setRename} accessibilityLabel={t('sessions.sidebar.session.menu.rename')} style={[styles.rename, text(16, 22), { fontFamily: font.regular, color: colors.surface.foreground, borderColor: colors.interactive.border, backgroundColor: colors.surface.elevated }]} testID="rename-input" /><Button variant="action" disabled={!rename.trim()} label={t('sessions.sidebar.session.rename.save')} onPress={() => { void controller.rename(rename); closeSheet(); }} testID="save-rename" /></View>}
-        {lastSheet === 'actions' && <>
-          <Button variant="row" icon="edit-box" label={t('mobile.sessions.newChat')} onPress={() => { closeSheet(); newChat(); }} testID="new-chat" />
-          <Button variant="row" icon="folder-3" label={t('mobile.header.workspace')} disabled={!runtime.supportsWorkspace} onPress={openWorkspace} testID="open-workspace" />
-          <Button variant="row" icon="chat-3" label={t('chat.modelControls.selectAgent')} onPress={() => openSheet('agents')} />
-          {active && <><Button variant="row" icon="edit-box" label={t('sessions.sidebar.session.menu.rename')} onPress={() => openSheet('rename')} testID="rename-chat" /><Button variant="row" icon="archive" label={t(active.time.archived ? 'sessions.sidebar.bulkActions.restore' : 'sessions.sidebar.nav.archive')} onPress={() => { void controller.archive(active.id, !active.time.archived); closeSheet(); }} /></>}
+    <Overlay open={drawer} foreground={sheet === null} kind="drawer" onClose={() => { dismissInput(); setDrawer(false); }}><Sidebar open={drawer} sessions={state.sessions} activeId={state.activeId} select={selectChat} actions={id => openActions(id, 'sidebar')} newChat={() => newChat()} mode={state.mode} openSettings={() => { dismissInput(); setDrawer(false); setSettingsOpen(true); }} openConnections={() => { dismissInput(); setDrawer(false); openConnections(); }} connection={runtime.connection.label} newProjectChat={newChat} /></Overlay>
+    <Overlay open={sheet !== null} kind="sheet" dismissible={!actionBusy} fitContent={lastSheet === 'actions' || lastSheet === 'rename'} onClose={closeSheet}>
+      {lastSheet === 'models' ? <ModelPicker hiddenModels={visibility.hidden} open={sheet === 'models'} models={availableModels} model={state.model} variants={modelEffort} setVariants={setModelEffort} select={selectModel} close={() => closeSheet()} favorites={state.favorites} favorite={key => controller.favorite(key)} availability={state.modelCatalog} retry={refreshCatalog} /> : lastSheet === 'agents' ? <>
+        {header(t('chat.modelControls.selectAgent'))}
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 16 }} keyboardShouldPersistTaps="handled"><CatalogStatus availability={state.agentCatalog} retry={refreshCatalog} />{availableAgents.map(agent => <Button key={agent} variant="row" showSelection label={agent} selected={agent === state.agent} onPress={() => { cancelNewChat(); controller.setAgent(agent); closeSheet(); }} />)}</ScrollView>
+      </> : <>
+        {!compactRename && header(lastSheet === 'actions' && actionOrigin === 'sidebar' ? actionTarget?.title ?? t('common.unavailable') : t(lastSheet === 'actions' ? 'mobile.header.actions' : 'sessions.sidebar.session.menu.rename'))}
+        <View style={{ paddingHorizontal: 12, paddingBottom: 16 }}>
+        {(lastSheet === 'actions' || lastSheet === 'rename') && <>
+          {actionBusy && <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 12, paddingBottom: 12 }}><ActivityIndicator color={colors.surface.foreground} /><Text accessibilityLiveRegion="polite" style={[text(14, 21), { fontFamily: font.regular, color: colors.surface.mutedForeground }]}>{t('common.loading')}</Text></View>}
+          {(actionError || actionTargetId && !actionTarget) && <Text accessibilityRole="alert" testID="session-action-error" style={[text(14, 21), { fontFamily: font.regular, color: colors.status.error, paddingHorizontal: 12, paddingBottom: 12 }]}>{t(!actionTarget ? 'mobile.native.session.missing' : actionError?.result === 'unavailable' ? 'common.unavailable' : actionError?.result === 'busy' ? 'common.loading' : 'mobile.native.actionFailed')}</Text>}
         </>}
-      </ScrollView></>}
+        {lastSheet === 'rename' && <View style={{ paddingHorizontal: compactRename ? 0 : 12, paddingTop: compactRename ? 0 : 8, gap: compactRename ? 8 : 20 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            {compactRename && <Button icon="arrow-left" label={t('mobile.sessions.doneEditing')} disabled={actionBusy} onPress={() => { renameInput.current?.blur(); Keyboard.dismiss(); }} testID="rename-dismiss" />}
+            <TextInput disableFullscreenUI ref={renameInput} value={rename} onChangeText={setRename} selectTextOnFocus selection={renameEditing ? undefined : { start: 0, end: 0 }} editable={!actionBusy && Boolean(actionTarget)} onFocus={() => setRenameEditing(true)} onBlur={() => setRenameEditing(false)} returnKeyType="done" onSubmitEditing={() => { if (rename.trim()) void mutateSession({ type: 'rename', title: rename }); }} accessibilityLabel={t('sessions.sidebar.session.menu.rename')} style={[styles.rename, text(16, 22), { flex: 1, paddingVertical: compactRename ? 4 : 12, fontFamily: font.regular, color: colors.surface.foreground, borderColor: colors.interactive.border, backgroundColor: colors.surface.elevated }]} testID="rename-input" />
+          </View>
+          <Button variant="action" disabled={!rename.trim() || actionBusy || !actionTarget} label={t('sessions.sidebar.session.rename.save')} onPress={() => { void mutateSession({ type: 'rename', title: rename }); }} testID="save-rename" />
+        </View>}
+        {lastSheet === 'actions' && <>
+          {actionOrigin === 'chat' && <>
+            <Button variant="row" icon="edit-box" label={t('mobile.sessions.newChat')} disabled={actionBusy} onPress={() => { closeSheet(); newChat(); }} testID="new-chat" />
+            <Button variant="row" icon="folder-3" label={t('mobile.header.workspace')} disabled={actionBusy || !runtime.supportsWorkspace} onPress={openWorkspace} testID="open-workspace" />
+            <Button variant="row" icon="chat-3" label={t('chat.modelControls.selectAgent')} disabled={actionBusy} onPress={() => openSheet('agents')} />
+          </>}
+          {actionTargetId && <>
+            <Button variant="row" icon="edit-box" label={t('sessions.sidebar.session.menu.rename')} disabled={actionBusy || !actionTarget} onPress={() => { setLastSheet('rename'); setSheet('rename'); setActionError(null); }} testID="rename-chat" />
+            <Button variant="row" icon={actionError?.intent.type === 'archive' ? 'restart' : 'archive'} label={t(actionError?.intent.type === 'archive' ? 'settings.common.actions.retry' : actionTarget?.time.archived ? 'sessions.sidebar.bulkActions.restore' : 'sessions.sidebar.nav.archive')} disabled={actionBusy || !actionTarget} onPress={() => { void mutateSession(actionError?.intent.type === 'archive' ? actionError.intent : { type: 'archive', archived: !actionTarget?.time.archived }); }} testID="archive-chat" />
+          </>}
+        </>}
+      </View></>}
     </Overlay>
-    <SettingsScreen open={settingsOpen} foreground={foreground} close={() => setSettingsOpen(false)} connection={runtime.connection.label} mode={state.mode} modeReady={state.preferencesReady} setMode={mode => controller.setMode(mode)} openConnections={openConnections} defaults={defaults} models={availableModels} agents={availableAgents} providers={providers} customProviders={customProviders} modelVisibility={modelVisibility} settingsProjects={settingsProjects} modelCatalog={state.modelCatalog} agentCatalog={state.agentCatalog} refreshCatalog={refreshCatalog} />
+    <SettingsScreen open={settingsOpen} foreground={foreground} close={() => setSettingsOpen(false)} openConnections={openConnections} server={{ connection: runtime.connection.label, mode: state.mode, modeReady: state.preferencesReady, setMode: mode => controller.setMode(mode), defaults, models: availableModels, agents: availableAgents, providers, customProviders, modelVisibility, settingsProjects, currentProjectAvailable: state.preferencesReady && (state.activeId === null || active !== undefined), modelCatalog: state.modelCatalog, agentCatalog: state.agentCatalog, refreshCatalog }} />
     {workspace && <Workspace runtime={runtime} sessionId={state.activeId} mode={state.mode} close={closeWorkspace} />}
   </View>;
 }

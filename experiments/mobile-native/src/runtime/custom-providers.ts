@@ -46,7 +46,7 @@ export class CustomProviderError extends Error {
 }
 export interface CustomProvidersSnapshot { error: { providerID: string; reason: CustomProviderErrorReason; credentialSaved: boolean } | null }
 export interface CustomProvidersTransport {
-  directory(): string | undefined;
+  directory(): string | undefined | null;
   editor(providerID: string, directory: string | undefined, signal: AbortSignal): Promise<EditorResponse>;
   saveKey(providerID: string, key: string, signal: AbortSignal): Promise<boolean>;
   save(providerID: string, request: WriteRequest, directory: string | undefined, signal: AbortSignal): Promise<z.infer<typeof mutationSchema>>;
@@ -128,10 +128,16 @@ export class CustomProvidersStore {
   private readonly partial = new Map<string, string>();
   constructor(transport: CustomProvidersTransport, providers: ProvidersStore) { this.transport = transport; this.providers = providers; }
   getSnapshot = () => this.state;
-  hasPendingCredential = (providerID: string): boolean => !this.lifetime.signal.aborted && this.partial.has(JSON.stringify([providerID.trim(), this.transport.directory()]));
+  hasPendingCredential = (providerID: string): boolean => {
+    const directory = this.transport.directory();
+    return !this.lifetime.signal.aborted && directory !== null && this.partial.has(JSON.stringify([providerID.trim(), directory]));
+  };
   subscribe = (listener: () => void) => { this.listeners.add(listener); return () => { this.listeners.delete(listener); }; };
   private publish(error: CustomProvidersSnapshot['error']) { if (!this.lifetime.signal.aborted) { this.state = { error }; this.listeners.forEach(listener => listener()); } }
-  private check(directory: string | undefined) { if (this.lifetime.signal.aborted || directory !== this.transport.directory()) throw new CustomProviderError('unavailable'); }
+  private check(directory: string | undefined | null): string | undefined {
+    if (this.lifetime.signal.aborted || directory === null || directory !== this.transport.directory()) throw new CustomProviderError('unavailable');
+    return directory;
+  }
   private async read(providerID: string, directory: string | undefined, signal: AbortSignal): Promise<CustomProviderEditor> {
     this.check(directory);
     const response = editorSchema.parse(await this.transport.editor(providerID, directory, signal));
@@ -144,16 +150,16 @@ export class CustomProvidersStore {
     const controller = new AbortController(); const abort = () => controller.abort();
     this.lifetime.signal.addEventListener('abort', abort); signal?.addEventListener('abort', abort);
     if (this.lifetime.signal.aborted || signal?.aborted) controller.abort();
-    try { return await this.read(providerID, this.transport.directory(), controller.signal); }
+    try { return await this.read(providerID, this.check(this.transport.directory()), controller.signal); }
     catch (cause) { throw controller.signal.aborted ? new CustomProviderError('unavailable') : failure(cause); }
     finally { this.lifetime.signal.removeEventListener('abort', abort); signal?.removeEventListener('abort', abort); }
   };
   save = async (form: CustomProviderFormState, previous?: CustomProviderEditor): Promise<void> => {
     const providerID = form.providerID.trim(); const directory = previous ? previous.directory : this.transport.directory();
     const partialKey = JSON.stringify([providerID, directory]);
-    let credentialSaved = this.partial.has(partialKey);
+    let credentialSaved = directory !== null && this.partial.has(partialKey);
     try {
-      this.check(directory);
+      const resolvedDirectory = this.check(directory);
       const validation = validateCustomProviderForm(form, previous, credentialSaved || !previous?.exists);
       if (Object.keys(validation.fields).length || validation.models.some(error => Object.keys(error).length) || validation.headers.some(error => Object.keys(error).length)) throw new CustomProviderError('invalidInput', validation);
       await this.providers.configurationChange(providerID, async (signal, changed) => {
@@ -162,7 +168,7 @@ export class CustomProvidersStore {
           this.check(directory);
           if (this.providers.getSnapshot().catalog.value?.all.some(provider => provider.id === providerID)) throw new CustomProviderError('conflict');
         }
-        const editor = await this.read(providerID, directory, signal);
+        const editor = await this.read(providerID, resolvedDirectory, signal);
         if (previous ? previous.revision !== editor.revision || previous.scope !== editor.scope || previous.exists !== editor.exists : editor.exists || credentialSaved && this.partial.get(partialKey) !== editor.revision) throw new CustomProviderError('conflict');
         const retryCredential = this.partial.get(partialKey) === editor.revision;
         const prepared = plan(form, editor, retryCredential);
@@ -172,15 +178,17 @@ export class CustomProvidersStore {
         }
         this.check(directory);
         if (signal.aborted) throw new CustomProviderError('unavailable');
-        const response = mutationSchema.parse(await this.transport.save(providerID, prepared.body, directory, signal));
+        const response = mutationSchema.parse(await this.transport.save(providerID, prepared.body, resolvedDirectory, signal));
         if (response.providerId !== providerID) throw new CustomProviderError('request');
         if (response.requiresRestart && response.restartDeferred) changed();
-        this.partial.delete(partialKey); this.publish(null);
+        this.partial.delete(partialKey);
+        if (directory === this.transport.directory()) this.publish(null);
       });
     } catch (cause) {
       const original = failure(cause);
       const error = credentialSaved && original.reason !== 'invalidInput' ? new CustomProviderError(original.reason === 'conflict' ? 'credentialSavedConflict' : 'credentialSavedConfigFailed') : original;
-      this.publish({ providerID, reason: error.reason, credentialSaved }); throw error;
+      if (directory === this.transport.directory()) this.publish({ providerID, reason: error.reason, credentialSaved });
+      throw error;
     }
   };
   remove = async (editor: CustomProviderEditor): Promise<boolean> => {
@@ -193,14 +201,19 @@ export class CustomProvidersStore {
         const result = removalSchema.parse(await this.transport.remove(editor.providerID, { scope: editor.scope, expectedRevision: editor.revision }, editor.directory, signal));
         if (result.providerId !== editor.providerID) throw new CustomProviderError('request');
         if (result.removed && result.requiresRestart && result.restartDeferred) changed();
-        this.publish(null); return result.removed;
+        if (editor.directory === this.transport.directory()) this.publish(null);
+        return result.removed;
       });
-    } catch (cause) { const error = failure(cause); this.publish({ providerID: editor.providerID, reason: error.reason, credentialSaved: false }); throw error; }
+    } catch (cause) {
+      const error = failure(cause);
+      if (editor.directory === this.transport.directory()) this.publish({ providerID: editor.providerID, reason: error.reason, credentialSaved: false });
+      throw error;
+    }
   };
   dispose = () => { this.lifetime.abort(); this.partial.clear(); this.listeners.clear(); };
 }
 
-export function createCustomProvidersStore(runtime: Pick<NativeRuntime, 'sdk' | 'runtimeFetch'>, providers: ProvidersStore, options: { directory: () => string | undefined }): CustomProvidersStore {
+export function createCustomProvidersStore(runtime: Pick<NativeRuntime, 'sdk' | 'runtimeFetch'>, providers: ProvidersStore, options: { directory: () => string | undefined | null }): CustomProvidersStore {
   const request = async <Value>(providerID: string, directory: string | undefined, schema: z.ZodType<Value>, init: RequestInit): Promise<Value> => {
     const response = await runtime.runtimeFetch(`/api/provider/${encodeURIComponent(providerID)}/editor${directory ? `?directory=${encodeURIComponent(directory)}` : ''}`, init);
     if (!response.ok) { await response.text().catch(() => undefined); throw new CustomProviderError([404, 405, 501].includes(response.status) ? 'upgrade' : response.status === 409 ? 'conflict' : response.status === 422 ? 'unsupported' : 'request'); }

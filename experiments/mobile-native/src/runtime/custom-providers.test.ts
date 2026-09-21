@@ -7,7 +7,7 @@ import { CustomProvidersStore, CustomProviderError, createCustomProvidersStore, 
 const config = { npm: '@ai-sdk/openai-compatible' as const, name: 'QA custom', env: ['FIRST_KEY', 'SECOND_KEY'], options: { baseURL: 'https://native-qa.invalid/v1', headers: { Authorization: 'synthetic-header' } }, models: { first: { name: 'QA model' } } };
 const form = (changes: Partial<CustomProviderFormState> = {}): CustomProviderFormState => ({ ...createEmptyCustomProviderForm(), providerID: 'qa-custom', name: 'QA custom', baseURL: 'https://native-qa.invalid/v1', apiKey: 'synthetic-key', models: [{ row: 'm', id: 'first', name: 'QA first' }], ...changes });
 function setup(initialExists = false) {
-  let exists = initialExists; let stored = false; let revision = 'revision-one'; let directory: string | undefined = '/project';
+  let exists = initialExists; let stored = false; let revision = 'revision-one'; let directory: string | undefined | null = '/project';
   const calls = { reads: 0, keys: 0, writes: 0, removes: 0, reloads: 0 };
   const providersTransport: ProvidersTransport = {
     directory: () => directory, catalog: async () => ({ all: [], connected: [], default: {} }), methods: async () => ({}), source: async () => ({ auth: { exists: stored }, user: { exists }, project: { exists: false }, custom: { exists: false } }),
@@ -21,8 +21,91 @@ function setup(initialExists = false) {
     save: async providerId => { calls.writes++; exists = true; revision = 'revision-two'; return { success: true, providerId, requiresRestart: true, restartDeferred: true }; },
     remove: async providerId => { calls.removes++; const removed = exists; exists = false; return { success: true, providerId, removed, requiresRestart: removed, restartDeferred: removed }; },
   };
-  return { store: new CustomProvidersStore(transport, providers), providers, transport, providersTransport, calls, directory(value: string | undefined) { directory = value; }, revision(value: string) { revision = value; } };
+  return { store: new CustomProvidersStore(transport, providers), providers, transport, providersTransport, calls, directory(value: string | undefined | null) { directory = value; }, revision(value: string) { revision = value; } };
 }
+
+test('unresolved custom provider scope performs no reads or writes and keeps the caller form intact for retry', async () => {
+  const fixture = setup(); fixture.directory(null);
+  const draft = form({ name: 'QA unsaved form', apiKey: '{env:CUSTOM_KEY}' });
+  const original = structuredClone(draft);
+  let providerReads = 0;
+  fixture.providersTransport.catalog = async () => { providerReads++; return { all: [], connected: [], default: {} }; };
+  await assert.rejects(fixture.store.readEditor('qa-custom'), error => error instanceof CustomProviderError && error.reason === 'unavailable');
+  await assert.rejects(fixture.store.save(draft), error => error instanceof CustomProviderError && error.reason === 'unavailable');
+  assert.deepEqual(fixture.calls, { reads: 0, keys: 0, writes: 0, removes: 0, reloads: 0 });
+  assert.equal(providerReads, 0);
+  assert.deepEqual(draft, original);
+  assert.equal(fixture.store.getSnapshot().error?.reason, 'unavailable');
+  const requested: Array<string | undefined> = [];
+  const editor = fixture.transport.editor, write = fixture.transport.save;
+  fixture.transport.editor = async (...args) => { requested.push(args[1]); return editor(...args); };
+  fixture.transport.save = async (...args) => { requested.push(args[2]); return write(...args); };
+  fixture.directory('/recovered-chat');
+  await fixture.store.save(draft);
+  assert.deepEqual(requested, ['/recovered-chat', '/recovered-chat']);
+  assert.deepEqual(draft, original);
+  assert.equal(fixture.calls.writes, 1);
+});
+
+test('resolved undefined remains a usable custom provider scope and never shares pending metadata with null', async () => {
+  const fixture = setup(); fixture.directory(undefined);
+  fixture.transport.save = async () => { throw new Error('Synthetic failed config write'); };
+  await assert.rejects(fixture.store.save(form()), error => error instanceof CustomProviderError && error.reason === 'credentialSavedConfigFailed');
+  assert.equal(fixture.calls.keys, 1);
+  assert.equal(fixture.store.hasPendingCredential('qa-custom'), true);
+  fixture.directory(null);
+  assert.equal(fixture.store.hasPendingCredential('qa-custom'), false);
+  await assert.rejects(fixture.store.save(form({ apiKey: '' })), error => error instanceof CustomProviderError && error.reason === 'unavailable');
+  fixture.directory(undefined);
+  assert.equal(fixture.store.hasPendingCredential('qa-custom'), true);
+  fixture.transport.save = async providerId => ({ success: true, providerId, requiresRestart: true, restartDeferred: true });
+  await fixture.store.save(form({ apiKey: '' }));
+  assert.equal(fixture.calls.keys, 1);
+});
+
+test('an editor from a resolved scope cannot be saved or removed after that scope becomes unresolved', async () => {
+  const fixture = setup(true);
+  const editor = await fixture.store.readEditor('qa-custom');
+  const original = structuredClone(editor.form);
+  fixture.directory(null);
+  await assert.rejects(fixture.store.save({ ...editor.form, name: 'QA changed' }, editor), error => error instanceof CustomProviderError && error.reason === 'unavailable');
+  await assert.rejects(fixture.store.remove(editor), error => error instanceof CustomProviderError && error.reason === 'unavailable');
+  assert.deepEqual(fixture.calls, { reads: 1, keys: 0, writes: 0, removes: 0, reloads: 0 });
+  assert.deepEqual(editor.form, original);
+});
+
+test('unresolved scope during editor preflight prevents auth/config writes and stale error publication', async () => {
+  const fixture = setup();
+  const response = Promise.withResolvers<Awaited<ReturnType<CustomProvidersTransport['editor']>>>();
+  const started = Promise.withResolvers<void>();
+  fixture.transport.editor = async () => { started.resolve(); return response.promise; };
+  const save = fixture.store.save(form());
+  await started.promise;
+  fixture.directory(null);
+  const snapshot = fixture.store.getSnapshot();
+  response.resolve({ providerId: 'qa-custom', scope: 'user', revision: 'one', config: null, credentials: { storedAuth: false, inline: false } });
+  await assert.rejects(save, error => error instanceof CustomProviderError && error.reason === 'unavailable');
+  assert.equal(fixture.calls.keys, 0); assert.equal(fixture.calls.writes, 0);
+  assert.strictEqual(fixture.store.getSnapshot(), snapshot);
+});
+
+test('accepted auth during a scope loss remains pending without a config write or stale error', async () => {
+  const fixture = setup();
+  const accepted = Promise.withResolvers<boolean>();
+  const started = Promise.withResolvers<void>();
+  fixture.transport.saveKey = async () => { fixture.calls.keys++; started.resolve(); return accepted.promise; };
+  const saving = fixture.store.save(form());
+  await started.promise; fixture.directory(null);
+  const snapshot = fixture.store.getSnapshot();
+  accepted.resolve(true);
+  await assert.rejects(saving, error => error instanceof CustomProviderError && error.reason === 'credentialSavedConfigFailed');
+  assert.equal(fixture.calls.keys, 1); assert.equal(fixture.calls.writes, 0);
+  assert.deepEqual(fixture.providers.getSnapshot().pendingRestart, ['qa-custom']);
+  assert.strictEqual(fixture.store.getSnapshot(), snapshot);
+  assert.equal(fixture.store.hasPendingCredential('qa-custom'), false);
+  fixture.directory('/project');
+  assert.equal(fixture.store.hasPendingCredential('qa-custom'), true);
+});
 
 test('invalid IDs, empty models, duplicate rows and malformed headers fail before any request or credential write', async () => {
   const { store, calls } = setup();

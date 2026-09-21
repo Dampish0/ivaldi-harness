@@ -9,6 +9,7 @@ import { serializeWrite } from './storage';
 import { loadCompleteSessionList, recoveredDraftState, resolveSelectedSession, sessionSendError, type SessionRecovery } from './session-recovery';
 import { chatSelectionSchema, rememberChatChoice, restoreChatChoices, sessionChatChoice, type ChatChoice } from './chat-choices';
 import { chatCatalogDirectory, ModelCatalogRefresh, type CatalogAvailability } from './model-refresh';
+import { SessionMutations } from './session-mutations';
 
 const attachmentSchema = z.object({ uri: z.string(), name: z.string(), mime: z.string(), size: z.number() });
 export type Attachment = z.infer<typeof attachmentSchema>;
@@ -52,8 +53,14 @@ export class ChatController {
   private historyLimits = new Map<string, number>();
   private readonly persistenceKey;
   private readonly modelCatalog: ModelCatalogRefresh;
+  private readonly sessionActions: SessionMutations;
   constructor(readonly runtime: NativeRuntime) {
     this.persistenceKey = `ivaldi.native.chat.v1.${runtime.connection.id}`;
+    this.sessionActions = new SessionMutations({
+      session: id => this.state.sessions.find(session => session.id === id),
+      update: async (id, directory, patch) => sessionSchema.parse((await this.runtime.sdk.session.update({ sessionID: id, directory, ...patch }, { throwOnError: true })).data),
+      commit: session => this.receive({ type: 'session.updated', properties: { info: session } }),
+    });
     this.modelCatalog = new ModelCatalogRefresh({
       readModels: async directory => {
         const providers = providersSchema.parse((await this.runtime.sdk.provider.list({ directory }, { throwOnError: true })).data);
@@ -74,14 +81,15 @@ export class ChatController {
     const precedingDirectory = mayChangeScope ? chatCatalogDirectory(this.state) : undefined;
     this.state = { ...this.state, ...patch };
     const scopeChanged = mayChangeScope && precedingDirectory !== chatCatalogDirectory(this.state);
-    if (scopeChanged) {
-      this.catalogScopeRevision++;
+    const catalogProvided = patch.models !== undefined && patch.agents !== undefined && patch.modelCatalog?.status === 'ready' && patch.agentCatalog?.status === 'ready';
+    if (scopeChanged || catalogProvided) this.catalogScopeRevision++;
+    if (scopeChanged && !catalogProvided) {
       this.state = { ...this.state, modelCatalog: { status: 'unavailable', available: false }, agentCatalog: { status: 'unavailable', available: false } };
     }
     if (coalesce) {
       if (!this.publishTimer) this.publishTimer = setTimeout(() => { this.publishTimer = null; this.listeners.forEach(listener => listener()); }, 32);
     } else { if (this.publishTimer) clearTimeout(this.publishTimer); this.publishTimer = null; this.listeners.forEach(listener => listener()); }
-    if (scopeChanged && !this.state.loading && chatCatalogDirectory(this.state) !== null) {
+    if (scopeChanged && !catalogProvided && !this.state.loading && chatCatalogDirectory(this.state) !== null) {
       const revision = this.catalogScopeRevision;
       void this.refreshModels().catch(() => { if (revision === this.catalogScopeRevision) this.publish({ error: 'load' }); });
     }
@@ -98,7 +106,7 @@ export class ChatController {
     } catch { this.publish({ error: 'storage' }); }
     if (this.disposed) return;
     void this.resume();
-    await this.loadInitialData();
+    await this.loadInitialData(true);
     this.publish({ loading: false });
   }
   private persist() {
@@ -137,19 +145,20 @@ export class ChatController {
   }
   setDraftDirectory(draftDirectory: string | null) { this.selectionRevision++; this.publish({ draftDirectory }); this.persist(); }
   setModel(model: ModelSelection) {
-    if (!this.state.modelCatalog.available || !this.state.models.some(choice => choice.id === model.modelID && choice.providerID === model.providerID)) return;
+    const choice = this.state.models.find(choice => choice.id === model.modelID && choice.providerID === model.providerID);
+    if (!this.state.modelCatalog.available || !choice || model.variant !== undefined && !choice.variants.includes(model.variant)) return;
     this.selectionRevision++; this.publish({ model, sessionChoices: rememberChatChoice(this.state.sessionChoices, this.state.activeId, { model, agent: this.state.agent }) }); this.persist();
   }
   setAgent(agent: string) {
     if (!this.state.agentCatalog.available || !this.state.agents.includes(agent)) return;
     this.selectionRevision++; this.publish({ agent, sessionChoices: rememberChatChoice(this.state.sessionChoices, this.state.activeId, { model: this.state.model, agent }) }); this.persist();
   }
-  startNewChat(directory: string | undefined, defaults: ChatChoice) {
+  startNewChat(directory: string | undefined, defaults: ChatChoice, catalog: { models: ModelChoice[]; agents: string[] }) {
     if (this.disposed || this.state.loading || !this.state.preferencesReady) return false;
     this.selectionRevision++;
     this.recoveryRevision++;
     const sessionChoices = rememberChatChoice(rememberChatChoice(this.state.sessionChoices, this.state.activeId, { model: this.state.model, agent: this.state.agent }), null, defaults);
-    this.publish({ activeId: null, draftDirectory: directory ?? null, model: defaults.model, agent: defaults.agent, sessionChoices, sessionRecovery: null, error: null });
+    this.publish({ activeId: null, draftDirectory: directory ?? null, model: defaults.model, agent: defaults.agent, sessionChoices, sessionRecovery: null, error: null, ...catalog, modelCatalog: { status: 'ready', available: true }, agentCatalog: { status: 'ready', available: true } });
     this.persist();
     return true;
   }
@@ -226,13 +235,18 @@ export class ChatController {
   private loadModels() { return this.modelCatalog.initialize(); }
   refreshModels = (): Promise<void> => this.modelCatalog.refresh();
   catalogForDirectory = (directory: string | undefined): Promise<{ models: ModelChoice[]; agents: string[] }> => this.modelCatalog.readForDirectory(directory);
-  private async loadInitialData() {
+  private async loadInitialData(initialize: boolean) {
     const sessions = this.refreshSessions();
+    let catalogRevision = this.catalogScopeRevision;
     // Saved IDs have no authoritative directory until session recovery finishes.
-    const catalogs = chatCatalogDirectory(this.state) === null ? sessions.then(() => this.loadModels()) : this.loadModels();
+    const loadCatalogs = () => {
+      catalogRevision = this.catalogScopeRevision;
+      return initialize ? this.loadModels() : this.refreshModels();
+    };
+    const catalogs = chatCatalogDirectory(this.state) === null ? sessions.then(loadCatalogs) : loadCatalogs();
     const results = await Promise.allSettled([sessions, catalogs]);
     if (chatCatalogDirectory(this.state) === null) this.publish({ modelCatalog: { status: 'error', available: false }, agentCatalog: { status: 'error', available: false } });
-    if (results.some(result => result.status === 'rejected')) this.publish({ error: 'load' });
+    if (results[0].status === 'rejected' || results[1].status === 'rejected' && catalogRevision === this.catalogScopeRevision) this.publish({ error: 'load' });
   }
   async loadHistory(id: string, limit = 100) {
     const existing = this.historyLoads.get(id);
@@ -460,10 +474,16 @@ export class ChatController {
       }
     } catch { this.publish({ error: 'stop' }); }
   }
-  async rename(title: string) { const id = this.state.activeId; if (!id || !title.trim()) return; try { const result = await this.runtime.sdk.session.update({ sessionID: id, directory: this.session(id).directory, title: title.trim() }, { throwOnError: true }); this.publish({ sessions: upsertSession(this.state.sessions, sessionSchema.parse(result.data)) }); } catch { this.publish({ error: 'action' }); } }
-  async archive(id: string, archived: boolean) { try { const result = await this.runtime.sdk.session.update({ sessionID: id, directory: this.session(id).directory, time: { archived: archived ? Date.now() : 0 } }, { throwOnError: true }); this.publish({ sessions: upsertSession(this.state.sessions, sessionSchema.parse(result.data)) }); if (archived && id === this.state.activeId) this.select(null); } catch { this.publish({ error: 'action' }); } }
+  rename(id: string, title: string) { return this.sessionActions.rename(id, title); }
+  async archive(id: string, archived: boolean) {
+    const selected = this.state.activeId === id;
+    const revision = this.selectionRevision;
+    const result = await this.sessionActions.archive(id, archived);
+    if (!this.disposed && result === 'saved' && archived && selected && this.state.activeId === id && revision === this.selectionRevision && this.state.sessions.find(session => session.id === id)?.time.archived) this.select(null);
+    return result;
+  }
   async permissionReply(permission: Permission, reply: 'once' | 'always' | 'reject') { try { await this.runtime.sdk.permission.reply({ requestID: permission.id, directory: this.session(permission.sessionID).directory, reply }, { throwOnError: true }); await this.refreshLiveState(permission.sessionID); } catch { this.publish({ error: 'action' }); } }
   async questionReply(question: Question, answers: string[][] | null) { try { const parameters = { requestID: question.id, directory: this.session(question.sessionID).directory }; if (answers) await this.runtime.sdk.question.reply({ ...parameters, answers }, { throwOnError: true }); else await this.runtime.sdk.question.reject(parameters, { throwOnError: true }); await this.refreshLiveState(question.sessionID); } catch { this.publish({ error: 'action' }); } }
-  async retry() { this.publish({ error: null }); await this.loadInitialData(); }
-  dispose() { this.selectionRevision++; this.recoveryRevision++; this.modelCatalog.dispose(); this.pause(); this.disposed = true; if (this.publishTimer) clearTimeout(this.publishTimer); this.runtime.close(); this.listeners.clear(); }
+  async retry() { this.publish({ error: null }); await this.loadInitialData(false); }
+  dispose() { this.selectionRevision++; this.recoveryRevision++; this.modelCatalog.dispose(); this.sessionActions.dispose(); this.pause(); this.disposed = true; if (this.publishTimer) clearTimeout(this.publishTimer); this.runtime.close(); this.listeners.clear(); }
 }

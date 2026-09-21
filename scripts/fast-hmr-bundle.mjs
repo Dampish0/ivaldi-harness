@@ -133,6 +133,17 @@ const createBridgePlugin = ({ repoRoot, uiSource }) => {
         };
       });
 
+      // Vite owns URL imports. Resolve the file without treating its query as
+      // part of the filename. The prebundle skips Vite's import analysis, so
+      // include its import marker to request a URL module instead of font bytes.
+      build.onResolve({ filter: /^(?:@\/|@ivaldi\/ui\/).*\?url$/ }, (args) => {
+        const relativePath = args.path.startsWith('@/')
+          ? args.path.slice(2)
+          : args.path.slice('@ivaldi/ui/'.length);
+        const file = resolveUiImport(relativePath.slice(0, -'?url'.length));
+        return { path: viteFsUrl(file, '?url&import'), external: true };
+      });
+
       build.onResolve({ filter: /^@ivaldi\/ui\// }, (args) => {
         const relativePath = args.path.slice('@ivaldi/ui/'.length);
         const file = resolveUiImport(relativePath);

@@ -8,6 +8,7 @@ import { readFileSync } from 'node:fs';
 import { z } from 'zod';
 import { startQaRelay } from './qa-relay.mjs';
 import { createProviderFixture } from './fixtures/native-providers.mjs';
+import { createSettingsStorageFixture } from './fixtures/native-settings-storage.mjs';
 
 const port = z.coerce.number().int().min(1024).max(65534).parse(process.argv.find(argument => argument.startsWith('--port='))?.slice(7) ?? 39123);
 const fixtureLabel = port === 39123 ? 'Native QA' : `Native QA ${port}`;
@@ -17,21 +18,27 @@ const visual = process.argv.includes('--visual') || images || chatDisplay;
 const relay = process.argv.includes('--relay') ? await startQaRelay(port + 1, port) : null;
 const adb = join(process.env.LOCALAPPDATA, 'Android/Sdk/platform-tools/adb.exe');
 const serial = process.env.ANDROID_SERIAL || 'emulator-5554';
+const emulatorHost = process.argv.includes('--emulator-host');
+if (emulatorHost && (relay || !/^emulator-\d+$/.test(serial))) throw new Error('Host alias requires a direct Android emulator fixture');
 const exec = promisify(execFile);
 const token = randomUUID(); const secret = randomUUID(); const pairingId = randomUUID();
 let redeemed = false;
-const stats = { redemptions: 0, rejectedAuth: 0, authChecks: 0, prompts: 0, aborts: 0, permissionReplies: [], questionReplies: [], attachmentCount: 0, settingsReads: 0, settingsWrites: 0, sessionGets: 0, sessionCreates: 0, workspaceLoads: 0, workspaceChecks: 0, lastPrompt: null, lastDeletedSession: null };
+const stats = { redemptions: 0, rejectedAuth: 0, rejectedAuthCategories: { favicon: 0, workspace: 0, 'workspace-check': 0, other: 0 }, authChecks: 0, prompts: 0, aborts: 0, permissionReplies: [], questionReplies: [], attachmentCount: 0, settingsReads: 0, settingsWrites: 0, sessionGets: 0, sessionCreates: 0, sessionLists: 0, sessionUpdateAttempts: 0, sessionUpdates: 0, lastSessionUpdate: null, workspaceLoads: 0, workspaceChecks: 0, lastPrompt: null, lastDeletedSession: null };
 const settings = { defaultModel: 'qa/native', defaultVariant: 'high', defaultAgent: 'build', showReasoning: true };
+const storedSettings = process.argv.includes('--settings-storage') ? await createSettingsStorageFixture(settings) : null;
+const settingsStorageControl = z.object({ command: z.enum(['read', 'write', 'corrupt', 'repair']) }).strict();
 const defaultsPatchSchema = z.object({ defaultModel: z.string().trim().optional(), defaultVariant: z.string().trim().optional(), defaultAgent: z.string().trim().optional() });
-const operationSchema = z.enum(['settings-read', 'settings-write', 'session-get', 'session-create', 'workspace-load', 'auth-session', 'pairing-redeem', 'provider-list', 'agent-list', 'provider-auth', 'provider-source', 'provider-save', 'provider-delete', 'provider-authorize', 'provider-callback', 'provider-reload', 'provider-config-read', 'provider-config-write', 'provider-config-delete']);
+const operationSchema = z.enum(['settings-read', 'settings-write', 'session-get', 'session-create', 'session-list', 'session-update', 'session-update-response', 'workspace-load', 'auth-session', 'pairing-redeem', 'provider-list', 'agent-list', 'provider-auth', 'provider-source', 'provider-save', 'provider-delete', 'provider-authorize', 'provider-callback', 'provider-reload', 'provider-config-read', 'provider-config-write', 'provider-config-delete']);
 const failureSchema = z.object({ operation: operationSchema, status: z.union([z.literal(404), z.literal(409), z.literal(422), z.literal(500), z.literal(503)]).default(503) })
   .refine(value => value.status !== 404 || value.operation === 'session-get')
   .refine(value => value.status !== 409 || ['provider-config-write', 'provider-config-delete'].includes(value.operation))
   .refine(value => value.status !== 422 || ['provider-config-read', 'provider-config-write'].includes(value.operation));
-const delaySchema = z.object({ operation: operationSchema, delayMs: z.number().int().min(1).max(5000) });
+const delaySchema = z.object({ operation: operationSchema, delayMs: z.number().int().min(1).max(15000) });
 const deleteSessionSchema = z.object({ sessionId: z.string().regex(/^ses_(?:native_qa|visual_\d+|[a-f\d-]{36})$/), emitEvent: z.boolean().default(true) });
 const promptSelectionSchema = z.object({ model: z.object({ providerID: z.string(), modelID: z.string(), variant: z.string().optional() }).optional(), variant: z.string().optional(), agent: z.string().optional() });
 const sessionCreateSchema = z.object({ title: z.string().optional(), agent: z.string().trim().min(1).optional(), model: z.object({ id: z.string().min(1), providerID: z.string().min(1), variant: z.string().min(1).optional() }).optional() });
+const sessionPatchSchema = z.union([z.object({ title: z.string().trim().min(1) }).strict(), z.object({ time: z.object({ archived: z.number().nonnegative() }).strict() }).strict()]);
+const externalSessionPatchSchema = deleteSessionSchema.pick({ sessionId: true }).extend({ update: sessionPatchSchema });
 const failures = new Map();
 const delays = new Map();
 const connections = new Set(); const timers = new Map();
@@ -100,15 +107,22 @@ async function applyNextControl(operation, response) {
 }
 async function body(request, limit = 30 * 1024 * 1024) { let text = ''; for await (const chunk of request) { text += chunk; if (text.length > limit) throw new Error('Fixture body too large'); } return text ? JSON.parse(text) : {}; }
 const providerFixture = process.argv.includes('--providers') ? createProviderFixture({ origin: `http://127.0.0.1:${port}`, catalog: providers, answer, body, applyNextControl }) : null;
+if (visual && providerFixture) { sessions.push(providerFixture.alternateSession); messages.set(providerFixture.alternateSession.id, []); }
 const server = createServer(async (request, response) => {
   try {
     const url = new URL(request.url, `http://127.0.0.1:${port}`); const path = url.pathname;
     if (path === '/__qa/stats') {
-      const snapshot = { ...stats, settings: { defaultModel: settings.defaultModel ?? '', defaultVariant: settings.defaultVariant ?? '', defaultAgent: settings.defaultAgent ?? '', showReasoning: settings.showReasoning }, pendingFailures: Object.fromEntries(failures), pendingDelays: Object.fromEntries(delays), relayHandshakes: relay?.handshakes() ?? 0 };
+      const snapshot = { ...stats, settings: { defaultModel: settings.defaultModel ?? '', defaultVariant: settings.defaultVariant ?? '', defaultAgent: settings.defaultAgent ?? '', showReasoning: settings.showReasoning }, settingsStorage: storedSettings?.stats(), pendingFailures: Object.fromEntries(failures), pendingDelays: Object.fromEntries(delays), relayHandshakes: relay?.handshakes() ?? 0 };
       if (providerFixture) snapshot.providers = providerFixture.snapshot();
       return answer(response, snapshot);
     }
     if (await providerFixture?.handlePublic(request, response, url)) return;
+    if (path === '/__qa/settings-storage' && request.method === 'POST' && storedSettings) {
+      const parsed = settingsStorageControl.safeParse(await body(request));
+      if (!parsed.success) return answer(response, { error: 'Invalid Settings storage control' }, 400);
+      await storedSettings.control(parsed.data.command);
+      return answer(response, storedSettings.stats());
+    }
     if (path === '/__qa/fail-next' && request.method === 'POST') {
       const parsed = failureSchema.safeParse(await body(request));
       if (!parsed.success) return answer(response, { error: 'Unsupported fixture failure' }, 400);
@@ -120,6 +134,17 @@ const server = createServer(async (request, response) => {
       if (!parsed.success) return answer(response, { error: 'Unsupported fixture delay' }, 400);
       delays.set(parsed.data.operation, parsed.data.delayMs);
       return answer(response, parsed.data);
+    }
+    if (path === '/__qa/update-session' && request.method === 'POST') {
+      const parsed = externalSessionPatchSchema.safeParse(await body(request));
+      if (!parsed.success) return answer(response, { error: 'Invalid fixture update' }, 400);
+      const session = sessions.find(item => item.id === parsed.data.sessionId);
+      if (!session) return answer(response, { error: 'Missing fixture session' }, 404);
+      if ('title' in parsed.data.update) session.title = parsed.data.update.title;
+      else session.time.archived = parsed.data.update.time.archived;
+      session.time.updated = Math.max(Date.now(), session.time.updated + 1);
+      event('session.updated', { info: session });
+      return answer(response, { sessionId: session.id, ...parsed.data.update });
     }
     if (path === '/__qa/delete-session' && request.method === 'POST') {
       const parsed = deleteSessionSchema.safeParse(await body(request));
@@ -154,7 +179,12 @@ const server = createServer(async (request, response) => {
       if (await applyNextControl('auth-session', response)) return;
       return answer(response, { authenticated, disabled: false });
     }
-    if (!authenticated) { stats.rejectedAuth++; return answer(response, { error: 'Unauthorized' }, 401); }
+    if (!authenticated) {
+      stats.rejectedAuth++;
+      const category = path === '/favicon.ico' ? 'favicon' : path === '/mobile' ? 'workspace' : path === '/api/__qa/workspace-check' ? 'workspace-check' : 'other';
+      stats.rejectedAuthCategories[category]++;
+      return answer(response, { error: 'Unauthorized' }, 401);
+    }
     if (await providerFixture?.handle(request, response, url)) return;
     if (path === '/mobile') {
       stats.workspaceLoads++;
@@ -166,16 +196,22 @@ const server = createServer(async (request, response) => {
     if (path === '/api/config/settings' && request.method === 'GET') {
       stats.settingsReads++;
       if (await applyNextControl('settings-read', response)) return;
-      return answer(response, providerFixture ? { ...settings, projects: providerFixture.projects() } : settings);
+      const current = storedSettings ? await storedSettings.read() : settings;
+      return answer(response, providerFixture ? { ...current, projects: providerFixture.projects() } : current);
     }
     if (path === '/api/config/settings' && request.method === 'PUT') {
       const parsed = defaultsPatchSchema.safeParse(await body(request));
       if (!parsed.success) return answer(response, { error: 'Invalid fixture defaults' }, 400);
       if (await applyNextControl('settings-write', response)) return;
-      for (const key of ['defaultModel', 'defaultVariant', 'defaultAgent']) {
-        if (parsed.data[key] === undefined) continue;
-        if (parsed.data[key]) settings[key] = parsed.data[key]; else delete settings[key];
-      }
+      if (storedSettings) {
+        const committed = await storedSettings.write(parsed.data);
+        for (const key of ['defaultModel', 'defaultVariant', 'defaultAgent']) {
+          if (committed[key]) settings[key] = committed[key]; else delete settings[key];
+        }
+      } else for (const key of ['defaultModel', 'defaultVariant', 'defaultAgent']) {
+          if (parsed.data[key] === undefined) continue;
+          if (parsed.data[key]) settings[key] = parsed.data[key]; else delete settings[key];
+        }
       stats.settingsWrites++;
       return answer(response, providerFixture ? { ...settings, projects: providerFixture.projects() } : settings);
     }
@@ -184,7 +220,12 @@ const server = createServer(async (request, response) => {
       response.write(`data: ${JSON.stringify({ directory, payload: { type: 'server.connected', properties: {} } })}\n\n`);
       connections.add(response); request.on('close', () => connections.delete(response)); return;
     }
-    if (path === '/api/experimental/session') return answer(response, sessions);
+    if (path === '/api/experimental/session') {
+      stats.sessionLists++;
+      const snapshot = structuredClone(providerFixture ? sessions.filter(session => providerFixture.sessionAvailable(session.id)) : sessions);
+      if (await applyNextControl('session-list', response)) return;
+      return answer(response, snapshot);
+    }
     if (path === '/api/provider') return answer(response, providers);
     if (path === '/api/agent') return answer(response, [{ name: 'build', mode: 'primary' }, { name: 'plan', mode: 'primary' }]);
     if (path === '/api/session/status') return answer(response, statuses);
@@ -221,6 +262,7 @@ const server = createServer(async (request, response) => {
       if (!action && request.method === 'GET') {
         stats.sessionGets++;
         if (await applyNextControl('session-get', response)) return;
+        if (providerFixture && !providerFixture.sessionAvailable(id)) return answer(response, { error: 'Synthetic session is temporarily unavailable' }, 503);
         return answer(response, session ?? { error: 'Missing session' }, session ? 200 : 404);
       }
       if (!session) return answer(response, { error: 'Missing session' }, 404);
@@ -243,18 +285,33 @@ const server = createServer(async (request, response) => {
         response.writeHead(204); return response.end();
       }
       if (action === 'abort') { stats.aborts++; clearInterval(timers.get(id)); timers.delete(id); statuses[id] = { type: 'idle' }; event('session.status', { sessionID: id, status: statuses[id] }); return answer(response, true); }
-      if (!action && request.method === 'PATCH') { const update = await body(request); if (update.title) session.title = update.title; if (update.time) session.time = { ...session.time, ...update.time }; event('session.updated', { info: session }); return answer(response, session); }
+      if (!action && request.method === 'PATCH') {
+        const parsed = sessionPatchSchema.safeParse(await body(request));
+        if (!parsed.success || url.searchParams.get('directory') !== session.directory) return answer(response, { error: 'Invalid fixture session update' }, 400);
+        stats.sessionUpdateAttempts++;
+        if (await applyNextControl('session-update', response)) return;
+        if (!sessions.includes(session)) return answer(response, { error: 'Missing session' }, 404);
+        if ('title' in parsed.data) session.title = parsed.data.title;
+        else session.time.archived = parsed.data.time.archived;
+        session.time.updated = Math.max(Date.now(), session.time.updated + 1);
+        stats.sessionUpdates++;
+        stats.lastSessionUpdate = { sessionId: id, directory: session.directory, ...parsed.data };
+        const snapshot = structuredClone(session);
+        event('session.updated', { info: snapshot });
+        if (await applyNextControl('session-update-response', response)) return;
+        return answer(response, snapshot);
+      }
     }
     answer(response, { error: 'Unsupported fixture route' }, 404);
   } catch { answer(response, { error: 'Fixture request failed' }, 500); }
 });
 server.listen(port, '127.0.0.1', async () => {
-  await exec(adb, ['-s', serial, 'reverse', `tcp:${port}`, `tcp:${port}`]);
+  if (!emulatorHost) await exec(adb, ['-s', serial, 'reverse', `tcp:${port}`, `tcp:${port}`]);
   if (relay) await exec(adb, ['-s', serial, 'reverse', `tcp:${port + 1}`, `tcp:${port + 1}`]);
-  const candidates = relay ? [{ type: 'relay', serverId: 'ivaldi-native-qa', relayUrl: `ws://127.0.0.1:${port + 1}`, hostEncPubJwk: relay.publicKey }] : [{ type: 'lan', url: `http://127.0.0.1:${port}`, priority: 1 }];
+  const candidates = relay ? [{ type: 'relay', serverId: 'ivaldi-native-qa', relayUrl: `ws://127.0.0.1:${port + 1}`, hostEncPubJwk: relay.publicKey }] : [{ type: 'lan', url: `http://${emulatorHost ? '10.0.2.2' : '127.0.0.1'}:${port}`, priority: 1 }];
   const payload = { v: 2, pairingId, secret, label: relay ? 'Native Relay QA' : fixtureLabel, fingerprint: 'QA-LOCAL', expiresAt: new Date(Date.now() + 600000).toISOString(), candidates };
   const link = `ivaldi-native://connect?v=2&p=${Buffer.from(JSON.stringify(payload)).toString('base64url')}`;
   await exec(adb, ['-s', serial, 'shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', `'${link}'`, '-p', 'dev.ivaldi.nativecomparison']);
   console.log(`${fixtureLabel} fixture ready. Confirm it in the emulator. Pairing credentials remain in memory.`);
 });
-process.on('SIGINT', () => { for (const timer of timers.values()) clearInterval(timer); for (const response of connections) response.end(); relay?.close(); server.close(); });
+process.on('SIGINT', () => { for (const timer of timers.values()) clearInterval(timer); for (const response of connections) response.end(); relay?.close(); server.close(() => { void storedSettings?.close(); }); });

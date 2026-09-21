@@ -1,4 +1,7 @@
 import { createProjectIdFromPath } from '../projects/project-id.js';
+import { z } from 'zod';
+
+const persistedSettingsSchema = z.record(z.string(), z.json());
 
 const DEFAULT_NOTIFICATION_TEMPLATES = {
   completion: { title: '{agent_name} is ready', message: '{model_name} completed the task' },
@@ -47,7 +50,14 @@ export const createSettingsRuntime = (deps) => {
     onSettingsChanged,
   } = deps;
 
-  let persistSettingsLock = Promise.resolve();
+  let settingsWriteQueue = Promise.resolve();
+  const enqueueSettingsWrite = (operation) => {
+    const request = settingsWriteQueue.then(operation);
+    // Each caller receives its own failure. Later saves and migrations still
+    // read the committed file instead of inheriting that rejected promise.
+    settingsWriteQueue = request.then(() => undefined, () => undefined);
+    return request;
+  };
 
   // Orphan recovery is a one-shot best-effort scan: when orphans can't be
   // matched on first pass they stay on disk and every subsequent settings
@@ -498,8 +508,8 @@ export const createSettingsRuntime = (deps) => {
     }
   };
 
-  // Strict variant for callers that REGENERATE persisted identity when a key is
-  // absent (relay signing/encryption keys). The lenient reader above maps every
+  // Mutations, migrations and identity creation require a readable JSON object.
+  // The lenient reader above maps every
   // failure — corrupt JSON, EACCES, transient I/O — to `{}`, which such callers
   // cannot distinguish from "first run": they would mint a NEW identity, orphan
   // every paired device and push binding, and overwrite the settings file with
@@ -515,11 +525,7 @@ export const createSettingsRuntime = (deps) => {
       }
       throw error;
     }
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== 'object') {
-      throw new Error('Settings file is malformed (non-object payload)');
-    }
-    return parsed;
+    return persistedSettingsSchema.parse(JSON.parse(raw));
   };
 
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -882,12 +888,12 @@ export const createSettingsRuntime = (deps) => {
 
   let hasCleanedOrphanedTempFiles = false;
 
-  const readSettingsFromDiskMigrated = async () => {
+  const readSettingsFromDiskMigrated = () => enqueueSettingsWrite(async () => {
     if (!hasCleanedOrphanedTempFiles) {
       hasCleanedOrphanedTempFiles = true;
       await cleanupOrphanedSettingsTempFiles(path.dirname(SETTINGS_FILE_PATH));
     }
-    const current = await readSettingsFromDisk();
+    const current = await readSettingsFromDiskStrict();
     const migration1 = await migrateSettingsFromLegacyLastDirectory(current);
     const migration2 = await migrateSettingsFromLegacyThemePreferences(migration1.settings);
     const migration3 = await migrateSettingsFromLegacyCollapsedProjects(migration2.settings);
@@ -901,84 +907,80 @@ export const createSettingsRuntime = (deps) => {
     }
     notifySettingsChanged(migration8.settings);
     return migration8.settings;
-  };
+  });
 
-  const persistSettings = async (changes) => {
-    persistSettingsLock = persistSettingsLock.then(async () => {
-      // Log field names only — changes can carry credentials (UI password,
-      // client tokens, tunnel tokens) that must never reach the log file.
-      console.log('[persistSettings] Updating fields:', Object.keys(changes || {}).join(', ') || '(none)');
-      const current = await readSettingsFromDisk();
-      const sanitized = sanitizeSettingsUpdate(changes);
-      let next = mergePersistedSettings(current, sanitized);
+  const persistSettings = (changes) => enqueueSettingsWrite(async () => {
+    // Log field names only — changes can carry credentials (UI password,
+    // client tokens, tunnel tokens) that must never reach the log file.
+    console.log('[persistSettings] Updating fields:', Object.keys(changes || {}).join(', ') || '(none)');
+    const current = await readSettingsFromDiskStrict();
+    const sanitized = sanitizeSettingsUpdate(changes);
+    let next = mergePersistedSettings(current, sanitized);
 
-      const normalizedState = normalizeSettingsPaths(next);
-      if (normalizedState.changed) {
-        next = normalizedState.settings;
+    const normalizedState = normalizeSettingsPaths(next);
+    if (normalizedState.changed) {
+      next = normalizedState.settings;
+    }
+
+    const deterministicProjectIdMigration = await migrateSettingsToDeterministicProjectIds(next);
+    if (deterministicProjectIdMigration.changed) {
+      next = deterministicProjectIdMigration.settings;
+    }
+
+    const approvedDirectoriesMigration = migrateSettingsRemoveApprovedDirectories(next);
+    if (approvedDirectoriesMigration.changed) {
+      next = approvedDirectoriesMigration.settings;
+    }
+
+    // Validating project paths hits the filesystem for every entry, so only
+    // do it when the incoming update actually touches the projects list —
+    // not on every theme/window-state/etc. save.
+    if (Object.prototype.hasOwnProperty.call(sanitized, 'projects') && Array.isArray(next.projects)) {
+      const validated = await validateProjectEntries(next.projects);
+      next = { ...next, projects: validated };
+    }
+
+    if (Array.isArray(next.projects) && next.projects.length > 0) {
+      const activeId = typeof next.activeProjectId === 'string' ? next.activeProjectId : '';
+      const active = next.projects.find((project) => project.id === activeId) || null;
+      if (!active) {
+        console.log(`[persistSettings] Active project ID ${activeId} not found, switching to ${next.projects[0].id}`);
+        next = { ...next, activeProjectId: next.projects[0].id };
       }
+    } else if (next.activeProjectId) {
+      console.log(`[persistSettings] No projects found, clearing activeProjectId ${next.activeProjectId}`);
+      next = { ...next, activeProjectId: undefined };
+    }
 
-      const deterministicProjectIdMigration = await migrateSettingsToDeterministicProjectIds(next);
-      if (deterministicProjectIdMigration.changed) {
-        next = deterministicProjectIdMigration.settings;
+    if (Object.prototype.hasOwnProperty.call(sanitized, 'managedRemoteTunnelPresets')) {
+      await syncManagedRemoteTunnelConfigWithPresets(next.managedRemoteTunnelPresets);
+    }
+
+    if (Object.prototype.hasOwnProperty.call(sanitized, 'managedRemoteTunnelPresetTokens') && sanitized.managedRemoteTunnelPresetTokens) {
+      const presetsById = new Map((next.managedRemoteTunnelPresets || []).map((entry) => [entry.id, entry]));
+      const updates = Object.entries(sanitized.managedRemoteTunnelPresetTokens)
+        .map(([presetId, token]) => {
+          const preset = presetsById.get(presetId);
+          if (!preset || typeof token !== 'string' || token.trim().length === 0) {
+            return null;
+          }
+          return {
+            id: preset.id,
+            name: preset.name,
+            hostname: preset.hostname,
+            token: token.trim(),
+          };
+        })
+        .filter(Boolean);
+
+      for (const update of updates) {
+        await upsertManagedRemoteTunnelToken(update);
       }
+    }
 
-      const approvedDirectoriesMigration = migrateSettingsRemoveApprovedDirectories(next);
-      if (approvedDirectoriesMigration.changed) {
-        next = approvedDirectoriesMigration.settings;
-      }
-
-      // Validating project paths hits the filesystem for every entry, so only
-      // do it when the incoming update actually touches the projects list —
-      // not on every theme/window-state/etc. save.
-      if (Object.prototype.hasOwnProperty.call(sanitized, 'projects') && Array.isArray(next.projects)) {
-        const validated = await validateProjectEntries(next.projects);
-        next = { ...next, projects: validated };
-      }
-
-      if (Array.isArray(next.projects) && next.projects.length > 0) {
-        const activeId = typeof next.activeProjectId === 'string' ? next.activeProjectId : '';
-        const active = next.projects.find((project) => project.id === activeId) || null;
-        if (!active) {
-          console.log(`[persistSettings] Active project ID ${activeId} not found, switching to ${next.projects[0].id}`);
-          next = { ...next, activeProjectId: next.projects[0].id };
-        }
-      } else if (next.activeProjectId) {
-        console.log(`[persistSettings] No projects found, clearing activeProjectId ${next.activeProjectId}`);
-        next = { ...next, activeProjectId: undefined };
-      }
-
-      if (Object.prototype.hasOwnProperty.call(sanitized, 'managedRemoteTunnelPresets')) {
-        await syncManagedRemoteTunnelConfigWithPresets(next.managedRemoteTunnelPresets);
-      }
-
-      if (Object.prototype.hasOwnProperty.call(sanitized, 'managedRemoteTunnelPresetTokens') && sanitized.managedRemoteTunnelPresetTokens) {
-        const presetsById = new Map((next.managedRemoteTunnelPresets || []).map((entry) => [entry.id, entry]));
-        const updates = Object.entries(sanitized.managedRemoteTunnelPresetTokens)
-          .map(([presetId, token]) => {
-            const preset = presetsById.get(presetId);
-            if (!preset || typeof token !== 'string' || token.trim().length === 0) {
-              return null;
-            }
-            return {
-              id: preset.id,
-              name: preset.name,
-              hostname: preset.hostname,
-              token: token.trim(),
-            };
-          })
-          .filter(Boolean);
-
-        for (const update of updates) {
-          await upsertManagedRemoteTunnelToken(update);
-        }
-      }
-
-      await writeSettingsToDisk(next);
-      return formatSettingsResponse(next);
-    });
-
-    return persistSettingsLock;
-  };
+    await writeSettingsToDisk(next);
+    return formatSettingsResponse(next);
+  });
 
   return {
     readSettingsFromDisk,

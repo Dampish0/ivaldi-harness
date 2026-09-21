@@ -164,6 +164,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   "mobile.instances.delete": "Видалити",
   "mobile.instances.deleteAria": "Видалити {label}",
   "mobile.instances.confirmDeleteAria": "Підтвердити видалення {label}",
+  'mobile.instances.deleteDescription': "Збережене підключення буде видалено з цього пристрою. Сервер і чати залишаться доступними.",
   "mobile.instances.cancelDeleteAria": "Залишити {label}",
   "mobile.instances.cancelEdit": "Скасувати",
   "mobile.instances.label.label": "Назва",
