@@ -34,6 +34,7 @@ import {
 } from './linux-autostart.mjs';
 import { unsupportedAppSpecificOpenError, validateLocalPath } from './path-open-utils.mjs';
 import { shouldAllowBrowserPanelCertificateError } from './browser-panel-security.mjs';
+import { resolveBrowserPopupWindowOpen } from './browser-popup.mjs';
 import { createWindowsComputerUse } from './computer-use.mjs';
 import { mintOutsideFileGrant } from '@ivaldi/web/server/lib/fs/routes.js';
 
@@ -50,7 +51,7 @@ const PACKAGED_APP_USER_MODEL_ID = 'dev.ivaldi.desktop';
 const DEV_APP_USER_MODEL_ID = 'dev.ivaldi.desktop.dev';
 const APP_USER_MODEL_ID = app.isPackaged ? PACKAGED_APP_USER_MODEL_ID : DEV_APP_USER_MODEL_ID;
 const BACKGROUND_START_ARG = '--background';
-const IVALDI_DESKTOP_UPDATES_ENABLED = false;
+const IVALDI_DESKTOP_UPDATES_ENABLED = true;
 
 const getLoginItemOptions = () => {
   if (process.platform === 'win32') {
@@ -5009,27 +5010,10 @@ contextMenu({
   showCopyLink: true,
 });
 
-const loadUrlInsideWebContents = (contents, rawUrl) => {
-  try {
-    const url = new URL(rawUrl);
-    if (url.protocol !== 'http:' && url.protocol !== 'https:') return false;
-    if (contents.isDestroyed()) return false;
-    void contents.loadURL(url.toString()).catch((error) => {
-      log.warn('[webview] failed to load popup URL in place:', error);
-    });
-    return true;
-  } catch {
-    return false;
-  }
-};
-
 app.on('web-contents-created', (_event, contents) => {
   if (contents.getType() !== 'webview') return;
 
-  contents.setWindowOpenHandler(({ url }) => {
-    loadUrlInsideWebContents(contents, url);
-    return { action: 'deny' };
-  });
+  contents.setWindowOpenHandler(({ url }) => resolveBrowserPopupWindowOpen(url));
 });
 
 // All desktop_* IPC and dialog:open run with full Electron main privileges

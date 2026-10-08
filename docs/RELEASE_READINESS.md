@@ -8,15 +8,37 @@ are tracked in [futureJourneys.md](../futureJourneys.md).
 
 Ivaldi releases belong to [Dampish0/ivaldi-harness](https://github.com/Dampish0/ivaldi-harness/releases).
 There are no GitHub Actions workflows. Builds, validation, review, and publishing
-are manual. Desktop automatic updates are disabled; users install newer Ivaldi
-builds while retaining application data. Workspace packages use `@ivaldi/*` and
-the VS Code extension uses `dampish0.ivaldi`. npm and Marketplace publication
+are manual. Updater-enabled desktop builds check the stable GitHub release feed
+on launch. Builds created before the first updater-enabled bridge release need a
+one-time manual install because they cannot discover that release. Workspace
+packages use `@ivaldi/*` and the VS Code extension uses `dampish0.ivaldi`. npm and Marketplace publication
 require separate release setup and are not implied by these names.
 
 Run local validation on the reviewed checkout, commit the intended changes, and
 build each platform from that same commit. Use `bun run electron:build` on the
 target platform. See the [desktop prerequisites](../packages/electron/README.md#platform-notes).
 No branch or tag push automatically builds or publishes artifacts.
+
+## 1.20.2 updater bridge — Windows x64, 2026-10-08
+
+This release sets Work, MiMo V2.6 Flash Free, and Full access as new-chat
+defaults, opens browser popups in isolated desktop windows, and enables checks
+against the Ivaldi stable release feed. It includes Windows x64 only. Earlier
+builds have update checks disabled and must install this bridge release once
+manually before they can receive later in-app updates.
+
+| Check | Result |
+| --- | --- |
+| Version and tag | 1.20.2, `v1.20.2` |
+| Artifact and SHA-256 | `Ivaldi-1.20.2-win-x64.exe`; `80BA56E571A64D68E9BE9E22B8E067FC478D4E1ACB2BF1F14E10913EB11F154D` |
+| Signing | Unsigned Windows installer |
+| Updater metadata | `latest.yml` generated for 1.20.2; packaged feed points to `Dampish0/ivaldi-harness` |
+| Packaged CLI | OpenCode 1.18.23 verified |
+| Packaged startup | `win-unpacked/Ivaldi.exe` stayed running in background with isolated app data; log confirmed updater feed setup. No user profile or existing install was used. |
+| Focused tests | 49 UI tests, 23 session-route tests, 18 updater tests, and 2 popup tests passed; UI and Electron type/syntax checks passed. |
+| Static review | Popup module passed oxlint. The full session-route files reported existing anti-slop findings outside the changed lines. Dead-code report showed the existing unused-code baseline with no new popup file warning. |
+| Installer and upgrade journey | Not run; the existing user installation was left untouched. In-place upgrade and data retention remain unverified. |
+| Other desktop platforms | macOS and Linux artifacts were not built on this Windows host. |
 
 ## Candidate record
 
@@ -87,7 +109,8 @@ Use a disposable project and OS account or test machine. Test the actual install
 - [ ] Review a file change and open the correct file in the correct project.
 - [ ] If remote or mobile access is included, pair, disconnect, and reconnect. Confirm sessions and pending requests return.
 - [ ] Install over the previous Ivaldi version. Confirm data is retained and the new version launches.
-- [ ] Confirm automatic updates stay disabled and manual update instructions identify the correct artifacts.
+- [ ] Confirm the packaged app detects, downloads, and applies a newer release while retaining application data.
+- [ ] Record that pre-updater builds require a one-time manual bridge install.
 - [ ] Record failures and retest fixes on the rebuilt candidate.
 
 ## Restart recovery gate

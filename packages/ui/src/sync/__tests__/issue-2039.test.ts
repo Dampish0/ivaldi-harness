@@ -18,7 +18,6 @@ const permissionModeCalls: Array<[string, PermissionMode]> = []
 // resolution reads it as the authoritative source, so the mock has to keep one.
 const sessionDirectoryRegistry = new Map<string, string>()
 let createdSessionDirectory: string | undefined
-let productMode: "work" | "developer" = "developer"
 
 mock.module("zustand", () => ({
   create: () => (initializer: (
@@ -98,12 +97,6 @@ mock.module("@/stores/permissionStore", () => ({
         permissionModeCalls.push([sessionId, mode])
       }),
     }),
-  },
-}))
-
-mock.module("@/stores/useProductModeStore", () => ({
-  useProductModeStore: {
-    getState: () => ({ mode: productMode }),
   },
 }))
 
@@ -322,7 +315,6 @@ describe("issue 2039 draft permission mode", () => {
     savedVariantCalls.length = 0
     configVariantOverride = undefined
     createdSessionDirectory = undefined
-    productMode = "developer"
 
     useSessionUIStore.setState({
       currentSessionId: null,
@@ -340,7 +332,7 @@ describe("issue 2039 draft permission mode", () => {
   test("stores the selected permission mode in the draft and applies it before materialization returns", async () => {
     useSessionUIStore.getState().openNewSessionDraft()
 
-    expect(useSessionUIStore.getState().newSessionDraft.permissionMode).toBe("manual")
+    expect(useSessionUIStore.getState().newSessionDraft.permissionMode).toBe("full-access")
 
     useSessionUIStore.getState().setDraftPermissionMode("full-access")
 
@@ -379,8 +371,7 @@ describe("issue 2039 draft permission mode", () => {
     expect(savedVariantCalls).toEqual([undefined, "high"])
   })
 
-  test("defaults Work mode drafts to full access", () => {
-    productMode = "work"
+  test("defaults drafts to full access", () => {
     useSessionUIStore.getState().openNewSessionDraft()
 
     expect(useSessionUIStore.getState().newSessionDraft.permissionMode).toBe("full-access")

@@ -97,7 +97,6 @@ import {
   permissionModeFromLegacyAutoAccept,
   type PermissionMode,
 } from "@/lib/permissionModes"
-import { useProductModeStore } from "@/stores/useProductModeStore"
 
 export type { AttachedFile }
 
@@ -787,7 +786,7 @@ export async function materializeOpenDraftSession(selection: {
   const store = useSessionUIStore.getState()
   const draft = draftOverride ?? store.newSessionDraft
   if (!draft?.open) return null
-  const draftPermissionMode = draft.permissionMode ?? getDefaultPermissionMode(useProductModeStore.getState().mode)
+  const draftPermissionMode = draft.permissionMode ?? getDefaultPermissionMode()
 
   const trimmedAgent = typeof selection.agent === "string" && selection.agent.trim().length > 0
     ? selection.agent.trim()
@@ -1155,7 +1154,7 @@ export const useSessionUIStore = create<SessionUIState>()((set, get) => ({
       permissionMode: options?.permissionMode
         ?? (typeof options?.permissionAutoAcceptEnabled === "boolean"
           ? permissionModeFromLegacyAutoAccept(options.permissionAutoAcceptEnabled)
-          : getDefaultPermissionMode(useProductModeStore.getState().mode)),
+          : getDefaultPermissionMode()),
       pendingWorktreeRequestId: options?.pendingWorktreeRequestId ?? null,
       bootstrapPendingDirectory: normalizePath(options?.bootstrapPendingDirectory ?? null),
       preserveDirectoryOverride: options?.preserveDirectoryOverride === true,
@@ -1187,7 +1186,7 @@ export const useSessionUIStore = create<SessionUIState>()((set, get) => ({
     // Config (providers/agents/default model+agent) lives at the PROJECT level. When the user
     // came from a worktree session, `directory` is the worktree path, whose provider list does
     // not include project/global-scoped providers (e.g. the default agent's non-opencode model)
-    // — resolving defaults against it would wrongly fall back to opencode/big-pickle. Activate
+    // — resolving defaults against it would wrongly fall back to opencode/mimo-v2.6-flash-free. Activate
     // the project's config instead so the default cascade matches app startup, then re-apply it
     // (a fresh draft must start from defaults, not inherit the previous session's selection).
     const configDirectory = normalizePath(selectedProject?.path ?? null) ?? directory

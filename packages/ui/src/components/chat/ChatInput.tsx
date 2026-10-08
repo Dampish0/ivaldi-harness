@@ -372,8 +372,8 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
     const newSessionDraftOpen = Boolean(newSessionDraft?.open);
     const draftPermissionMode = useSessionUIStore((s) => (
         s.newSessionDraft?.open
-            ? (s.newSessionDraft.permissionMode ?? getDefaultPermissionMode(productMode))
-            : getDefaultPermissionMode(productMode)
+            ? (s.newSessionDraft.permissionMode ?? getDefaultPermissionMode())
+            : getDefaultPermissionMode()
     ));
     const setNewSessionDraftTarget = useSessionUIStore((s) => s.setNewSessionDraftTarget);
     const setDraftPermissionMode = useSessionUIStore((s) => s.setDraftPermissionMode);

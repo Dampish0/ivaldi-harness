@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 
 import {
+  DEFAULT_PRODUCT_MODE,
   getSettingsPageKeywordsInProductMode,
   isComposerCommandVisibleInProductMode,
   isComposerSkillVisibleInProductMode,
@@ -10,6 +11,12 @@ import {
   isSettingsPageVisibleInProductMode,
   isWorkAdvancedSettingsDetailPage,
 } from './productMode';
+
+describe('default product mode', () => {
+  test('starts new profiles in Work mode', () => {
+    expect(DEFAULT_PRODUCT_MODE).toBe('work');
+  });
+});
 
 describe('isSettingsPageVisibleInProductMode', () => {
   test('keeps the curated work settings navigation visible', () => {

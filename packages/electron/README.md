@@ -6,7 +6,7 @@ Electron desktop runtime for Ivaldi on macOS, Windows, and Linux.
 
 Build Ivaldi artifacts locally with `bun run electron:build` from the repository root on the target platform. There are no GitHub Actions build or publishing workflows. See [release readiness](../../docs/RELEASE_READINESS.md) for the candidate record and packaged checks required before manual distribution.
 
-Automatic updates are disabled by `IVALDI_DESKTOP_UPDATES_ENABLED` in `main.mjs`. The retained upstream updater code is inactive. Update installations manually using an Ivaldi artifact for the same platform and architecture, keeping application data. The updater mechanics documented below describe retained infrastructure, not an enabled Ivaldi update service.
+Packaged builds check the Ivaldi GitHub release feed on launch and offer available updates in the app. Builds created before the updater-enabled bridge release cannot discover that first update; users on those builds must install the matching platform artifact manually once. The updater is configured for `Dampish0/ivaldi-harness` and stable releases.
 
 This package owns the native shell: windows, menus, deep links, native notifications, auto-updates, host switching, SSH connections, tunnel helpers, and packaged desktop builds. The web UI and OpenChamber server logic still live in `packages/web` and shared React UI lives in `packages/ui`.
 
@@ -117,7 +117,7 @@ macOS builds produce `dmg` and `zip` artifacts. Windows builds produce an NSIS i
 
 macOS packaging needs Xcode/build tools for notarized builds and icon asset compilation.
 
-Windows packaging needs the .NET 10 SDK for the Computer Use helper, Visual Studio C++ build tools with Spectre-mitigated libraries for the selected toolset and architecture, and NSIS support through `electron-builder`. A native rebuild error `MSB8040` means those Spectre libraries are missing; install the matching components through Visual Studio Installer before retrying. If no Windows signing env is set, `package.mjs` disables code signing and builds an unsigned installer. The retained updater code uses `latest.yml` for x64 and `latest-arm64.yml` for ARM64 when updates are enabled.
+Windows packaging needs the .NET 10 SDK for the Computer Use helper, Visual Studio C++ build tools with Spectre-mitigated libraries for the selected toolset and architecture, and NSIS support through `electron-builder`. A native rebuild error `MSB8040` means those Spectre libraries are missing; install the matching components through Visual Studio Installer before retrying. If no Windows signing env is set, `package.mjs` disables code signing and builds an unsigned installer. The updater uses `latest.yml` for x64 and `latest-arm64.yml` for ARM64.
 
 Linux AppImages must be built natively. Set `OPENCHAMBER_TARGET_ARCH=x64` or `OPENCHAMBER_TARGET_ARCH=arm64` when packaging; the build rejects a target that does not match the Linux host. The same target selects the bundled OpenCode CLI, native Electron rebuild, and Electron Builder architecture. Linux identity is stable across architectures: executable `ivaldi`, desktop file `ivaldi.desktop`, icon `ivaldi`, and `StartupWMClass=ivaldi`.
 
@@ -127,7 +127,7 @@ Running a packaged Linux AppImage requires FUSE (`libfuse.so.2`, typically `libf
 
 Desktop clears AppImage `ARGV0` from `process.env` before probing the login shell and starting the in-process server. Leaving it set makes zsh rewrite argv[0] for integrated-terminal and managed-OpenCode child commands to the AppImage path.
 
-Linux updates are supported only when the packaged app is running from a writable AppImage. Update checks, downloads, and installation report an actionable error when `APPIMAGE` is missing, invalid, or read-only; a missing release feed (`latest-linux.yml` 404 before the first Linux publish) is treated as “no update available”. macOS and Windows updater behavior is unchanged. Release builds keep `latest-linux.yml` (x64) and `latest-linux-arm64.yml` separate and validate each manifest against its AppImage before upload. Linux AppImages download full updates (no `.blockmap` differential channel yet).
+Linux updates are supported only when the packaged app is running from a writable AppImage. Update checks, downloads, and installation report an actionable error when `APPIMAGE` is missing, invalid, or read-only; a missing release feed (`latest-linux.yml` 404 before the first Linux publish) is treated as “no update available”. Windows and macOS use their standard GitHub update manifests. Release builds keep `latest-linux.yml` (x64) and `latest-linux-arm64.yml` separate and validate each manifest against its AppImage before upload. Linux AppImages download full updates (no `.blockmap` differential channel yet).
 
 ### Updater End-to-End Fixture
 

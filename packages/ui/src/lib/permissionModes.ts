@@ -1,7 +1,5 @@
 import { z } from 'zod';
 
-import type { ProductMode } from '@/lib/productMode';
-
 export const PERMISSION_MODES = ['manual', 'auto', 'full-access'] as const;
 
 export type PermissionMode = (typeof PERMISSION_MODES)[number];
@@ -46,6 +44,4 @@ export const isPermissionModeSupported = (
   capabilities: PermissionModeCapabilities,
 ): boolean => capabilities.supportedModes.includes(mode);
 
-export const getDefaultPermissionMode = (productMode: ProductMode): PermissionMode => (
-  productMode === 'work' ? 'full-access' : 'manual'
-);
+export const getDefaultPermissionMode = (): PermissionMode => 'full-access';

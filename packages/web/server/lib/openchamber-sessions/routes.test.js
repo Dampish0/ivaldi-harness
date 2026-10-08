@@ -283,6 +283,34 @@ describe('openchamber session routes', () => {
     }
   });
 
+  it('uses MiMo V2.6 Flash Free when no model default is configured', async () => {
+    const originalFetch = globalThis.fetch;
+    const fetchMock = vi.fn(async (url) => {
+      const text = String(url);
+      if (text.includes('/prompt_async')) return { ok: true, text: async () => '' };
+      if (text.includes('/config/providers')) {
+        return { ok: true, json: async () => ({ providers: [{ id: 'opencode', models: { 'mimo-v2.6-flash-free': { id: 'mimo-v2.6-flash-free' } } }] }) };
+      }
+      if (text.includes('/agent')) return { ok: true, json: async () => [{ name: 'build', mode: 'primary' }] };
+      if (text.includes('/config')) return { ok: true, json: async () => ({}) };
+      return { ok: true, json: async () => ({ id: 'ses_123' }) };
+    });
+    globalThis.fetch = fetchMock;
+    const { app } = createApp({
+      readSettingsFromDiskMigrated: async () => ({ projects: [{ id: 'proj_1', path: '/repo/app' }] }),
+    });
+    try {
+      const response = await request(app)
+        .post('/api/openchamber/sessions')
+        .send({ directory: '/repo/app', prompt: 'Run this' })
+        .expect(200);
+
+      expect(response.body.model).toEqual({ providerID: 'opencode', modelID: 'mimo-v2.6-flash-free' });
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it('dispatches an initial prompt when model is provided', async () => {
     const originalFetch = globalThis.fetch;
     const fetchMock = vi.fn(async (url) => {

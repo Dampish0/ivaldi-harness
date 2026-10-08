@@ -3,7 +3,7 @@ import type { SettingsPageSlug } from '@/lib/settings/metadata';
 
 export type ProductMode = 'work' | 'developer';
 
-export const DEFAULT_PRODUCT_MODE: ProductMode = 'developer';
+export const DEFAULT_PRODUCT_MODE: ProductMode = 'work';
 
 const DEVELOPER_ONLY_CONTEXT_MODES = new Set<ContextPanelMode>([
   'git',

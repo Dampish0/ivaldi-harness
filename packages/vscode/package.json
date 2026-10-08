@@ -2,7 +2,7 @@
   "name": "ivaldi",
   "displayName": "Ivaldi",
   "description": "%extension.description%",
-  "version": "1.20.1",
+  "version": "1.20.2",
   "publisher": "dampish0",
   "private": true,
   "repository": {
