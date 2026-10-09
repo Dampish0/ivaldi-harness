@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 - English labels use sentence case throughout, and the command palette shows settings page names in your language.
 - Work mode uses everyday English words: chats instead of sessions, assistants instead of agents, connectors instead of MCP servers, extensions instead of plugins, and AI services instead of providers. Developer mode is unchanged.
 - Restart messages say "Restart Ivaldi" instead of "Restart OpenCode".
+- New installs start in Work mode with Ling 3.1 Flash Free as the model.
 - New chats start in Full access, so the agent edits files and runs commands without asking. Switch to Auto or Manual in the composer to review them first.
 - Desktop: the app ships OpenCode 1.18.35, so newer OpenCode Zen models such as Ling 3.1 Flash Free show up in the model picker.
 - Chat: questions and permission requests from the agent use one card style. Each answer is a full-width row, a recommended answer gets one "Recommended" tag, and Work mode hides the copy buttons. A dismissed question no longer shows as an error.
