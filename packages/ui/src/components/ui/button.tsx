@@ -47,7 +47,9 @@ const TINT_INFO = [
 const buttonVariants = cva(
   [
     "group relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg typography-ui-label font-medium tracking-[0.005em] shrink-0 select-none",
-    "transition-[background-color,border-color,color,opacity] duration-150 ease-out outline-none",
+    "transition-[background-color,border-color,color,opacity,scale,transform] duration-150 ease-out outline-none",
+    // A slight press-in so a click is felt even before anything else changes.
+    "active:scale-[0.97] motion-reduce:active:scale-100",
     "focus-visible:border-ring focus-visible:ring-ring focus-visible:ring-[3px]",
     "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
     "disabled:pointer-events-none disabled:opacity-50",

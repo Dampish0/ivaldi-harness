@@ -13,6 +13,7 @@ import { applyRetryOverlay } from './lib/turns/applyRetryOverlay';
 import { buildLiveStreamingEntry } from './lib/turns/streamingTailEntry';
 import { getNormalizedMessageForDisplay, hasCompactionPart } from './lib/messageDisplayNormalization';
 import { useUIStore } from '@/stores/useUIStore';
+import { useChatRenderMode } from '@/hooks/useChatRenderMode';
 import { useFeatureFlagsStore } from '@/stores/useFeatureFlagsStore';
 import { isHiddenUserMessage } from './message/hiddenUserMessage';
 import { FadeInDisabledProvider } from './message/FadeInOnReveal';
@@ -1150,7 +1151,7 @@ const StreamingTailContent: React.FC<{
     const hideCompactionProtocolMessages = hideGoalProtocolMessages || isMobileSurfaceRuntime();
     const liveEntry = React.useMemo(() => buildLiveStreamingEntry(entry, {
         livePartsByMessageId,
-        showTextJustificationActivity: chatRenderMode === 'sorted',
+        showTextJustificationActivity: chatRenderMode === 'sorted' && !hideGoalProtocolMessages,
         showTurnChangedFiles,
         mergeHiddenUserTurns: { planModeEnabled, hideGoalProtocolMessages, hideCompactionProtocolMessages },
     }), [chatRenderMode, entry, livePartsByMessageId, showTurnChangedFiles, planModeEnabled, hideGoalProtocolMessages, hideCompactionProtocolMessages]);
@@ -1200,10 +1201,11 @@ const MessageList = React.forwardRef<MessageListHandle, MessageListProps>(({
     streamPerfMark('react.message_list_render');
     streamPerfCount('ui.message_list.render');
     const stickyUserHeader = useUIStore(state => state.stickyUserHeader);
-    const chatRenderMode = useUIStore((state) => state.chatRenderMode);
+    const chatRenderMode = useChatRenderMode();
     const activityRenderMode = useUIStore((state) => state.activityRenderMode);
     const showTurnChangedFiles = useUIStore((state) => state.showTurnChangedFiles);
-    const defaultActivityExpanded = activityRenderMode === 'summary';
+    const isWorkMode = useProductModeStore((state) => state.mode === 'work');
+    const defaultActivityExpanded = !isWorkMode && activityRenderMode === 'summary';
     const reviewTransferDirection = useGlobalSessionsStore((state) => {
         return state.reviewTransferBySessionId.get(sessionKey) ?? null;
     });
@@ -1219,7 +1221,7 @@ const MessageList = React.forwardRef<MessageListHandle, MessageListProps>(({
 
     React.useEffect(() => {
         setTurnUiStates(new Map());
-    }, [activityRenderMode]);
+    }, [defaultActivityExpanded]);
 
     const toggleTurnGroup = React.useCallback((turnId: string) => {
         setTurnUiStates((previous) => {
@@ -1315,7 +1317,9 @@ const MessageList = React.forwardRef<MessageListHandle, MessageListProps>(({
     const hideCompactionProtocolMessages = hideGoalProtocolMessages || isMobileSurfaceRuntime();
     const { projection, staticTurns, streamingTurn } = useTurnRecords(displayMessages, {
         sessionKey,
-        showTextJustificationActivity: chatRenderMode === 'sorted',
+        // Work mode (which also hides goal protocol turns) keeps the assistant's
+        // words between steps in the chat rather than inside the steps row.
+        showTextJustificationActivity: chatRenderMode === 'sorted' && !hideGoalProtocolMessages,
         showTurnChangedFiles,
         planModeEnabled,
         hideGoalProtocolMessages,

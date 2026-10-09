@@ -198,11 +198,12 @@ export function WorkingPlaceholder({
 
   // Retry state: show countdown and attempt info
   if (retryInfo) {
-    const attemptLabel = retryInfo.attempt && retryInfo.attempt > 1 ? ` (attempt ${retryInfo.attempt})` : '';
-    const countdownLabel = retryCountdown !== null && retryCountdown > 0
-      ? ` in ${formatRetryCountdown(retryCountdown)}`
-      : '';
-    const retryText = `Retrying${countdownLabel}${attemptLabel}`;
+    const retryStatus = retryCountdown !== null && retryCountdown > 0
+      ? t('chat.statusRow.retry.in', { time: formatRetryCountdown(retryCountdown) })
+      : t('chat.statusRow.retry.now');
+    const retryText = retryInfo.attempt && retryInfo.attempt > 1
+      ? t('chat.statusRow.retry.attempt', { status: retryStatus, attempt: retryInfo.attempt })
+      : retryStatus;
 
     return (
       <div
@@ -211,7 +212,7 @@ export function WorkingPlaceholder({
         aria-live="polite"
         aria-label={`${retryText}...`}
       >
-        <span className="typography-ui-header">
+        <span className="typography-ui-header animate-reveal-up">
           {retryText}
           <BusyDots />
         </span>
@@ -241,7 +242,9 @@ export function WorkingPlaceholder({
       aria-label={label}
       data-waiting={displayedPermission ? 'true' : undefined}
     >
-      <span className="text-sm">
+      {/* Keyed on the status so each new one slides in; the shimmer and the
+          pulsing dot keep it obvious that work is still going on. */}
+      <span key={displayedText} className="text-sm animate-reveal-up">
         {hasProviderLogo && providerLogoSrc ? (
           <img
             src={providerLogoSrc}
@@ -253,8 +256,13 @@ export function WorkingPlaceholder({
             }}
             onError={handleProviderLogoError}
           />
-        ) : null}
-        {label}
+        ) : (
+          <span aria-hidden="true" className="relative mr-2 inline-flex size-2 align-[1px]">
+            <span className="absolute inline-flex size-full rounded-full bg-primary opacity-60 animate-ping motion-reduce:animate-none" />
+            <span className="relative inline-flex size-2 rounded-full bg-primary" />
+          </span>
+        )}
+        <span className="animate-text-shimmer">{label}</span>
         <BusyDots />
       </span>
     </div>

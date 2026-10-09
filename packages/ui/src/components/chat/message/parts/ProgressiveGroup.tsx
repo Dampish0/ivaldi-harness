@@ -27,6 +27,7 @@ import { areRenderRelevantPartsEqual } from '../renderCompare';
 import { getExternalFaviconUrl } from '@/lib/url';
 import { getDirectoryForFilePath, getRelativeFilePath, isFilePathWithinDirectory, normalizeFilePath, toAbsoluteFilePath } from '@/lib/path-utils';
 import { useI18n } from '@/lib/i18n';
+import { getToolStatusKey } from '@/lib/toolStatus';
 
 const TOOL_ROW_TEXT_CLASS = '!text-[length:var(--text-meta)] !leading-5 sm:!leading-6 tracking-normal';
 const TOOL_ROW_TITLE_CLASS = cn('typography-meta font-medium', TOOL_ROW_TEXT_CLASS);
@@ -85,6 +86,33 @@ const isActivityRunning = (activity: TurnActivityPart): boolean => {
     }
     return typeof activity.endedAt !== 'number';
 };
+
+interface WorkStepsSummary {
+    stepCount: number;
+    runningToolName: string | null;
+    isThinking: boolean;
+}
+
+/** What the Work mode steps row says: the step in progress, or how many ran. */
+const summarizeWorkSteps = (parts: TurnActivityPart[], streamPhase: StreamPhase): WorkStepsSummary => {
+    const isLive = streamPhase !== 'completed';
+    let stepCount = 0;
+    let runningToolName: string | null = null;
+    let isThinking = false;
+    for (const activity of parts) {
+        if (activity.part.type === 'tool') {
+            stepCount += 1;
+            if (isLive && isActivityRunning(activity)) {
+                runningToolName = activity.part.tool;
+            }
+        } else if (activity.part.type === 'reasoning' && isLive && activity.part.time.end === undefined) {
+            isThinking = true;
+        }
+    }
+    return { stepCount, runningToolName, isThinking };
+};
+
+const capitalizeFirst = (text: string): string => text.charAt(0).toLocaleUpperCase() + text.slice(1);
 
 const getActivityStatus = (activity: TurnActivityPart): string => {
     if (activity.part.type !== 'tool') return '';
@@ -843,6 +871,7 @@ const ProgressiveGroup: React.FC<ProgressiveGroupProps> = ({
     renderJustificationActions,
 }) => {
     const { t } = useI18n();
+    const isWorkMode = useProductModeStore((state) => state.mode === 'work');
     const previewCount = showHeader && !isExpanded
         ? Math.max(0, Math.floor(collapsedPreviewCount))
         : 0;
@@ -876,8 +905,40 @@ const ProgressiveGroup: React.FC<ProgressiveGroupProps> = ({
         return rows.slice(-previewCount);
     }, [isExpanded, previewCount, rows]);
 
+    const workSummary = React.useMemo(
+        () => (isWorkMode ? summarizeWorkSteps(parts, streamPhase) : null),
+        [isWorkMode, parts, streamPhase],
+    );
+
+    // Rows ease in only when the person opens the group, not every time the
+    // chat list remounts it while scrolling.
+    const [revealRows, setRevealRows] = React.useState(false);
+    const handleToggle = React.useCallback(() => {
+        setRevealRows(true);
+        onToggle();
+    }, [onToggle]);
+
     if (shouldRenderRows && rows.length === 0) {
         return null;
+    }
+
+    let headerLabel: string = t('chat.activity.label');
+    let isHeaderLive = false;
+    if (workSummary) {
+        if (workSummary.runningToolName) {
+            const toolName = workSummary.runningToolName;
+            headerLabel = capitalizeFirst(t(getToolStatusKey(toolName), { tool: getToolDisplayName(toolName, true) }));
+            isHeaderLive = true;
+        } else if (workSummary.isThinking) {
+            headerLabel = t('chat.activity.work.thinking');
+            isHeaderLive = true;
+        } else if (workSummary.stepCount === 1) {
+            headerLabel = t('chat.activity.work.stepsOne');
+        } else if (workSummary.stepCount > 1) {
+            headerLabel = t('chat.activity.work.steps', { count: workSummary.stepCount });
+        } else {
+            headerLabel = t('chat.activity.work.thought');
+        }
     }
 
     const wrapRow = (key: string, content: React.ReactNode) => {
@@ -969,20 +1030,33 @@ const ProgressiveGroup: React.FC<ProgressiveGroupProps> = ({
             <div className="my-1.5">
                 <button
                     type="button"
+                    aria-expanded={isExpanded}
                     className="group/tool -ml-0.5 flex min-h-7 w-full items-center gap-1.5 rounded-md px-1 py-1 text-left text-muted-foreground transition-colors hover:bg-interactive-hover hover:text-foreground"
-                    onClick={onToggle}
+                    onClick={handleToggle}
                 >
                     <span className="inline-flex size-4 flex-shrink-0 items-center justify-center">
-                        <Icon name={isExpanded ? 'arrow-down-s' : 'arrow-right-s'} className="size-3.5" />
+                        <Icon
+                            name="arrow-right-s"
+                            className={cn(
+                                'size-3.5 transition-transform duration-200 ease-out motion-reduce:transition-none',
+                                isExpanded && 'rotate-90',
+                            )}
+                        />
                     </span>
-                    <span
-                        className="typography-meta inline-flex items-center font-medium"
-                    >
-                        {t('chat.activity.label')}
+                    {/* A new step slides in; the shimmer shows it is still going. */}
+                    <span key={headerLabel} className={cn('inline-flex min-w-0', isHeaderLive && 'animate-reveal-up')}>
+                        <span
+                            className={cn(
+                                'typography-meta inline-flex items-center truncate font-medium',
+                                isHeaderLive && 'animate-text-shimmer',
+                            )}
+                        >
+                            {headerLabel}
+                        </span>
                     </span>
                 </button>
                 {shouldShowRowsContainer ? (
-                    <div className="relative ml-[7px] pl-4">
+                    <div className={cn('relative ml-[7px] pl-4', revealRows && 'animate-reveal-up')}>
                         <span
                             aria-hidden="true"
                             className="pointer-events-none absolute bottom-1 left-0 top-1 w-px"
@@ -991,7 +1065,7 @@ const ProgressiveGroup: React.FC<ProgressiveGroupProps> = ({
                         {previewHiddenCount > 0 ? (
                             <button
                                 type="button"
-                                onClick={onToggle}
+                                onClick={handleToggle}
                                 className="typography-meta rounded-md px-1.5 py-1 text-left text-muted-foreground transition-colors hover:bg-interactive-hover hover:text-foreground"
                             >
                                 {t('chat.activity.more', { count: previewHiddenCount })}

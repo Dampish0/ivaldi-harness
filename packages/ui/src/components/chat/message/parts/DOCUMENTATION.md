@@ -93,10 +93,15 @@ Use this doc when you ask an agent to change tool/header/description behavior.
   longer than the seven-row collapsed preview, where the wrapper actually
   reduces transcript length. Developer mode keeps that behavior and its saved
   render-mode/default-expansion preferences. Work mode always uses sorted chat
-  rendering with Activity collapsed by default, plus a zero-row collapsed
-  preview, so tool/reasoning execution details stay available on demand without
-  filling the everyday transcript by default. Switching modes does not rewrite
-  the saved Developer preferences.
+  rendering (`useChatRenderMode`) with each run of steps collapsed into one row
+  and a zero-row collapsed preview, so tool/reasoning execution details stay
+  available on demand without filling the everyday transcript. The text the
+  assistant writes between steps is not moved into the group as justification
+  rows; it stays in the chat and streams as it arrives. The group header names
+  the step in progress in plain words, with a shimmer, using the same phrases
+  as the status line (`@/lib/toolStatus`), and once the steps end it says how
+  many there were. Switching modes does not rewrite the saved Developer
+  preferences.
 - Work presentation also treats the narrowly recognized legacy `/goal`
   continuation/command messages as hidden protocol turns. Their assistant
   replies are merged into the previous visible turn instead of being dropped,

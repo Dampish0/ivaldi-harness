@@ -1772,6 +1772,48 @@ input[aria-label="Terminal input"] {
   animation: oc-busy-pulse 1.2s ease-in-out infinite;
 }
 
+/* A soft light that sweeps across text while a step is in progress. */
+@keyframes oc-text-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.animate-text-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    var(--muted-foreground) 0%,
+    var(--muted-foreground) 35%,
+    var(--foreground) 50%,
+    var(--muted-foreground) 65%,
+    var(--muted-foreground) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: oc-text-shimmer 2.2s linear infinite;
+}
+
+/* New content eases up into place instead of popping in. */
+@keyframes oc-reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-reveal-up {
+  animation: oc-reveal-up 220ms ease-out both;
+}
+
 @keyframes navrail-dot-wave {
   0%, 100% {
     transform: scale(0.72);
@@ -1892,8 +1934,15 @@ input[aria-label="Terminal input"] {
     display: none;
   }
 
-  .animate-busy-pulse {
+  .animate-busy-pulse,
+  .animate-reveal-up {
     animation: none;
+  }
+
+  .animate-text-shimmer {
+    animation: none;
+    background-image: none;
+    color: inherit;
   }
 
 }

@@ -540,6 +540,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     }, [isUser, normalizedParts]);
 
     const hideGoalProtocolMessages = useProductModeStore((state) => state.mode === 'work');
+    const isWorkMode = hideGoalProtocolMessages;
     const hideCompactionProtocolMessages = hideGoalProtocolMessages || isMobileSurfaceRuntime();
     const shouldHideUserMessage = isUser && (displayParts.length === 0 || isHiddenUserMessage(message, { planModeEnabled, hideGoalProtocolMessages, hideCompactionProtocolMessages }));
 
@@ -685,7 +686,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         }
         // Retries and a stopped reply are not failures, so they keep the info tone.
         if (errorName === 'SessionRetry') {
-            return { text: t('chat.messageBody.error.retrying', { detail }), tone: 'info' as const };
+            // Work mode hides the AI service's raw error, which means nothing to
+            // most people; Developer mode keeps it for diagnosis.
+            const text = isWorkMode
+                ? t('chat.messageBody.error.serviceBusy')
+                : t('chat.messageBody.error.retrying', { detail });
+            return { text, tone: 'info' as const };
         }
         if (isLikelyProviderAuthFailure(detail)) {
             return { text: t('chat.messageBody.error.providerAuth'), tone: 'error' as const };
@@ -694,7 +700,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             return { text: t('chat.messageBody.error.stopped'), tone: 'info' as const };
         }
         return { text: t('chat.messageBody.error.failed', { detail }), tone: 'error' as const };
-    }, [isUser, message.info, t]);
+    }, [isUser, isWorkMode, message.info, t]);
 
     const assistantErrorText = assistantError?.text;
     const assistantErrorTone = assistantError?.tone;

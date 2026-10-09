@@ -86,6 +86,8 @@ export const workDict = {
   'chat.questionCard.fromSubagent': 'From a helper',
   'chat.recap.aria': 'Chat recap',
   'chat.revertPopover.fork': 'Copy chat',
+  'chat.statusRow.retry.in': 'The AI service is busy. Trying again in {time}',
+  'chat.statusRow.retry.now': 'The AI service is busy. Trying again',
   'chat.statusRow.status.composing': 'writing',
   'chat.statusRow.status.permission': 'waiting for your approval',
   'chat.statusRow.status.tool.applyPatch': 'editing files',

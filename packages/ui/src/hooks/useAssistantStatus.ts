@@ -7,6 +7,7 @@ import { useDirectorySync, useSessionMessages, useSessionPermissions, useSession
 import { isFullySyntheticMessage } from '@/lib/messages/synthetic';
 import { useI18n, type I18nKey } from '@/lib/i18n';
 import { getToolDisplayName as getToolLabel } from '@/lib/toolHelpers';
+import { OTHER_TOOL_STATUS_KEY, TOOL_STATUS_KEYS, getToolStatusKey } from '@/lib/toolStatus';
 import { useProductModeStore } from '@/stores/useProductModeStore';
 import { useCurrentSessionActivity } from './useSessionActivity';
 
@@ -82,32 +83,7 @@ const STATUS_SIGNATURE_SEPARATOR = '\u0000';
 const EDITING_TOOLS = new Set(['edit', 'write', 'multiedit', 'apply_patch']);
 // Status phrases stay i18n keys until the hook returns, so the signature that
 // decides when to re-render is a plain string, and Work mode can word them
-// plainly through its own dictionary.
-const TOOL_STATUS_KEYS: ReadonlyMap<string, I18nKey> = new Map<string, I18nKey>([
-    ['read', 'chat.statusRow.status.tool.read'],
-    ['write', 'chat.statusRow.status.tool.write'],
-    ['edit', 'chat.statusRow.status.tool.edit'],
-    ['multiedit', 'chat.statusRow.status.tool.multiedit'],
-    ['apply_patch', 'chat.statusRow.status.tool.applyPatch'],
-    ['bash', 'chat.statusRow.status.tool.bash'],
-    ['grep', 'chat.statusRow.status.tool.grep'],
-    ['glob', 'chat.statusRow.status.tool.glob'],
-    ['list', 'chat.statusRow.status.tool.list'],
-    ['task', 'chat.statusRow.status.tool.task'],
-    ['webfetch', 'chat.statusRow.status.tool.webfetch'],
-    ['websearch', 'chat.statusRow.status.tool.websearch'],
-    ['codesearch', 'chat.statusRow.status.tool.codesearch'],
-    ['todowrite', 'chat.statusRow.status.tool.todowrite'],
-    ['todoread', 'chat.statusRow.status.tool.todoread'],
-    ['skill', 'chat.statusRow.status.tool.skill'],
-    ['question', 'chat.statusRow.status.tool.question'],
-    ['plan_enter', 'chat.statusRow.status.tool.planEnter'],
-    ['plan_exit', 'chat.statusRow.status.tool.planExit'],
-    ['openchamber_web', 'chat.statusRow.status.tool.browser'],
-    ['openchamber_memory', 'chat.statusRow.status.tool.memory'],
-]);
-/** A tool with no phrase of its own; `{tool}` is its display name, never its id. */
-const OTHER_TOOL_STATUS_KEY: I18nKey = 'chat.statusRow.status.tool.other';
+// plainly through its own dictionary. Tool phrases live in `@/lib/toolStatus`.
 const EDITING_STATUS_KEY: I18nKey = 'chat.statusRow.status.tool.edit';
 const THINKING_STATUS_KEY: I18nKey = 'chat.statusRow.status.thinking';
 const COMPOSING_STATUS_KEY: I18nKey = 'chat.statusRow.status.composing';
@@ -145,9 +121,6 @@ type ParsedStatusResult = {
     isGenericStatus: boolean;
 };
 
-const getToolStatusKey = (toolName: string): I18nKey => {
-    return TOOL_STATUS_KEYS.get(toolName) ?? OTHER_TOOL_STATUS_KEY;
-};
 
 const hashString = (value: string): number => {
     let hash = 0;

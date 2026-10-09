@@ -32,6 +32,9 @@ All notable changes to this project will be documented in this file.
 - Browser: the agent can open a page before you have opened the side panel. Before, it waited 45 seconds and failed.
 - Chat: the working status line names tools in plain words. It says "using the browser" instead of "using openchamber_web", and Work mode uses everyday phrases such as "searching your files" and "waiting for your approval".
 - Work mode: chat tabs and the header show "Untitled chat" instead of a raw "New session - 2026-…" timestamp, matching the sidebar. Renaming such a chat starts from an empty box.
+- Work mode: tool calls fold into one row per run of steps. While it works the row names the step in plain words, such as "Reading a file", and afterwards it says "Worked through 4 steps". Click it to see the steps. The assistant's words between steps stay in the chat and appear as they are written.
+- Chat: the working status line has a pulsing dot and a shimmer, and each new status slides in. Buttons press in slightly when clicked, and the steps row's arrow turns when it opens. All of it stays still when the system asks for reduced motion.
+- Chat: retries say "Trying again in 5s" in your language. In Work mode they say the AI service is busy instead of showing the service's raw error.
 
 ## [1.21.0] - 2026-08-26
 
