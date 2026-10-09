@@ -26,6 +26,26 @@ type SelectPortalContextValue = {
 
 const SelectPortalContext = React.createContext<SelectPortalContextValue | null>(null);
 
+// Labels of the items written inside a Select, by value. A SelectValue without
+// children shows the matching label instead of the raw value, for example
+// "Usage" instead of "usage".
+const SelectItemLabelsContext = React.createContext<ReadonlyMap<string, React.ReactNode> | null>(null);
+
+const collectItemLabels = (node: React.ReactNode, labels: Map<string, React.ReactNode>): void => {
+  React.Children.forEach(node, (child) => {
+    if (!React.isValidElement<{ value?: unknown; children?: React.ReactNode }>(child)) {
+      return;
+    }
+    if (child.type === SelectItem) {
+      if (typeof child.props.value === "string" && !labels.has(child.props.value)) {
+        labels.set(child.props.value, child.props.children);
+      }
+      return;
+    }
+    collectItemLabels(child.props.children, labels);
+  });
+};
+
 const resolveDialogContainer = (element: HTMLElement | null): HTMLElement | null => {
   if (!element) {
     return null;
@@ -82,16 +102,21 @@ function Select<Value extends string = string>({
     onOpenChange?.(nextOpen, eventDetails);
   };
 
+  const itemLabels = new Map<string, React.ReactNode>();
+  collectItemLabels(props.children, itemLabels);
+
   return (
     <SelectPortalContext.Provider value={portalContextValue}>
-      <BaseSelect.Root
-        {...props}
-        modal={modal}
-        open={open}
-        defaultOpen={defaultOpen}
-        onOpenChange={handleOpenChange}
-        onValueChange={handleValueChange}
-      />
+      <SelectItemLabelsContext.Provider value={itemLabels}>
+        <BaseSelect.Root
+          {...props}
+          modal={modal}
+          open={open}
+          defaultOpen={defaultOpen}
+          onOpenChange={handleOpenChange}
+          onValueChange={handleValueChange}
+        />
+      </SelectItemLabelsContext.Provider>
     </SelectPortalContext.Provider>
   )
 }
@@ -108,6 +133,7 @@ type SelectValueProps = Omit<React.ComponentProps<typeof BaseSelect.Value>, "chi
 };
 
 function SelectValue({ placeholder, children, ...props }: SelectValueProps) {
+  const itemLabels = React.useContext(SelectItemLabelsContext);
   return (
     <BaseSelect.Value data-slot="select-value" {...props}>
       {(value: unknown) => {
@@ -125,7 +151,7 @@ function SelectValue({ placeholder, children, ...props }: SelectValueProps) {
         if (resolvedValue === undefined || resolvedValue === "") {
           return placeholder as React.ReactNode;
         }
-        return resolvedValue;
+        return itemLabels?.get(resolvedValue) ?? resolvedValue;
       }}
     </BaseSelect.Value>
   )
