@@ -52,7 +52,7 @@ export function useDraftTarget(enabled: boolean, options: { includeWorktrees?: b
     const chatProject = React.useMemo<DraftTargetProject>(() => ({
         id: CHAT_DRAFT_PROJECT_ID,
         path: '',
-        label: t('layout.mainTab.chat'),
+        label: t('chat.chatInput.draftPicker.noProject'),
         kind: 'chat',
     }), [t]);
     const projects = React.useMemo(() => [chatProject, ...configuredProjects], [chatProject, configuredProjects]);

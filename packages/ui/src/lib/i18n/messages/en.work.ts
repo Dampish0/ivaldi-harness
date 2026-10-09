@@ -227,6 +227,7 @@ export const workDict = {
   'sessions.sidebar.dialogs.sessionDelete.descriptionManyWithDate': 'This deletes {count} chats from {dateLabel} for good.',
   'sessions.sidebar.dialogs.sessionDelete.descriptionOne': 'This deletes 1 chat for good.',
   'sessions.sidebar.dialogs.sessionDelete.descriptionOneWithDate': 'This deletes 1 chat from {dateLabel} for good.',
+  'sessions.sidebar.empty.noSessions.description': 'Your chats will show up here.',
   'sessions.sidebar.empty.noSessions.title': 'No chats yet',
   'sessions.sidebar.group.actions.deleteArchivedInGroupAria': 'Delete archived chats in {label}',
   'sessions.sidebar.group.actions.deleteArchivedSessions': 'Delete archived chats',

@@ -829,6 +829,9 @@ const resolveConfigDirectory = (directory: string | null | undefined): string | 
     const dir = normalizeConfigPath(directory);
     const projects = getKnownProjectDirectories();
     if (!dir) return null;
+    // A fresh install has no project yet, and Work mode chats do not need one.
+    // Use the folder itself, so models still load for the first chats.
+    if (projects.length === 0) return dir;
     if (projects.includes(dir)) return dir;
 
     // 1. Persisted mapping — resolves synchronously when the async worktree

@@ -2690,7 +2690,11 @@ export const ModelControls: React.FC<ModelControlsProps> = ({
             return null;
         }
 
-        const displayVariant = currentVariant ?? t('chat.modelControls.default');
+        const formatVariant = (variant: string) => variant.charAt(0).toUpperCase() + variant.slice(1);
+        const displayVariant = currentVariant ? formatVariant(currentVariant) : t('chat.modelControls.default');
+        // "Default" alone does not say what it sets, so Work mode names it on the button.
+        const thinkingLabel = t('chat.modelControls.thinkingLevel', { level: displayVariant });
+        const buttonLabel = isDeveloperMode ? displayVariant : thinkingLabel;
         const isDefault = !currentVariant;
         const colorClass = isDefault ? 'text-muted-foreground' : 'text-foreground';
 
@@ -2699,6 +2703,7 @@ export const ModelControls: React.FC<ModelControlsProps> = ({
                 <button
                     type="button"
                     onClick={() => setActiveMobilePanel('variant')}
+                    aria-label={thinkingLabel}
                     className={cn(
                         'model-controls__variant-trigger flex items-center gap-1.5 transition-opacity min-w-0 focus:outline-none',
                         buttonHeight,
@@ -2713,7 +2718,7 @@ export const ModelControls: React.FC<ModelControlsProps> = ({
                         isMobile && 'max-w-[60px]',
                         colorClass
                     )}>
-                        {displayVariant}
+                        {buttonLabel}
                     </span>
                 </button>
             );
@@ -2730,6 +2735,7 @@ export const ModelControls: React.FC<ModelControlsProps> = ({
                                     'model-controls__variant-trigger flex items-center gap-1.5 transition-colors cursor-pointer hover:bg-transparent hover:opacity-70 min-w-0',
                                     buttonHeight,
                                 )}
+                                aria-label={thinkingLabel}
                             >
                                 <Icon name="brain-ai-3" className={cn(controlIconSize, 'flex-shrink-0', colorClass)} />
                                 <span
@@ -2741,7 +2747,7 @@ export const ModelControls: React.FC<ModelControlsProps> = ({
                                         colorClass,
                                     )}
                                 >
-                                    {displayVariant}
+                                    {buttonLabel}
                                 </span>
                             </button>
                         </DropdownMenuTrigger>
@@ -2757,7 +2763,7 @@ export const ModelControls: React.FC<ModelControlsProps> = ({
                         {availableVariants.length > 0 && <DropdownMenuSeparator />}
                         {availableVariants.map((variant) => {
                             const selected = currentVariant === variant;
-                            const label = variant.charAt(0).toUpperCase() + variant.slice(1);
+                            const label = formatVariant(variant);
                             return (
                                 <DropdownMenuItem
                                     key={variant}
@@ -2774,7 +2780,7 @@ export const ModelControls: React.FC<ModelControlsProps> = ({
                     </DropdownMenuContent>
                 </DropdownMenu>
                 <TooltipContent side="top">
-                    <p className="typography-meta">Thinking: {displayVariant}</p>
+                    <p className="typography-meta">{thinkingLabel}</p>
                 </TooltipContent>
             </Tooltip>
         );

@@ -22,6 +22,7 @@ import { useSessionUIStore } from '@/sync/session-ui-store';
 import * as sessionActions from '@/sync/session-actions';
 import { useDirectoryStore } from '@/stores/useDirectoryStore';
 import { useProjectsStore } from '@/stores/useProjectsStore';
+import { useProductModeStore } from '@/stores/useProductModeStore';
 import { useUIStore } from '@/stores/useUIStore';
 import { useDeviceInfo } from '@/lib/device';
 import { sessionEvents } from '@/lib/sessionEvents';
@@ -73,6 +74,7 @@ export const SessionDialogs: React.FC = () => {
     const currentDirectory = useDirectoryStore((s) => s.currentDirectory);
     const homeDirectory = useDirectoryStore((s) => s.homeDirectory);
     const isHomeReady = useDirectoryStore((s) => s.isHomeReady);
+    const isDeveloperMode = useProductModeStore((s) => s.mode === 'developer');
     const projects = useProjectsStore((s) => s.projects);
     const activeProjectId = useProjectsStore((s) => s.activeProjectId);
     const { isMobile, isTablet, hasTouchInput } = useDeviceInfo();
@@ -115,8 +117,10 @@ export const SessionDialogs: React.FC = () => {
 
     // Session loading is handled by sync bootstrap — no manual loadSessions needed.
 
+    // Work mode chats do not need a project, so only Developer mode asks for a
+    // folder on its own. Work mode keeps "Choose project" in the message box.
     React.useEffect(() => {
-        if (hasShownInitialDirectoryPrompt || !isHomeReady || projects.length > 0) {
+        if (!isDeveloperMode || hasShownInitialDirectoryPrompt || !isHomeReady || projects.length > 0) {
             return;
         }
 
@@ -124,6 +128,7 @@ export const SessionDialogs: React.FC = () => {
 
         setIsDirectoryDialogOpen(true);
     }, [
+        isDeveloperMode,
         hasShownInitialDirectoryPrompt,
         isHomeReady,
         projects.length,

@@ -41,6 +41,9 @@ All notable changes to this project will be documented in this file.
 - Settings: the empty footer bar under the settings menu is gone in Work mode. The General page groups auto-save, keymap and shell under "Editor and terminal", or "Files" in Work mode. In Work mode, the Chat page and the empty Connectors page use everyday words.
 - Accessibility: more icon buttons have names, and the diff layout switch and changed files button use translated labels.
 - Connectors: after signing in to an MCP server, the return page opens Ivaldi through an `ivaldi://` link instead of `openchamber://`.
+- First start: a new install with no project loads the model list again, so the message box shows Ling 3.1 Flash Free instead of "Select model". This broke in 1.20.6.
+- Work mode: the Add project box no longer opens by itself on every start when you have no project. "Choose project" in the message box now ends with "Add project...", and the entry without a project reads "No project". The empty chat list says "Your chats will show up here."
+- Composer: the thinking level button reads "Thinking: Default" in Work mode, and its tooltip and screen reader label are translated.
 
 ## [1.21.0] - 2026-08-26
 

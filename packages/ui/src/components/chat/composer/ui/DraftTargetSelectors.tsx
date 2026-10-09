@@ -29,6 +29,7 @@ import { matchesRankQuery, rankByQuery } from '@/lib/search/fuzzySearch';
 import { PROJECT_COLOR_MAP, PROJECT_ICON_MAP, ProjectIconImage } from '@/lib/projectMeta';
 import { createWorktreeDraft } from '@/lib/worktreeSessionCreator';
 import { useKeybind } from '@/hooks/useKeybind';
+import { sessionEvents } from '@/lib/sessionEvents';
 import type { Theme } from '@/types/theme';
 import { normalizePath } from '../attachments/filePaths';
 import { getProjectDisplayLabel, type DraftTargetProject } from '../state/useDraftTarget';
@@ -53,6 +54,10 @@ export interface DraftTargetProps {
     onDirectoryChange: (directory: string) => void;
     theme: Theme;
 }
+
+// The last item in the project select. Picking it opens the Add project box
+// instead of changing the draft's project.
+const ADD_PROJECT_VALUE = '__ivaldi_add_project__';
 
 const getProjectIconColor = (projectColor?: string | null): string | undefined =>
     projectColor ? PROJECT_COLOR_MAP[projectColor] ?? undefined : undefined;
@@ -130,6 +135,11 @@ export function DraftTargetSelectors(props: DraftTargetProps) {
     });
 
     const handleProjectChange = (projectId: string) => {
+        if (projectId === ADD_PROJECT_VALUE) {
+            setOpenPicker(null);
+            sessionEvents.requestDirectoryDialog();
+            return;
+        }
         onProjectChange(projectId);
         setOpenPicker(null);
     };
@@ -166,6 +176,13 @@ export function DraftTargetSelectors(props: DraftTargetProps) {
                             <ProjectLabel project={project} theme={theme} />
                         </SelectItem>
                     ))}
+                    <SelectSeparator />
+                    <SelectItem value={ADD_PROJECT_VALUE} showSelectedBackground={false} className="max-w-[24rem] truncate">
+                        <span className="inline-flex min-w-0 items-center gap-1.5">
+                            <Icon name="add" className="h-3.5 w-3.5 shrink-0 text-muted-foreground/80" />
+                            <span className="truncate">{t('chat.chatInput.draftPicker.addProject')}</span>
+                        </span>
+                    </SelectItem>
                 </SelectContent>
             </Select>
 
