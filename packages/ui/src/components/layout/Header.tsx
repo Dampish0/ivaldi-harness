@@ -29,6 +29,7 @@ import { useGlobalSessionsStore } from '@/stores/useGlobalSessionsStore';
 import { streamPerfCount } from '@/stores/utils/streamDebug';
 import { useFeatureFlagsStore } from '@/stores/useFeatureFlagsStore';
 import { useProductModeStore } from '@/stores/useProductModeStore';
+import { resolveWorkChatTitle } from '@/components/session/sidebar/utils';
 
 import { useDesktopWindowControlsLayout } from '@/hooks/useDesktopWindowControlsLayout';
 import { ContextUsageDisplay } from '@/components/ui/ContextUsageDisplay';
@@ -584,8 +585,9 @@ export const Header: React.FC = () => {
       return activeProjectLabel ?? 'Ivaldi';
     }
     const trimmedTitle = currentSession?.title?.trim();
+    if (!isDeveloperMode) return resolveWorkChatTitle(trimmedTitle, t('chat.work.untitledChat'));
     return trimmedTitle && trimmedTitle.length > 0 ? trimmedTitle : t('sessions.sidebar.session.untitled');
-  }, [activeProjectLabel, currentSession?.title, currentSessionId, t]);
+  }, [activeProjectLabel, currentSession?.title, currentSessionId, isDeveloperMode, t]);
   const headerDirectoryStore = useDirectoryStore(openDirectory || undefined, { bootstrap: false });
   const sync = useSync();
   const updateSessionTitle = useSessionUIStore((state) => state.updateSessionTitle);

@@ -148,7 +148,7 @@ export function WorkingPlaceholder({
       return;
     }
 
-    const incomingText = isWaitingForPermission ? 'waiting for permission' : statusText;
+    const incomingText = isWaitingForPermission ? t('chat.statusRow.status.permission') : statusText;
     const incomingPermission = Boolean(isWaitingForPermission);
     const incomingGeneric = Boolean(isGenericStatus) && !incomingPermission;
 
@@ -187,6 +187,7 @@ export function WorkingPlaceholder({
     clearTimers,
     showStatus,
     scheduleQueueProcess,
+    t,
   ]);
 
   React.useEffect(() => () => clearTimers(), [clearTimers]);

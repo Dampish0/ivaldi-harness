@@ -5,6 +5,9 @@ import type { MessageStreamPhase } from '@/stores/types/sessionTypes';
 import { useSessionUIStore } from '@/sync/session-ui-store';
 import { useDirectorySync, useSessionMessages, useSessionPermissions, useSessionQuestions, useSessionStatus } from '@/sync/sync-context';
 import { isFullySyntheticMessage } from '@/lib/messages/synthetic';
+import { useI18n, type I18nKey } from '@/lib/i18n';
+import { getToolDisplayName as getToolLabel } from '@/lib/toolHelpers';
+import { useProductModeStore } from '@/stores/useProductModeStore';
 import { useCurrentSessionActivity } from './useSessionActivity';
 
 type AssistantActivity = 'idle' | 'streaming' | 'tooling' | 'cooldown' | 'permission';
@@ -77,53 +80,73 @@ const DEFAULT_WORKING: WorkingSummary = {
 const EMPTY_PARTS: Part[] = [];
 const STATUS_SIGNATURE_SEPARATOR = '\u0000';
 const EDITING_TOOLS = new Set(['edit', 'write', 'multiedit', 'apply_patch']);
-const TOOL_STATUS_PHRASES: Record<string, string> = {
-    read: 'reading file',
-    write: 'writing file',
-    edit: 'editing file',
-    multiedit: 'editing files',
-    apply_patch: 'applying patch',
-    bash: 'running command',
-    grep: 'searching content',
-    glob: 'finding files',
-    list: 'listing directory',
-    task: 'delegating task',
-    webfetch: 'fetching URL',
-    websearch: 'searching web',
-    codesearch: 'web code search',
-    todowrite: 'updating todos',
-    todoread: 'reading todos',
-    skill: 'learning skill',
-    question: 'asking question',
-    plan_enter: 'switching to planning',
-    plan_exit: 'switching to building',
-};
-const WORKING_PHRASES = [
-    'working',
-    'processing',
-    'preparing',
-    'warming up',
-    'gears turning',
-    'computing',
-    'calculating',
-    'analyzing',
-    'wheels spinning',
-    'calibrating',
-    'synthesizing',
-    'connecting dots',
-    'inspecting logic',
-    'weighing options',
+// Status phrases stay i18n keys until the hook returns, so the signature that
+// decides when to re-render is a plain string, and Work mode can word them
+// plainly through its own dictionary.
+const TOOL_STATUS_KEYS: ReadonlyMap<string, I18nKey> = new Map<string, I18nKey>([
+    ['read', 'chat.statusRow.status.tool.read'],
+    ['write', 'chat.statusRow.status.tool.write'],
+    ['edit', 'chat.statusRow.status.tool.edit'],
+    ['multiedit', 'chat.statusRow.status.tool.multiedit'],
+    ['apply_patch', 'chat.statusRow.status.tool.applyPatch'],
+    ['bash', 'chat.statusRow.status.tool.bash'],
+    ['grep', 'chat.statusRow.status.tool.grep'],
+    ['glob', 'chat.statusRow.status.tool.glob'],
+    ['list', 'chat.statusRow.status.tool.list'],
+    ['task', 'chat.statusRow.status.tool.task'],
+    ['webfetch', 'chat.statusRow.status.tool.webfetch'],
+    ['websearch', 'chat.statusRow.status.tool.websearch'],
+    ['codesearch', 'chat.statusRow.status.tool.codesearch'],
+    ['todowrite', 'chat.statusRow.status.tool.todowrite'],
+    ['todoread', 'chat.statusRow.status.tool.todoread'],
+    ['skill', 'chat.statusRow.status.tool.skill'],
+    ['question', 'chat.statusRow.status.tool.question'],
+    ['plan_enter', 'chat.statusRow.status.tool.planEnter'],
+    ['plan_exit', 'chat.statusRow.status.tool.planExit'],
+    ['openchamber_web', 'chat.statusRow.status.tool.browser'],
+    ['openchamber_memory', 'chat.statusRow.status.tool.memory'],
+]);
+/** A tool with no phrase of its own; `{tool}` is its display name, never its id. */
+const OTHER_TOOL_STATUS_KEY: I18nKey = 'chat.statusRow.status.tool.other';
+const EDITING_STATUS_KEY: I18nKey = 'chat.statusRow.status.tool.edit';
+const THINKING_STATUS_KEY: I18nKey = 'chat.statusRow.status.thinking';
+const COMPOSING_STATUS_KEY: I18nKey = 'chat.statusRow.status.composing';
+const PERMISSION_STATUS_KEY: I18nKey = 'chat.statusRow.status.permission';
+const WORKING_STATUS_KEYS: readonly I18nKey[] = [
+    'chat.statusRow.status.working.working',
+    'chat.statusRow.status.working.processing',
+    'chat.statusRow.status.working.preparing',
+    'chat.statusRow.status.working.warmingUp',
+    'chat.statusRow.status.working.gearsTurning',
+    'chat.statusRow.status.working.computing',
+    'chat.statusRow.status.working.calculating',
+    'chat.statusRow.status.working.analyzing',
+    'chat.statusRow.status.working.wheelsSpinning',
+    'chat.statusRow.status.working.calibrating',
+    'chat.statusRow.status.working.synthesizing',
+    'chat.statusRow.status.working.connectingDots',
+    'chat.statusRow.status.working.inspectingLogic',
+    'chat.statusRow.status.working.weighingOptions',
 ];
+const DEFAULT_WORKING_STATUS_KEY: I18nKey = 'chat.statusRow.status.working.working';
+const STATUS_KEYS = new Set<string>([
+    ...TOOL_STATUS_KEYS.values(),
+    ...WORKING_STATUS_KEYS,
+    OTHER_TOOL_STATUS_KEY,
+    THINKING_STATUS_KEY,
+    COMPOSING_STATUS_KEY,
+]);
+const isStatusKey = (value: string): value is I18nKey => STATUS_KEYS.has(value);
 
 type ParsedStatusResult = {
     activePartType: 'text' | 'tool' | 'reasoning' | 'editing' | undefined;
     activeToolName: string | undefined;
-    statusText: string;
+    statusKey: I18nKey;
     isGenericStatus: boolean;
 };
 
-const getToolStatusPhrase = (toolName: string): string => {
-    return TOOL_STATUS_PHRASES[toolName] ?? `using ${toolName}`;
+const getToolStatusKey = (toolName: string): I18nKey => {
+    return TOOL_STATUS_KEYS.get(toolName) ?? OTHER_TOOL_STATUS_KEY;
 };
 
 const hashString = (value: string): number => {
@@ -134,8 +157,8 @@ const hashString = (value: string): number => {
     return Math.abs(hash);
 };
 
-const getStableWorkingPhrase = (key: string): string => {
-    return WORKING_PHRASES[hashString(key) % WORKING_PHRASES.length] ?? 'working';
+const getStableWorkingStatusKey = (key: string): I18nKey => {
+    return WORKING_STATUS_KEYS[hashString(key) % WORKING_STATUS_KEYS.length] ?? DEFAULT_WORKING_STATUS_KEY;
 };
 
 const createParsedStatus = (parts: Part[], genericKey: string): ParsedStatusResult => {
@@ -188,34 +211,34 @@ const createParsedStatus = (parts: Part[], genericKey: string): ParsedStatusResu
     }
 
     const isGenericStatus = activePartType === undefined;
-    const statusText = (() => {
-        if (activePartType === 'editing') return activeToolName === 'multiedit' ? getToolStatusPhrase(activeToolName) : 'editing file';
-        if (activePartType === 'tool' && activeToolName) return getToolStatusPhrase(activeToolName);
-        if (activePartType === 'reasoning') return 'thinking';
-        if (activePartType === 'text') return 'composing';
-        return getStableWorkingPhrase(genericKey);
+    const statusKey = ((): I18nKey => {
+        if (activePartType === 'editing') return activeToolName === 'multiedit' ? getToolStatusKey(activeToolName) : EDITING_STATUS_KEY;
+        if (activePartType === 'tool' && activeToolName) return getToolStatusKey(activeToolName);
+        if (activePartType === 'reasoning') return THINKING_STATUS_KEY;
+        if (activePartType === 'text') return COMPOSING_STATUS_KEY;
+        return getStableWorkingStatusKey(genericKey);
     })();
 
-    return { activePartType, activeToolName, statusText, isGenericStatus };
+    return { activePartType, activeToolName, statusKey, isGenericStatus };
 };
 
 const encodeParsedStatus = (status: ParsedStatusResult): string => {
     return [
         status.activePartType ?? '',
         status.activeToolName ?? '',
-        status.statusText,
+        status.statusKey,
         status.isGenericStatus ? '1' : '0',
     ].join(STATUS_SIGNATURE_SEPARATOR);
 };
 
 const decodeParsedStatus = (signature: string): ParsedStatusResult => {
-    const [activePartType, activeToolName, statusText = 'working', isGenericStatus] = signature.split(STATUS_SIGNATURE_SEPARATOR);
+    const [activePartType, activeToolName, statusKey = '', isGenericStatus] = signature.split(STATUS_SIGNATURE_SEPARATOR);
     return {
         activePartType: activePartType === 'text' || activePartType === 'tool' || activePartType === 'reasoning' || activePartType === 'editing'
             ? activePartType
             : undefined,
         activeToolName: activeToolName || undefined,
-        statusText,
+        statusKey: isStatusKey(statusKey) ? statusKey : DEFAULT_WORKING_STATUS_KEY,
         isGenericStatus: isGenericStatus === '1',
     };
 };
@@ -352,6 +375,12 @@ export function useAssistantStatus(): AssistantStatusSnapshot {
         return decodeParsedStatus(lastAssistantStatusSignature);
     }, [lastAssistantStatusSignature]);
 
+    const { t } = useI18n();
+    const isWorkMode = useProductModeStore((state) => state.mode === 'work');
+    const statusText = React.useMemo(() => t(parsedStatus.statusKey, {
+        tool: parsedStatus.activeToolName ? getToolLabel(parsedStatus.activeToolName, isWorkMode) : '',
+    }), [isWorkMode, parsedStatus.activeToolName, parsedStatus.statusKey, t]);
+
     const abortState = React.useMemo(() => {
         const hasActiveAbort = Boolean(sessionAbortRecord && !sessionAbortRecord.acknowledged);
         return { wasAborted: hasActiveAbort, abortActive: hasActiveAbort };
@@ -401,7 +430,7 @@ export function useAssistantStatus(): AssistantStatusSnapshot {
             isStreaming,
             isCooldown,
             lifecyclePhase: isStreaming ? 'streaming' : isCooldown ? 'cooldown' : null,
-            statusText: isWorking ? parsedStatus.statusText : null,
+            statusText: isWorking ? statusText : null,
             isGenericStatus: isWorking ? parsedStatus.isGenericStatus : true,
             isWaitingForPermission: false,
             canAbort: isWorking,
@@ -414,7 +443,7 @@ export function useAssistantStatus(): AssistantStatusSnapshot {
             isComplete: false,
             retryInfo,
         };
-    }, [activityPhase, isPhaseWorking, parsedStatus, abortState, sessionRetryAttempt, sessionRetryNext]);
+    }, [activityPhase, isPhaseWorking, parsedStatus, statusText, abortState, sessionRetryAttempt, sessionRetryNext]);
 
     const forming = React.useMemo<FormingSummary>(() => {
         const isActive = isPhaseWorking && parsedStatus.activePartType === 'text';
@@ -449,12 +478,12 @@ export function useAssistantStatus(): AssistantStatusSnapshot {
 
         return {
             ...baseWorking,
-            statusText: 'waiting for permission',
+            statusText: t(PERMISSION_STATUS_KEY),
             isWaitingForPermission: true,
             canAbort: false,
             retryInfo: null,
         };
-    }, [baseWorking, sessionPermissionRequests, sessionQuestionRequests]);
+    }, [baseWorking, sessionPermissionRequests, sessionQuestionRequests, t]);
 
     return {
         activeModel: activeAssistant.model,

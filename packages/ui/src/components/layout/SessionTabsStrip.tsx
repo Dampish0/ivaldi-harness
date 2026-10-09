@@ -31,6 +31,8 @@ import { Icon } from '@/components/icon/Icon';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/i18n';
 import { useSessionTabsStore, type SessionTabSnapshot } from '@/stores/useSessionTabsStore';
+import { useProductModeStore } from '@/stores/useProductModeStore';
+import { resolveWorkChatTitle } from '@/components/session/sidebar/utils';
 import { closeSessionTabAndActivateNeighbour } from '@/lib/sessionTabs';
 import { useGlobalSessionsStore, resolveGlobalSessionDirectory } from '@/stores/useGlobalSessionsStore';
 import { useSessionUIStore } from '@/sync/session-ui-store';
@@ -110,9 +112,11 @@ const SessionTabItem: React.FC<{
   const [contextMenuOpen, setContextMenuOpen] = React.useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: tab.id });
 
-  const title = tab.session?.title?.trim()
-    || tab.snapshot.title.trim()
-    || t('sessions.sidebar.session.untitled');
+  const isWorkMode = useProductModeStore((state) => state.mode === 'work');
+  const rawTitle = tab.session?.title?.trim() || tab.snapshot.title.trim();
+  const title = isWorkMode
+    ? resolveWorkChatTitle(rawTitle, t('chat.work.untitledChat'))
+    : rawTitle || t('sessions.sidebar.session.untitled');
   const hasLiveSession = tab.session !== null;
   const overlayVisible = !suppressControls && (menuOpen || menuVisible);
 
