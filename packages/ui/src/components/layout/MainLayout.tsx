@@ -17,6 +17,8 @@ import { lazyWithChunkRecovery } from '@/lib/chunkLoadRecovery';
 import { preloadSettingsRouteModules } from '@/lib/settings/preload';
 import { ensureSettingsDictionary } from '@/lib/i18n';
 import { useSessionListSync } from '@/components/session/sidebar/list/useSessionListSync';
+import { useEffectiveDirectory } from '@/hooks/useEffectiveDirectory';
+import { registerBrowserOpener } from '@/lib/browser/controlClient';
 
 import { ChatView } from '@/components/views/ChatView';
 
@@ -72,6 +74,24 @@ export const MainLayout: React.FC = () => {
             setContextPanelMounted(true);
         }
     }, [isAnyContextPanelOpen]);
+
+    // Lets an agent's browser.open create the tab it needs when none is open
+    // yet. Registered here, not in the panel, because the panel is not mounted
+    // until it has been opened once, and an opener inside it left the agent
+    // waiting out its timeout. Background by default: an agent working a page
+    // must not pop the panel open (or steal the active surface) under the user,
+    // so the panel is mounted closed and the tab's view lives there unseen.
+    // Only browser.show, which the agent uses to show the user a page, asks for
+    // the panel to open.
+    const effectiveDirectory = useEffectiveDirectory() ?? '';
+    const openContextBrowser = useUIStore((state) => state.openContextBrowser);
+    React.useEffect(() => {
+        if (!effectiveDirectory) return;
+        return registerBrowserOpener((url, options) => {
+            setContextPanelMounted(true);
+            openContextBrowser(effectiveDirectory, url, { reveal: options?.reveal === true });
+        });
+    }, [effectiveDirectory, openContextBrowser]);
 
     // Keep Settings off the startup graph, then warm it after the first few
     // seconds. `requestIdleCallback` can run immediately after first paint and

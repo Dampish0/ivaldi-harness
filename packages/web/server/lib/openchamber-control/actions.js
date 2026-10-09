@@ -43,6 +43,7 @@ export const OPENCHAMBER_AGENT_TOOL_ACTIONS = Object.freeze(
 
 export const OPENCHAMBER_WEB_ACTION_DEFINITIONS = Object.freeze([
   { action: 'browser.open', title: 'Open a page in the browser panel', description: 'Open url in the in-app browser panel; use it to look at the running app. Set viewport to mobile, tablet or desktop to lay the page out at that size' },
+  { action: 'browser.show', title: 'Show the browser panel to the user', description: 'Bring the browser panel in front of the user with the open page; pass url to open that page first. Use it only when the user asked to see something or should look at the result, since it covers part of their screen' },
   { action: 'browser.snapshot', title: 'Read the open page', description: 'Read the open page: url, title, visible text, and interactive elements with the selectors the other browser actions accept. Pass selector to read only that part of a long page. Reports any errors the page logged' },
   { action: 'browser.click', title: 'Click on the open page', description: 'Click an element; give selector, or text to match a link or button by its visible label' },
   { action: 'browser.type', title: 'Type into the open page', description: 'Type value into the field matched by selector; set submit to press Enter afterwards' },

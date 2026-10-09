@@ -28,6 +28,8 @@ All notable changes to this project will be documented in this file.
 - Chat: the to-do step says how far along the list is, for example "1 of 3 done", and high-priority items use orange instead of the error red. A helper step's links are no longer bold.
 - Work mode: the model picker hides context sizes and the capabilities and cost card, the sidebar menu no longer offers multi-run, and the raw context view is gone from the side panel and the command palette. The side panel opens Files by default. The pin buttons say "Make the assistant remember this", and a helper step links to "Open helper chat".
 - Sidebar: the home folder shows its name instead of "~", and the account menu uses the same spacing as other menus.
+- Browser: the agent can show you a page. A new `browser.show` action brings the browser panel to the front, opening a page first if the agent passes one. Other browser actions still run in the background without opening the panel.
+- Browser: the agent can open a page before you have opened the side panel. Before, it waited 45 seconds and failed.
 
 ## [1.21.0] - 2026-08-26
 

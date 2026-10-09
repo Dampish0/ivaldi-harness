@@ -30,7 +30,6 @@ import { useUIStore, type ContextPanelMode, type PendingDiffScope } from '@/stor
 import { markSessionViewed } from '@/sync/notification-store';
 import { setExternallyViewedSession, useDirectoryStore } from '@/sync/sync-context';
 import { browserUrlLabel } from '@/lib/browser/url';
-import { registerBrowserOpener } from '@/lib/browser/controlClient';
 import { getRuntimeBearerTokenSync, getRuntimeExtraHeadersSync } from '@/lib/runtime-auth';
 import { getRuntimeApiBaseUrl, getRuntimeKey } from '@/lib/runtime-switch';
 import { getActiveRelayDescriptor } from '@/lib/relay/runtime-tunnel';
@@ -451,18 +450,6 @@ export const ContextPanel: React.FC = () => {
   const toggleContextPanelExpanded = useUIStore((state) => state.toggleContextPanelExpanded);
   const setContextPanelWidth = useUIStore((state) => state.setContextPanelWidth);
   const setActiveContextPanelTab = useUIStore((state) => state.setActiveContextPanelTab);
-  const openContextBrowser = useUIStore((state) => state.openContextBrowser);
-
-  // Lets an agent's browser.open create the tab it needs when none is open yet.
-  // Registered from the panel because opening a tab is panel state, not
-  // something the browser view itself can do before it exists. Background on
-  // purpose: an agent working a page must not pop the panel open (or steal
-  // the active surface) under the user — the tab mounts invisibly, and the
-  // rail is where the user opens it when curious.
-  React.useEffect(() => {
-    if (!effectiveDirectory) return;
-    return registerBrowserOpener((url) => openContextBrowser(effectiveDirectory, url, { reveal: false }));
-  }, [effectiveDirectory, openContextBrowser]);
   const reorderContextPanelTabs = useUIStore((state) => state.reorderContextPanelTabs);
   const setSelectedFilePath = useFilesViewTabsStore((state) => state.setSelectedPath);
   const contextEditorTreeVisible = useUIStore((state) => state.contextEditorTreeVisible);

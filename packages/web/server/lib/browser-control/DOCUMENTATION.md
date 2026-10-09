@@ -29,8 +29,11 @@ itself; it can only ask and wait.
   a Chromium host does; the flag lives and dies with that connection, so there
   is no setting to enable and no restart to remember.
 - `emitRequest` counts only clients that can serve the action. `browser.open`
-  needs any client, because opening a tab is what creates a view; every other
-  action needs a declared-capable one.
+  needs any client, because opening a tab is what creates a view, and so does
+  `browser.show` with a url; every other action needs a declared-capable one.
+- `browser.show` is the only action that changes what the user is looking at:
+  it opens the browser panel on the agent's tab. Every other action, including
+  `browser.open`, leaves the panel as the user left it.
 - Exactly one client performs a request. The broadcast reaches everyone who
   could serve it, so a client claims the request over
   `POST /api/browser-control/claim` and acts only if granted; the first claim

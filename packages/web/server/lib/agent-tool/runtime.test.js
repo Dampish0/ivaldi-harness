@@ -155,6 +155,7 @@ describe('managed agent tool runtime', () => {
     const controlActions = tool.openchamber.args.action.enum;
     const webActions = tool.openchamber_web.args.action.enum;
     expect(webActions).toContain('browser.open');
+    expect(webActions).toContain('browser.show');
     expect(controlActions).not.toContain('browser.open');
     expect(webActions).not.toContain('session.create');
 

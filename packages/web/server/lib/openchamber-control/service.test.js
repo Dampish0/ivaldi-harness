@@ -413,3 +413,33 @@ describe('browser capture', () => {
     expect(request).toHaveBeenCalledWith('browser.capture', { label: 'before' }, expect.anything());
   });
 });
+
+describe('browser show', () => {
+  const createShowService = () => {
+    const request = vi.fn(async () => ({ shown: true }));
+    const { service } = createService({ browserControl: { request } });
+    return { service, request };
+  };
+
+  it('shows the open page when no url is given', async () => {
+    const { service, request } = createShowService();
+    await service.execute('browser.show', {});
+    expect(request).toHaveBeenCalledWith('browser.show', {}, expect.objectContaining({ timeoutMs: 20_000 }));
+  });
+
+  it('opens a url first and gives it the time a page load needs', async () => {
+    const { service, request } = createShowService();
+    await service.execute('browser.show', { url: 'http://localhost:3000' });
+    expect(request).toHaveBeenCalledWith(
+      'browser.show',
+      { url: 'http://localhost:3000/' },
+      expect.objectContaining({ timeoutMs: 45_000 }),
+    );
+  });
+
+  it('refuses a url that is not http(s)', async () => {
+    const { service, request } = createShowService();
+    await expect(service.execute('browser.show', { url: 'file:///etc/passwd' })).rejects.toThrow(/http or https/);
+    expect(request).not.toHaveBeenCalled();
+  });
+});

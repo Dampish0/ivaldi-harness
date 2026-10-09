@@ -93,6 +93,7 @@ const WebviewBrowser: React.FC<BrowserPaneProps> = ({ initialUrl, directory, tab
     setWebviewElement(node);
   }, []);
   const setContextPanelTabTargetPath = useUIStore((state) => state.setContextPanelTabTargetPath);
+  const setActiveContextPanelTab = useUIStore((state) => state.setActiveContextPanelTab);
 
   // Captured once: the webview owns its history from here on, and re-deriving
   // this from props would drag the view back to where the tab started.
@@ -364,6 +365,33 @@ const WebviewBrowser: React.FC<BrowserPaneProps> = ({ initialUrl, directory, tab
       return { viewport: viewportSummary(viewportForMode(parameters.viewport)) };
     }
 
+    // The one action allowed to change what the user is looking at: it opens
+    // the panel on this tab. Revealing before loading lets the user watch the
+    // page arrive instead of a finished page appearing out of nowhere.
+    if (action === 'browser.show') {
+      const url = parameters.url ? String(parameters.url) : '';
+      setActiveContextPanelTab(directory, tabID);
+      let settled = true;
+      if (url) {
+        loadUrl(url);
+        await new Promise((resolve) => setTimeout(resolve, 150));
+        settled = await waitForIdle(25_000);
+      }
+      let title = '';
+      try {
+        title = webview.getTitle() || '';
+      } catch {
+        title = '';
+      }
+      return {
+        url: url ? normalizeBrowserUrl(url) : toDisplayUrl(webview.getURL()),
+        title,
+        shown: true,
+        opened: Boolean(url),
+        settled,
+      };
+    }
+
     if (action === 'browser.open') {
       const url = typeof parameters.url === 'string' ? parameters.url : '';
       if (!url) throw new Error('url is required');
@@ -450,7 +478,7 @@ const WebviewBrowser: React.FC<BrowserPaneProps> = ({ initialUrl, directory, tab
       await waitForIdle();
     }
     return result;
-  }, [annotationHost, loadUrl, waitForIdle]);
+  }, [annotationHost, directory, loadUrl, setActiveContextPanelTab, tabID, waitForIdle]);
 
   React.useEffect(
     () => registerBrowserController({ run: runControlAction }),

@@ -353,10 +353,12 @@ export const createOpenChamberControlService = (dependencies) => {
       if (label) parameters.label = label;
     }
 
-    if (action === 'browser.open') {
-      readViewport(false);
+    const readUrl = (required) => {
       const url = asNonEmptyString(input.url);
-      if (!url) throw new OpenChamberControlError('url is required for browser.open', 400);
+      if (!url) {
+        if (required) throw new OpenChamberControlError('url is required for browser.open', 400);
+        return;
+      }
       let parsed;
       try {
         parsed = new URL(url);
@@ -367,7 +369,15 @@ export const createOpenChamberControlService = (dependencies) => {
         throw new OpenChamberControlError('url must use http or https', 400);
       }
       parameters.url = parsed.toString();
+    };
+
+    if (action === 'browser.open') {
+      readViewport(false);
+      readUrl(true);
     }
+
+    // Without a url this shows the page already open, so nothing is required.
+    if (action === 'browser.show') readUrl(false);
 
 
     if (action === 'browser.click') {
@@ -418,7 +428,8 @@ export const createOpenChamberControlService = (dependencies) => {
     // Opening a page waits for the navigation to settle, so its budget has to
     // exceed the client's own wait; sharing one timeout with the quick actions
     // made a slow page indistinguishable from an unreachable browser.
-    const timeoutMs = action === 'browser.open' ? 45_000 : 20_000;
+    const opensPage = action === 'browser.open' || (action === 'browser.show' && parameters.url);
+    const timeoutMs = opensPage ? 45_000 : 20_000;
     const result = await browserControl.request(action, parameters, { signal, timeoutMs });
 
     // The image is written here rather than in the renderer: the file belongs

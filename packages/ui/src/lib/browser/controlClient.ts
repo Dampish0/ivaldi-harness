@@ -10,7 +10,8 @@
  * `browser.open` is the exception: it is handled even with no view attached,
  * since opening a tab is precisely what creates one. The view it creates then
  * takes over the rest of that same request, so asking for a layout while
- * opening does not cost the agent a second call.
+ * opening does not cost the agent a second call. `browser.show` with a url is
+ * an open that also brings the panel in front of the user.
  */
 import { runtimeFetch } from '@/lib/runtime-fetch';
 import { subscribeOpenchamberEvents } from '@/lib/openchamberEvents';
@@ -27,8 +28,11 @@ export type BrowserController = {
   readonly run: (action: string, parameters: Record<string, unknown>) => Promise<unknown>;
 };
 
-/** Opens a URL when no browser view exists yet. */
-export type BrowserOpener = (url: string) => void;
+/**
+ * Opens a URL when no browser view exists yet. Without `reveal` the tab opens
+ * in the background; with it the panel opens on that tab.
+ */
+export type BrowserOpener = (url: string, options?: { reveal?: boolean }) => void;
 
 /**
  * How long a freshly opened tab is given to mount its view. A pane appears
@@ -107,22 +111,40 @@ const waitForController = async (
 };
 
 const handleRequest = async (request: BrowserControlRequest): Promise<void> => {
-  const isOpen = request.action === 'browser.open';
+  const isShow = request.action === 'browser.show';
+  // The server validated url before sending it, so it is a string when present.
+  const requestedUrl = request.parameters.url ? String(request.parameters.url) : '';
+  const isOpen = request.action === 'browser.open' || (isShow && Boolean(requestedUrl));
   const controller = activeController;
 
-  if (!controller && !(isOpen && opener)) return;
+  // A panel with no page still answers browser.show, by saying there is
+  // nothing to show, rather than leaving the agent to time out.
+  if (!controller && !((isOpen || isShow) && opener)) return;
 
   // Nothing below this line may touch a page without the server's grant.
   if (!await claimRequest(request.requestId)) return;
 
   try {
+    if (isShow && !controller && !requestedUrl) {
+      await postResult(request.requestId, {
+        ok: false,
+        error: 'No page is open in the browser panel. Pass url to open one and show it.',
+      });
+      return;
+    }
+
     if (isOpen && !controller) {
-      const url = typeof request.parameters.url === 'string' ? request.parameters.url : '';
+      const url = requestedUrl;
       if (!url) {
         await postResult(request.requestId, { ok: false, error: 'url is required' });
         return;
       }
-      opener?.(url);
+      opener?.(url, { reveal: isShow });
+
+      if (isShow) {
+        await postResult(request.requestId, { ok: true, data: { url, opened: true, shown: true } });
+        return;
+      }
 
       const requestedViewport = typeof request.parameters.viewport === 'string'
         ? request.parameters.viewport

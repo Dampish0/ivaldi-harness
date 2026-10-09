@@ -131,3 +131,68 @@ describe('opening a page before any view exists', () => {
     expect(typeof data.note).toBe('string');
   });
 });
+
+describe('showing the browser panel to the user', () => {
+  beforeEach(() => {
+    posted.length = 0;
+    claims.length = 0;
+    grantClaims = true;
+  });
+
+  afterEach(() => {
+    while (cleanups.length > 0) cleanups.pop()?.();
+  });
+
+  const emitShow = (parameters: Parameters<typeof emitOpen>[0]): void => {
+    listener?.({ type: 'browser-control-request', requestId: 'req-1', action: 'browser.show', parameters });
+  };
+
+  test('opens a page in front of the user when no view exists yet', async () => {
+    const opened: Array<{ url: string; reveal?: boolean }> = [];
+    cleanups.push(registerBrowserOpener((url, options) => { opened.push({ url, reveal: options?.reveal }); }));
+
+    emitShow({ url: 'https://example.test' });
+    await wait(20);
+
+    expect(opened).toEqual([{ url: 'https://example.test', reveal: true }]);
+    expect(posted[0]?.data).toEqual({ url: 'https://example.test', opened: true, shown: true });
+  });
+
+  test('keeps a plain open in the background', async () => {
+    const opened: Array<{ url: string; reveal?: boolean }> = [];
+    cleanups.push(registerBrowserOpener((url, options) => { opened.push({ url, reveal: options?.reveal }); }));
+
+    emitOpen({ url: 'https://example.test' });
+    await wait(20);
+
+    expect(opened).toEqual([{ url: 'https://example.test', reveal: false }]);
+  });
+
+  test('says there is nothing to show instead of timing out', async () => {
+    const opened: string[] = [];
+    cleanups.push(registerBrowserOpener((url) => { opened.push(url); }));
+
+    emitShow({});
+    await wait(20);
+
+    expect(opened).toEqual([]);
+    expect(posted[0]?.ok).toBe(false);
+    expect(posted[0]?.error).toContain('Pass url');
+  });
+
+  test('lets an existing view show itself', async () => {
+    const ran: Array<{ action: string; url: unknown }> = [];
+    const opened: string[] = [];
+    cleanups.push(registerBrowserOpener((url) => { opened.push(url); }));
+    cleanups.push(registerBrowserController({
+      run: async (action, parameters) => { ran.push({ action, url: parameters.url }); return { shown: true }; },
+    }));
+
+    emitShow({ url: 'https://example.test' });
+    await wait(20);
+
+    expect(opened).toEqual([]);
+    expect(ran).toEqual([{ action: 'browser.show', url: 'https://example.test' }]);
+    expect(posted[0]?.data).toEqual({ shown: true });
+  });
+});

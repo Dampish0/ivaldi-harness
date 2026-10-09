@@ -1402,8 +1402,11 @@ const browserControlBroker = createBrowserControlBroker({
   emitRequest: (request) => {
     // Opening a page only needs a panel to open it in; everything else needs a
     // client that can actually drive one. Counting the right clients is what
-    // lets the broker say "not here" instead of timing out.
-    const needsBrowserView = request.action !== 'browser.open';
+    // lets the broker say "not here" instead of timing out. Showing the panel
+    // with a url to open is an open too.
+    const opensPage = request.action === 'browser.open'
+      || (request.action === 'browser.show' && Boolean(request.parameters?.url));
+    const needsBrowserView = !opensPage;
     let delivered = 0;
     for (const client of uiOpenChamberEventClients) {
       if (needsBrowserView && client.openchamberBrowserCapable !== true) continue;
