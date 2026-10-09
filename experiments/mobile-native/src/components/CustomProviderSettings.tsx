@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useImperativeHandle, useRef, useState, useSyncExternalStore } from 'react';
 import { Alert, Keyboard, ScrollView, StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeInLeft, FadeInRight, FadeOut, ReduceMotion } from 'react-native-reanimated';
+import Animated, { FadeInLeft, FadeInRight, FadeOut, ReduceMotion, useReducedMotion } from 'react-native-reanimated';
 import { useI18n, type MessageKey } from '@/lib/i18n';
 import { useTheme, useTypography } from '../theme';
 import {
@@ -41,6 +41,7 @@ export function CustomProviderSettings({ ref, store, providers, providerID, comp
   providerID: string | null; compactEditing: boolean; back: () => void; close: () => void; saved: (providerID: string) => void; removed: () => void; directory: string | undefined | null;
 }) {
   const { t } = useI18n(); const { colors } = useTheme(); const { font, text } = useTypography();
+  const reducedMotion = useReducedMotion();
   const state = useSyncExternalStore(providers.subscribe, providers.getSnapshot);
   useSyncExternalStore(store.subscribe, store.getSnapshot);
   const [form, setForm] = useState(createEmptyCustomProviderForm);
@@ -161,7 +162,7 @@ export function CustomProviderSettings({ ref, store, providers, providerID, comp
   const pageKey = page.kind === 'model' || page.kind === 'header' ? `${page.kind}:${page.row}` : page.kind;
   const conflict = scopeChanged || failure === 'conflict' || failure === 'credentialSavedConflict';
 
-  return <Animated.View key={pageKey} entering={direction === 0 ? undefined : (direction > 0 ? FadeInRight : FadeInLeft).duration(220).reduceMotion(ReduceMotion.System)} exiting={FadeOut.duration(100).reduceMotion(ReduceMotion.System)} style={styles.page}>
+  return <Animated.View key={pageKey} entering={reducedMotion || direction === 0 ? undefined : (direction > 0 ? FadeInRight : FadeInLeft).duration(220).reduceMotion(ReduceMotion.System)} exiting={reducedMotion ? undefined : FadeOut.duration(100).reduceMotion(ReduceMotion.System)} style={styles.page}>
     <SettingsHeader title={title} back={onBack} close={() => leave(close)} hidden={compactEditing && directory !== null} disabled={state.mutation !== null} />
     {showBusy && <Text accessibilityLiveRegion="polite" style={[secondary, styles.notice]}>{t('settings.common.actions.saving')}</Text>}
     {(failure || scopeChanged) && !compactEditing && directory !== null && <View style={styles.notice}>

@@ -2,7 +2,7 @@ import React, { useEffect, useState, type RefObject } from 'react';
 import { Keyboard, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { KeyboardStickyView, useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { FadeIn, FadeOut, runOnJS, useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOut, runOnJS, useAnimatedReaction, useAnimatedStyle, useDerivedValue, useReducedMotion, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
 import { Button, Icon } from './ui';
 import { movement } from '../motion';
 import { useTheme, useTypography } from '../theme';
@@ -19,7 +19,7 @@ export function Composer({ inputRef, draft, setDraft, pending, disabled, editabl
 }) {
   const { colors, appearance } = useTheme(); const typography = useTypography(); const { font } = typography;
   const { t } = useI18n();
-  const safe = useSafeAreaInsets();
+  const safe = useSafeAreaInsets(); const reduceMotion = useReducedMotion();
   const { fontScale, height, width } = useWindowDimensions();
   const textScale = appearance.textScale / 100;
   const minimumHeight = 24 * fontScale * textScale;
@@ -66,7 +66,7 @@ export function Composer({ inputRef, draft, setDraft, pending, disabled, editabl
         <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.chips}>
           {attachments.map((file, index) => {
             const uri = previewableImageUri(file.uri, file.mime, 'picker');
-            return <Animated.View key={file.uri} entering={FadeIn.duration(180)} exiting={FadeOut.duration(140)} style={[styles.chip, { backgroundColor: colors.surface.background }, uri && styles.imageChip]}>
+            return <Animated.View key={file.uri} entering={reduceMotion ? undefined : FadeIn.duration(180)} exiting={reduceMotion ? undefined : FadeOut.duration(140)} style={[styles.chip, { backgroundColor: colors.surface.background }, uri && styles.imageChip]}>
             {uri ? <ImageAttachment compact image={{ uri, name: file.name }} open={previewImage} testID={'draft-image-' + index} /> : <><Icon name="file-text" size={16} color={colors.surface.mutedForeground} /><Text numberOfLines={1} style={[styles.file, typography.text(13, 20), { fontFamily: font.regular }, { color: colors.surface.foreground }]}>{file.name}</Text></>}
             <Button label={t('chat.chatInput.contextPreview.remove') + ': ' + file.name} icon="close" iconSize={18} disabled={!editable} onPress={() => removeAttachment(file.uri)} testID={index === 0 ? 'remove-attachment' : 'remove-attachment-' + index} />
           </Animated.View>;

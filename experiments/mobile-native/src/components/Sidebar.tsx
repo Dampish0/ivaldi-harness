@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore } from 'react';
 import { Keyboard, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useI18n } from '@/lib/i18n';
@@ -6,19 +6,24 @@ import { useTheme, useTypography } from '../theme';
 import type { Session } from '../runtime/schema';
 import { isManagedChat } from '../runtime/conversations';
 import { initialSidebarDisclosure, sidebarDisclosure } from '../runtime/sidebar-disclosure';
+import { sidebarProjects } from '../runtime/sidebar-projects';
+import type { SettingsProjectsStore } from '../runtime/settings-projects';
 import { Button, Icon } from './ui';
 import { Folder } from './Folder';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { movement } from '../motion';
 
-export function Sidebar({ open, sessions, activeId, select, actions, newChat, mode, openSettings, openConnections, connection, newProjectChat }: {
+export function Sidebar({ open, sessions, projects, activeId, select, actions, newChat, mode, openSettings, openConnections, connection, newProjectChat }: {
   open: boolean;
   sessions: Session[]; activeId: string | null; select: (id: string) => void; actions: (id: string) => void; newChat: () => void;
+  projects: SettingsProjectsStore;
   mode: 'work' | 'developer'; openSettings: () => void; openConnections: () => void; connection: string; newProjectChat: (directory: string) => void;
 }) {
   const { colors, appearance } = useTheme(); const typography = useTypography(); const { font } = typography; const { t } = useI18n(); const safe = useSafeAreaInsets();
   const [searching, setSearching] = useState(false); const [query, setQuery] = useState('');
   const [searchEditing, setSearchEditing] = useState(false);
+  const registry = useSyncExternalStore(projects.subscribe, projects.getSnapshot);
+  useEffect(() => { if (open) void projects.load().catch(() => {}); }, [open, projects]);
   const [disclosure, updateDisclosure] = useReducer(sidebarDisclosure, undefined, initialSidebarDisclosure);
   const selectedChat = sessions.find(chat => chat.id === activeId);
   useEffect(() => { updateDisclosure({ type: 'select', activeId, session: selectedChat, managed: selectedChat !== undefined && isManagedChat(selectedChat.directory) }); }, [activeId, selectedChat]);
@@ -45,11 +50,7 @@ export function Sidebar({ open, sessions, activeId, select, actions, newChat, mo
   </View>;
   const matches = sessions.filter(chat => chat.title.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
   const chats = sessions.filter(chat => isManagedChat(chat.directory) && !chat.time.archived);
-  const groups = useMemo(() => {
-    const result = new Map<string, Session[]>();
-    for (const session of sessions) { if (isManagedChat(session.directory)) continue; const group = result.get(session.directory) ?? []; group.push(session); result.set(session.directory, group); }
-    return [...result.entries()];
-  }, [sessions]);
+  const groups = useMemo(() => sidebarProjects(sessions, registry.projects), [sessions, registry.projects]);
   return <View style={[styles.page, { paddingTop: safe.top, paddingBottom: compactSearch ? 0 : safe.bottom + 8, paddingLeft: safe.left }]}>
     {!compactSearch && <View style={styles.header}><Text accessibilityRole="header" style={[styles.brand, typography.text(18, 24), { fontFamily: font.semibold, fontWeight: typography.semiboldWeight, color: colors.surface.foreground }]}>Ivaldi</Text><Button icon="search" iconSize={21} label={t('mobile.sessions.search.placeholder')} onPress={toggleSearch} testID="sidebar-search" /><Button icon="edit-box" iconSize={21} label={t('mobile.sessions.newChat')} onPress={newChat} testID="sidebar-new-chat" /></View>}
     <Animated.View style={[{ overflow: 'hidden' }, searchStyle]} pointerEvents={searching ? 'auto' : 'none'} accessibilityElementsHidden={!searching} importantForAccessibility={searching ? 'auto' : 'no-hide-descendants'}><View style={[styles.search, compactSearch && { paddingLeft: 0 }, { backgroundColor: colors.surface.elevated }]}>
@@ -60,11 +61,14 @@ export function Sidebar({ open, sessions, activeId, select, actions, newChat, mo
       {query.trim() ? matches.length ? matches.map(row) : <Text style={[styles.empty, typography.text(15, 22), { fontFamily: font.regular }, { color: colors.surface.mutedForeground }]}>{t('mobile.sessions.empty.searchTitle')}</Text> : <>
         {chats.length > 0 && <Text style={[styles.section, { paddingTop: 24 * appearance.density / 100, paddingBottom: 10 * appearance.density / 100 }, typography.text(13, 18), { fontFamily: font.semibold, fontWeight: typography.semiboldWeight }, { color: colors.surface.mutedForeground }]}>{t('sessions.sidebar.activity.chatsTitle')}</Text>}
         {chats.map(row)}
-        {groups.length > 0 && <Text style={[styles.section, { paddingTop: 24 * appearance.density / 100, paddingBottom: 10 * appearance.density / 100 }, typography.text(13, 18), { fontFamily: font.semibold, fontWeight: typography.semiboldWeight }, { color: colors.surface.mutedForeground }]}>{t('mobile.sessions.section.projects')}</Text>}
-        {sessions.length === 0 && <Text style={[styles.empty, typography.text(15, 22), { fontFamily: font.regular }, { color: colors.surface.mutedForeground }]}>{t('mobile.sessions.empty.noSessionsDescription')}</Text>}
-        {groups.map(([directory, chats], index) => <Folder key={directory} disclosure={folderDisclosure(`project:${directory}`)} title={directory.replace(/\\/g, '/').split('/').filter(Boolean).at(-1) ?? directory} testID={'project-' + index} action={<Button icon="edit-box" iconSize={18} label={t('mobile.sessions.newChat')} onPress={() => newProjectChat(directory)} testID={'project-new-chat-' + index} />}>
+        {(groups.length > 0 || registry.loading || registry.error) && <Text style={[styles.section, { paddingTop: 24 * appearance.density / 100, paddingBottom: 10 * appearance.density / 100 }, typography.text(13, 18), { fontFamily: font.semibold, fontWeight: typography.semiboldWeight }, { color: colors.surface.mutedForeground }]}>{t('mobile.sessions.section.projects')}</Text>}
+        {registry.loading && !registry.ready && <Text accessibilityLiveRegion="polite" style={[projectStyles.notice, typography.text(14, 21), { fontFamily: font.regular, color: colors.surface.mutedForeground }]}>{t('common.loading')}</Text>}
+        {registry.error && <View style={projectStyles.error} testID="sidebar-projects-error"><Text accessibilityRole="alert" style={[typography.text(14, 21), { flex: 1, fontFamily: font.regular, color: colors.surface.mutedForeground }]}>{t('mobile.native.settingsProjectUnavailable')}</Text><Button variant="compact" icon="restart" label={t('settings.common.actions.retry')} disabled={registry.loading} onPress={() => { void projects.load().catch(() => {}); }} testID="sidebar-projects-retry" /></View>}
+        {sessions.length === 0 && groups.length === 0 && !registry.loading && !registry.error && <Text style={[styles.empty, typography.text(15, 22), { fontFamily: font.regular }, { color: colors.surface.mutedForeground }]}>{t('mobile.sessions.empty.noSessionsDescription')}</Text>}
+        {groups.map(({ key, directory, title, chats }, index) => <Folder key={key} disclosure={folderDisclosure(`project:${key}`)} title={title} testID={'project-' + index} action={<Button icon="edit-box" iconSize={18} label={t('mobile.sessions.newChat')} onPress={() => newProjectChat(directory)} testID={'project-new-chat-' + index} />}>
+          {chats.length === 0 && <Text style={[projectStyles.notice, typography.text(14, 21), { fontFamily: font.regular, color: colors.surface.mutedForeground }]}>{t('sessions.sidebar.activity.chatsEmpty')}</Text>}
           {chats.filter(chat => !chat.time.archived).map(row)}
-          {chats.some(chat => chat.time.archived) && <Folder icon="archive" disclosure={folderDisclosure(`project-archive:${directory}`)} title={t('sessions.sidebar.nav.archive')} testID={'nested-project-' + index}>{chats.filter(chat => chat.time.archived).map(row)}</Folder>}
+          {chats.some(chat => chat.time.archived) && <Folder icon="archive" disclosure={folderDisclosure(`project-archive:${key}`)} title={t('sessions.sidebar.nav.archive')} testID={'nested-project-' + index}>{chats.filter(chat => chat.time.archived).map(row)}</Folder>}
         </Folder>)}
         {sessions.some(chat => isManagedChat(chat.directory) && chat.time.archived) && <Folder icon="archive" disclosure={folderDisclosure('chat-archive')} title={t('sessions.sidebar.nav.archive')} testID="chat-archive">{sessions.filter(chat => isManagedChat(chat.directory) && chat.time.archived).map(row)}</Folder>}
       </>}
@@ -78,4 +82,5 @@ export function Sidebar({ open, sessions, activeId, select, actions, newChat, mo
     </View>}
   </View>;
 }
+const projectStyles = StyleSheet.create({ notice: { paddingHorizontal: 12, paddingVertical: 10 }, error: { flexDirection: 'row', alignItems: 'center', paddingLeft: 12, gap: 8 } });
 const styles = StyleSheet.create({ page: { flex: 1 }, header: { flexDirection: 'row', alignItems: 'center', minHeight: 60, paddingHorizontal: 12 }, brand: { flex: 1, minWidth: 0, paddingLeft: 12 }, empty: { padding: 24 }, content: { paddingHorizontal: 12, paddingBottom: 24 }, section: { paddingHorizontal: 12, paddingTop: 24, paddingBottom: 10 }, footer: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 12, paddingTop: 8, borderTopWidth: StyleSheet.hairlineWidth }, connection: { flex: 1, minWidth: 0 }, connectionLabel: { flex: 1, minWidth: 0, gap: 2 }, search: { marginHorizontal: 24, marginVertical: 6, borderRadius: 14, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, gap: 8 }, searchInput: { flex: 1, height: 46 } });

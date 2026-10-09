@@ -25,6 +25,12 @@ const token = randomUUID(); const secret = randomUUID(); const pairingId = rando
 let redeemed = false;
 const stats = { redemptions: 0, rejectedAuth: 0, rejectedAuthCategories: { favicon: 0, workspace: 0, 'workspace-check': 0, other: 0 }, authChecks: 0, prompts: 0, aborts: 0, permissionReplies: [], questionReplies: [], attachmentCount: 0, settingsReads: 0, settingsWrites: 0, sessionGets: 0, sessionCreates: 0, sessionLists: 0, sessionUpdateAttempts: 0, sessionUpdates: 0, lastSessionUpdate: null, workspaceLoads: 0, workspaceChecks: 0, lastPrompt: null, lastDeletedSession: null };
 const settings = { defaultModel: 'qa/native', defaultVariant: 'high', defaultAgent: 'build', showReasoning: true };
+const registrySchema = z.array(z.object({ id: z.string().min(1), path: z.string().startsWith('C:/IvaldiNativeQA/'), label: z.string().optional() }).strict());
+let projectRegistry = process.argv.includes('--projects') ? registrySchema.parse([
+  { id: 'research', path: 'C:/IvaldiNativeQA/research', label: 'Research' },
+  { id: 'design', path: 'C:/IvaldiNativeQA/project', label: 'Design system' },
+  { id: 'long', path: 'C:/IvaldiNativeQA/a-project-with-a-deliberately-long-folder-name', label: 'A project name that should fit without displacing its controls' },
+]) : null;
 const storedSettings = process.argv.includes('--settings-storage') ? await createSettingsStorageFixture(settings) : null;
 const settingsStorageControl = z.object({ command: z.enum(['read', 'write', 'corrupt', 'repair']) }).strict();
 const defaultsPatchSchema = z.object({ defaultModel: z.string().trim().optional(), defaultVariant: z.string().trim().optional(), defaultAgent: z.string().trim().optional() });
@@ -117,6 +123,12 @@ const server = createServer(async (request, response) => {
       return answer(response, snapshot);
     }
     if (await providerFixture?.handlePublic(request, response, url)) return;
+    if (path === '/__qa/projects' && request.method === 'POST' && projectRegistry !== null) {
+      const parsed = registrySchema.safeParse(await body(request));
+      if (!parsed.success) return answer(response, { error: 'Invalid synthetic project registry' }, 400);
+      projectRegistry = parsed.data;
+      return answer(response, { count: projectRegistry.length });
+    }
     if (path === '/__qa/settings-storage' && request.method === 'POST' && storedSettings) {
       const parsed = settingsStorageControl.safeParse(await body(request));
       if (!parsed.success) return answer(response, { error: 'Invalid Settings storage control' }, 400);
@@ -197,7 +209,8 @@ const server = createServer(async (request, response) => {
       stats.settingsReads++;
       if (await applyNextControl('settings-read', response)) return;
       const current = storedSettings ? await storedSettings.read() : settings;
-      return answer(response, providerFixture ? { ...current, projects: providerFixture.projects() } : current);
+      const projects = projectRegistry ?? providerFixture?.projects();
+      return answer(response, projects ? { ...current, projects } : current);
     }
     if (path === '/api/config/settings' && request.method === 'PUT') {
       const parsed = defaultsPatchSchema.safeParse(await body(request));
@@ -208,10 +221,12 @@ const server = createServer(async (request, response) => {
         for (const key of ['defaultModel', 'defaultVariant', 'defaultAgent']) {
           if (committed[key]) settings[key] = committed[key]; else delete settings[key];
         }
-      } else for (const key of ['defaultModel', 'defaultVariant', 'defaultAgent']) {
+      } else {
+        for (const key of ['defaultModel', 'defaultVariant', 'defaultAgent']) {
           if (parsed.data[key] === undefined) continue;
           if (parsed.data[key]) settings[key] = parsed.data[key]; else delete settings[key];
         }
+      }
       stats.settingsWrites++;
       return answer(response, providerFixture ? { ...settings, projects: providerFixture.projects() } : settings);
     }
@@ -312,6 +327,6 @@ server.listen(port, '127.0.0.1', async () => {
   const payload = { v: 2, pairingId, secret, label: relay ? 'Native Relay QA' : fixtureLabel, fingerprint: 'QA-LOCAL', expiresAt: new Date(Date.now() + 600000).toISOString(), candidates };
   const link = `ivaldi-native://connect?v=2&p=${Buffer.from(JSON.stringify(payload)).toString('base64url')}`;
   await exec(adb, ['-s', serial, 'shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', `'${link}'`, '-p', 'dev.ivaldi.nativecomparison']);
-  console.log(`${fixtureLabel} fixture ready. Confirm it in the emulator. Pairing credentials remain in memory.`);
+  console.log(`${fixtureLabel} fixture ready. Confirm it on the device. Pairing credentials remain in memory.`);
 });
 process.on('SIGINT', () => { for (const timer of timers.values()) clearInterval(timer); for (const response of connections) response.end(); relay?.close(); server.close(() => { void storedSettings?.close(); }); });

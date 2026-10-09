@@ -245,7 +245,7 @@ export function SettingsScreen({ open, foreground, close, openConnections, serve
     <KeyboardAvoidingView behavior="padding" enabled={visible} style={[styles.screen, { backgroundColor: colors.surface.background }]}>
     <View style={[styles.screen, { backgroundColor: colors.surface.background, paddingTop: safe.top, paddingBottom: safe.bottom, paddingLeft: safe.left, paddingRight: safe.right }]} testID="settings-screen">
       <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} />
-      <Animated.View key={page} entering={direction === 0 ? undefined : (direction > 0 ? FadeInRight : FadeInLeft).duration(220).reduceMotion(ReduceMotion.System)} exiting={FadeOut.duration(100).reduceMotion(ReduceMotion.System)} style={styles.page}>
+      <Animated.View key={page} entering={reducedMotion || direction === 0 ? undefined : (direction > 0 ? FadeInRight : FadeInLeft).duration(220).reduceMotion(ReduceMotion.System)} exiting={reducedMotion ? undefined : FadeOut.duration(100).reduceMotion(ReduceMotion.System)} style={styles.page}>
         {server && page === 'provider-custom' ? <CustomProviderSettings active={visible} ref={customNavigation} store={server.customProviders} providers={server.providers} directory={settingsDirectory} providerID={customProviderID} compactEditing={compactAuth} back={popPage} close={close} saved={id => goProvider('provider-detail', id)} removed={customRemoved} /> : <>
         <SettingsHeader title={title} back={page === 'home' ? undefined : back} close={close} hidden={compactSearch || compactAuth} />
         {(saveState !== 'idle' || storageError && !appearanceReady) && <View style={[styles.status, { borderColor: colors.interactive.border }]}>

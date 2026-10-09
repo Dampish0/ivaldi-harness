@@ -1,6 +1,6 @@
 # Native mobile gaps and next changes
 
-Reviewed 15 September 2026 against native 0.2.11 and the current Capacitor/shared source, then updated through 0.2.14 short forms and confirmations. This is the current work list. The [earlier Settings comparison](MOBILE_CAPACITOR_NATIVE_PARITY.md) preserves the original 0.2.4 baseline and subsequent implementation history. Installed evidence belongs in the [visual review](MOBILE_NATIVE_VISUAL_REVIEW.md).
+Reviewed 15 September 2026 against native 0.2.11 and the current Capacitor/shared source, then updated through 0.2.15 registered projects on 22 September. This is the current work list. The [earlier Settings comparison](MOBILE_CAPACITOR_NATIVE_PARITY.md) preserves the original 0.2.4 baseline and subsequent implementation history. Installed evidence belongs in the [visual review](MOBILE_NATIVE_VISUAL_REVIEW.md).
 
 ## Assessment
 
@@ -14,7 +14,7 @@ Keep React Native and finish complete user journeys. Reuse the existing server A
 
 "Native" below means an implementation exists. It does not claim that every device, error case or animation has passed acceptance. "Web tools" means the retained whole mobile web app on direct connections; it is not an equivalent native destination and does not work over the native encrypted relay.
 
-| User workflow | Native 0.2.14 coverage | Gap to close |
+| User workflow | Native 0.2.15 coverage | Gap to close |
 | --- | --- | --- |
 | Connect to a server | Pairing, QR, manual address, saved connections, authentication, direct and encrypted relay connection paths | Recovery diagnostics, LAN/relay handover on network changes, acceptance on the phone after sleep and network loss |
 | Change device preferences | System/Light/Dark, Selawik/system font, size, density, language and chat display, including before connecting and after failed reconnect | Theme palettes, code font, time format and week start are absent |
@@ -23,7 +23,7 @@ Keep React Native and finish complete user journeys. Reuse the existing server A
 | Configure providers | Search, supported authentication, visibility and guarded custom-provider editor | Quota detail, remaining advanced fields and config-layer choice. Editing requires a compatible host |
 | Choose the Settings project | Independent registered-project picker | Add, rename, remove or configure projects; browse host folders; manage worktrees |
 | Configure agents and tools | Existing agent selection; web tools for much configuration | Native agent definitions, permissions, behavior, commands, hooks, MCP, plugins, skills and integrations |
-| Find and organize chats | Search, managed chats, directory groups, animated folders and archives; targeted row rename/archive/restore with retained edits and local retry | Child chats, worktree grouping, registered-project labels/order, clear loading/retry and search scope |
+| Find and organize chats | Search, managed chats, animated folders and archives; registered project names, host order and empty projects with local registry Retry; targeted row rename/archive/restore with retained edits | Child chats, worktree grouping, chat-list loading/retry and search scope |
 | Send and follow up | Text, local attachments, model/effort/agent, streaming, Stop, questions and permissions | Queue and steer while busy, mentions, slash commands, goal/plan and permission controls |
 | Read and act on messages | Markdown, code copy, reasoning/tools, local and embedded raster preview | Remote image handling, broader document preparation, fork/revert, context pinning and richer message actions |
 | Use project tools | Authenticated retained web app with retry on direct connections | Open the requested Files, Notes, Changes or Terminal destination, preserve its route, and return without a second app shell |
@@ -63,20 +63,35 @@ The [0.2.13 review](MOBILE_NATIVE_VISUAL_REVIEW.md#targeted-sidebar-actions-vers
 
 The [0.2.14 review](MOBILE_NATIVE_VISUAL_REVIEW.md#short-forms-and-confirmations-version-0214) records the build, installed checks and the limits of the motion evidence. These form changes do not close the remaining project or Settings workflows.
 
+## Registered projects, version 0.2.15
+
+- [x] Use the registered project name and host registry order in the sidebar. Include empty projects, with a quiet compose action when expanded. Keep unregistered directories that still contain chats accessible.
+- [x] Preserve open folders across registry rename, reorder, removal and refresh. Normalize path separators without inferring parent-project or worktree ownership.
+- [x] Keep known project names and chats after a failed registry read. Offer Retry beside the affected list; a failed request must not become an empty list.
+- [x] Show the chosen project's registered name in the new-chat header and welcome text. Starting that draft and cold relaunch preserve its text, model and project context.
+- [x] Check the installed build on the S24 Ultra in normal dark Work mode and large-text light Developer mode, including portrait and landscape. Folder and compose controls remain separate and reachable without opening the keyboard.
+- [x] Fix the reduced-motion startup crash found during phone acceptance. Omit entrance/exit animation builders when reduced motion is enabled. Three reduced-motion and three normal cold starts preserved the draft, project and model with no process errors.
+
+The [0.2.15 review](MOBILE_NATIVE_VISUAL_REVIEW.md#registered-projects-version-0215) records the comparison, build identity and acceptance limits. Host registry order is not desktop's device-local manual sorting. Project registration, metadata editing, defaults, worktrees and child chats remain open.
+
 ## Following passes, in order
 
 | Priority | Work | Completion evidence |
 | --- | --- | --- |
 | 1 | Daily reliability and recovery | Reproduce reported failures before changing code. Cold launch, reconnect, background/resume, app recreation, draft retention, Send/Stop and model recovery pass. A failed read never clears valid data |
-| 2 | Sidebar workflows | Rename/archive/restore from the relevant row without selecting another chat first; cancellation and failed mutations retain the row and draft. Add child/worktree structure and project labels from authoritative records |
+| 2 | Sidebar workflows | Preserve accepted row actions and registered-project behavior. Add child/worktree structure, clear chat-list recovery and deliberate search scope |
 | 3 | Project configuration and remaining daily Settings | Safe project registration and edits without activating a chat or deleting a directory; project defaults; useful Usage and About pages; agent configuration with source-aware, guarded writes |
 | 4 | Follow-up composer and message actions | Queue/steer captures the chosen model, agent and project; failed sends remain recoverable; mentions and document preparation preserve the draft; fork/revert affects the selected message and has clear consequences |
 | 5 | Tools and advanced configuration | Targeted Files/Notes/Changes/Terminal navigation, then MCP/plugins/skills/integrations and other configuration. Test direct and relay capability separately. Preserve tool state and native Back behavior |
 | 6 | Platform features and release readiness | Real voice and notification checks, large-screen layout, network handover, release signing and migration from the old package. iOS needs its own build and device acceptance |
 
-The short-form refinements are implemented. Next work should cover project registration and metadata, then project defaults and agent configuration. Project operations must stay separate from chat activation and preserve unrelated registry entries.
+Short forms and registered-project display are implemented. Next work should cover project registration and metadata edits, then project defaults and agent configuration. Project operations must stay separate from chat activation and preserve unrelated registry entries.
 
-Before adding project writes, exercise a failed server Settings save followed by Retry. Code review found that `persistSettings` in [settings-runtime.js](../packages/web/server/lib/opencode/settings-runtime.js) chains each operation onto the previous promise without recovering a rejection. Verify whether one failed save prevents later writes, then correct the owning queue if reproduced. This is a source finding, not an installed-device failure reproduced in 0.2.14.
+The Settings persistence prerequisite is closed. Regression tests reproduced a failed save blocking later saves, unreadable settings being overwritten, and a migration racing a save. The server now rejects unreadable files and serializes migration reads with saves through a queue that recovers after rejection. On 22 September, native 0.2.14 passed failed-save Retry, independent later saves, read failure, malformed-file recovery and cold-relaunch draft retention on the S24 Ultra. See the [installed recovery evidence](MOBILE_NATIVE_VISUAL_REVIEW.md#settings-persistence-recovery-on-the-s24-ultra). This is a host fix and requires restarting the host to use it.
+
+Project editing needs targeted host operations. The native picker currently parses only `id`, `path` and `label`, while the desktop registry also holds icons, colors and other metadata. Sending that projection back as a replacement `projects` array would lose omitted fields and could overwrite another client's change. Reuse the host's validation and Settings queue, applying each registration, rename or removal to its latest registry without activating a chat or deleting a directory.
+
+The generic Settings writer also validates every path when it receives a replacement project list and drops entries whose directories are missing. A targeted rename must preserve unrelated registrations, including temporarily unavailable directories. Validate a newly registered path directly, and keep the mutation inside the existing queue with a revision check on the edited record. The current desktop `addProject` activates the project, so it cannot serve as the native Settings registration operation unchanged.
 
 ## Completion criteria
 

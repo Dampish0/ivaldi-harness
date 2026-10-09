@@ -3,12 +3,13 @@ import type { NativeRuntime } from './connection';
 
 const nonBlank = z.string().refine(value => value.trim().length > 0);
 const projectSchema = z.object({ id: nonBlank, path: nonBlank, label: z.string().optional() });
+export type SettingsProject = z.infer<typeof projectSchema>;
 const settingsSchema = z.object({
   projects: z.array(projectSchema).refine(projects => new Set(projects.map(project => project.id)).size === projects.length).default([]),
 });
 
 interface SettingsProjectsSnapshot {
-  projects: z.infer<typeof projectSchema>[];
+  projects: SettingsProject[];
   selectedId: string | null;
   ready: boolean;
   loading: boolean;

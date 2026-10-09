@@ -1,6 +1,6 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
-import Animated, { FadeIn, FadeOut, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOut, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 import { SvgXml } from 'react-native-svg';
 import icons from '../generated/icons.json';
 import { useTheme, useTypography } from '../theme';
@@ -22,6 +22,7 @@ export function Button({ label, icon, onPress, onLongPress, longPressLabel, sele
 }) {
   const { colors, appearance } = useTheme();
   const { font, text, semiboldWeight } = useTypography();
+  const reduceMotion = useReducedMotion();
   const opacity = useSharedValue(1);
   const feedback = useAnimatedStyle(() => ({ opacity: opacity.value }));
   const action = variant === 'action' || variant === 'destructive';
@@ -40,7 +41,7 @@ export function Button({ label, icon, onPress, onLongPress, longPressLabel, sele
         }]}>
         {showSelection && <View style={styles.selection}>{selected && <Icon name="check" size={20} />}</View>}
         {icon && <View style={variant === 'primary' ? [styles.primary, { backgroundColor: disabled ? colors.interactive.border : colors.primary.base }] : { width: iconSize, height: iconSize }}>
-          <Animated.View key={icon} entering={animateIcon ? FadeIn.duration(160) : undefined} exiting={animateIcon ? FadeOut.duration(120) : undefined} style={styles.iconLayer}><Icon name={icon} size={variant === 'primary' ? 20 : iconSize} color={variant === 'primary' && disabled ? colors.surface.mutedForeground : foreground} /></Animated.View>
+          <Animated.View key={icon} entering={animateIcon && !reduceMotion ? FadeIn.duration(160) : undefined} exiting={animateIcon && !reduceMotion ? FadeOut.duration(120) : undefined} style={styles.iconLayer}><Icon name={icon} size={variant === 'primary' ? 20 : iconSize} color={variant === 'primary' && disabled ? colors.surface.mutedForeground : foreground} /></Animated.View>
         </View>}
         {children ?? (variant === 'row' || variant === 'setting' || action ? <Text numberOfLines={variant === 'setting' ? undefined : labelLines} style={[styles.label, text(16, 22), { fontFamily: font.regular, color: foreground }, action && { fontFamily: font.semibold, fontWeight: semiboldWeight }]}>{label}</Text> : null)}
       </Pressable>

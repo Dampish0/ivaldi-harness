@@ -1,5 +1,49 @@
 # Native mobile visual review
 
+## Registered projects, version 0.2.15
+
+Tested on the connected Samsung S24 Ultra, Android 16. The [0.2.14 baseline](../experiments/mobile-native/artifacts/native-projects-0215-s24-baseline.json) omitted an empty registered project and showed directory names instead of saved project labels. Native now reads that same registry used by the Settings picker. Registered projects keep the host's order and name; unregistered directories with chats remain accessible. Empty projects expose a compose action when expanded. The new project's registered name appears in both the header and welcome text.
+
+The [visual check](../experiments/mobile-native/artifacts/native-projects-0215-s24-visual.json) verifies names, order, long-label truncation, the empty project and preserved draft/model on project selection. The [recovery check](../experiments/mobile-native/artifacts/native-projects-0215-s24-recovery.json) verifies failed-read Retry, rename/reorder/removal, retained folder disclosure and cold-restored project context. A failed registry read keeps the known list. Removing a registry entry does not discard its chats.
+
+| Normal dark mode | Large system text, light mode |
+| --- | --- |
+| [Registered project rows](../experiments/mobile-native/artifacts/native-projects-0215-s24-registry.png) | [Portrait](../experiments/mobile-native/artifacts/native-projects-0215-s24-light-large-portrait.png) |
+| [Empty project](../experiments/mobile-native/artifacts/native-projects-0215-s24-empty.png) | [Landscape](../experiments/mobile-native/artifacts/native-projects-0215-s24-light-large-landscape.png) |
+
+The [layout check](../experiments/mobile-native/artifacts/native-projects-0215-s24-layout.json) passed Developer mode with system text scale 2.0 in light portrait and landscape. The folder and compose actions remained reachable and separate, and navigation kept the keyboard hidden. Initial automation attempts started a swipe in the fixed footer's padding and did not reliably confirm rotation. The accepted test reads the actual scroll viewport and waits for the requested orientation.
+
+Phone acceptance exposed a startup crash with Android animation scales set to zero. The preceding candidate, SHA-256 `2b7838a75fecb144ef1f680872cd9f3fe04aac59c3245ff00324d6b3703ac4d8`, crashed on two reduced-motion reconnects with the same Fabric `addViewAt` index error. The [crash evidence](../artifacts/mobile-motion/native-projects-0215-reduced-crash-baseline.log) contains only the app's native exception and stack. It is not an accepted build.
+
+The corrected app omits entering/exiting builders when reduced motion is enabled at startup. Normal motion retains those transitions. This follows the [documented startup scope of useReducedMotion](https://docs.swmansion.com/react-native-reanimated/docs/device/useReducedMotion/). The [cold-start result](../experiments/mobile-native/artifacts/native-projects-0215-s24-reduced-startup.json) passed three reduced-motion and three normal launches with the draft, project and model retained and no process errors. Live changes to the Android accessibility setting while the app remains mounted were not tested.
+
+The [motion result](../experiments/mobile-native/artifacts/native-projects-0215-s24-motion.json) passed six empty-project toggles with rapid reversals in both modes. The [normal recording](../experiments/mobile-native/artifacts/native-projects-0215-s24-normal.mp4) shows the chevron, compose action and following rows moving together. Sequential frame inspection retained normal text proportions and ended at the expected closed state. The [reduced-motion recording](../experiments/mobile-native/artifacts/native-projects-0215-s24-reduced.mp4) shows the corresponding immediate states. General/Mode and Appearance/Font navigation also passed in both modes with the draft preserved and no process errors.
+
+The frame counter recorded 164 normal frames and 10 reduced-motion frames, then zero additional frames in each five-second idle check. Android reported 6 ms and 11 ms at the 95th percentile, respectively, and flagged 4 of 164 normal frames and 5 of 10 reduced-motion frames as janky. These short recorded samples establish instrument activity, reduced-motion behavior and settled idle. They do not establish whole-app smoothness or performance with large or nested project lists. No folder timing optimization is claimed in this pass.
+
+The [APK](../artifacts/mobile-motion/ivaldi-native-0.2.15-android.apk) is release-mode 0.2.15, code 17, with bundled JavaScript, arm64/x86_64 libraries and the existing Android Debug certificate. Its [manifest](../artifacts/mobile-motion/ivaldi-native-0.2.15-android.manifest.json) records SHA-256 `bb3ceda6813d3dc1a140a58619165a81b62f34fef8853bfee863eec16269854c`, 96,294,984 bytes and 100 matching staged files. Installation preserved the existing native app's data.
+
+All 281 native runtime tests passed. Native type-check, focused ESLint/oxlint and the final release build passed. Dead-code analysis retains its existing report of 2 files, 222 exports, 163 types and one duplicate; it excludes the native experiment. No dependencies were added.
+
+The [final installed verification](../artifacts/mobile-motion/native-projects-0215-installed.json) matches all six acceptance phases to that APK and the current staged sources. It records zero current-process JavaScript/Android errors and no prompts, session creations or server Settings writes. Cleanup removed the synthetic draft and QA connection, verified its absence after cold restart, and restored the phone's display and animation settings. The owned fixture and USB reverse were stopped afterward.
+
+Project registration and metadata edits, defaults, worktree/child-chat hierarchy and the remaining Settings workflows are still open. Registry order does not reproduce desktop's device-local manual sorting. This pass does not establish iOS, relay recovery, real provider authentication or complete animation coverage. The [workflow plan](MOBILE_NATIVE_GAP_PLAN.md) remains the completion checklist.
+
+## Settings persistence recovery on the S24 Ultra
+
+Tested 22 September 2026 on the connected Samsung S24 Ultra, Android 16, density 600 and system text scale 1.0. The phone upgraded from 0.2.11 to the existing release-mode 0.2.14 APK without uninstalling or clearing data. Its installed SHA-256 matched `e5199c25304a2d06058ddbf18a35649adc1a2c8e1c6bdbd7f62aa79abe76f433`. The [identity record](../artifacts/mobile-motion/native-settings-recovery-s24-installed.json) records the production Settings runtime and fixture hashes. These changes are in the host; the APK did not change.
+
+The isolated USB-connected fixture used the real server persistence runtime with synthetic settings. [Save checks](../experiments/mobile-native/artifacts/native-settings-recovery-s24-save.json) passed a disk-write failure, explicit Retry in the same host process, a subsequent independent save and draft/model preservation. [Read checks](../experiments/mobile-native/artifacts/native-settings-recovery-s24-read.json) passed a disk-read failure, failed malformed-file reads without an overwrite, explicit QA repair, Retry and cold relaunch. No prompt or session was created. The phone kept the old selected values when a request failed, and navigation did not open the keyboard.
+
+| Failure | Recovery |
+| --- | --- |
+| [Save failed with Retry](../experiments/mobile-native/artifacts/native-settings-recovery-s24-save-failed.png) | [Retried selection](../experiments/mobile-native/artifacts/native-settings-recovery-s24-save-retried.png) |
+| [Unreadable defaults](../experiments/mobile-native/artifacts/native-settings-recovery-s24-read-failed.png) | [Defaults recovered](../experiments/mobile-native/artifacts/native-settings-recovery-s24-recovered.png) |
+
+Focused server tests passed 65 cases with one platform-specific skip. Web type-check and focused ESLint passed. Dead-code analysis retained its existing report of 2 files, 222 exports, 163 types and one duplicate export. Oxlint reported 70 existing findings in the Settings runtime and old tests; the new fixture and test cases had none. The source changes protect unreadable files and recover the in-process save/migration queue. They do not establish cross-process ordering or change the Windows copy fallback.
+
+The drawer opened after fresh pairing on this phone. That single success does not close the earlier intermittent drawer observation. This pass also does not establish motion quality, relay recovery or completion of the missing native workflows. The host must restart to use the persistence fix.
+
 ## Short forms and confirmations, version 0.2.14
 
 Action, rename and saved-connection confirmation sheets now measure their content instead of multiplying a fixed height by font scale. They retain scrolling, safe-area insets and clearance above the keyboard. An unfocused rename shows the start of its title; tapping it selects the old value. Saved-connection deletion uses Ivaldi's native theme, a concise Delete button and a localized explanation. Pending deletion blocks dismissal and duplicate submission. Storage failure retains its target for Retry without claiming rollback.

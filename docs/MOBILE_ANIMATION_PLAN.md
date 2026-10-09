@@ -1,12 +1,12 @@
 # Mobile animation plan
 
-12 September 2026. Proposal only. Implementation starts after your go-ahead.
+Originally proposed and approved on 12 September 2026. Updated 22 September after the approved move to React Native. The interaction inventory below still defines acceptance. Use the [native gap plan](MOBILE_NATIVE_GAP_PLAN.md) for current priorities and the [native visual review](MOBILE_NATIVE_VISUAL_REVIEW.md) for installed evidence. This document does not claim every interaction is implemented or verified.
 
 The goal is the same restrained, conversation-first design as desktop Ivaldi and the Codex/ChatGPT reference: immediate touch response, readable content during movement, and clear relationships between screens.
 
-The current composer swaps between separate collapsed and expanded layouts, then adds entry effects. Draft suggestions disappear instantly. Android resizes the WebView for the keyboard through a different path from the iOS choreography. These need coordinated transitions. Adding another fade will leave the layout jumps intact.
+The original Capacitor composer swapped between separate collapsed and expanded layouts, then added entry effects. Draft suggestions disappeared instantly, and Android resized the WebView for the keyboard through a different path from the iOS choreography. That diagnosis motivated the approved migration. The native composer now uses one editor and native keyboard movement; remaining transitions still need their own acceptance evidence.
 
-This plan follows the [existing motion review](MOBILE_MOTION_REVIEW.md) and current code inspection. Fresh phone recordings will establish the baseline before implementation.
+The [original motion review](MOBILE_MOTION_REVIEW.md) records the Capacitor baseline. Compare native changes on the same installed build and device before claiming a motion improvement.
 
 | Interaction | Planned movement and behavior |
 |---|---|
@@ -27,7 +27,7 @@ I will implement this in the following order:
 2. **Composer first.** Resolve layout, focus, and keyboard ownership before tuning motion. One owner controls each animated property. Review expansion, multiline typing, attachments, picker handoff, and collapse together before moving on.
 3. **Navigation, then remaining interactions.** Consolidate shared sheet, drawer, and page behavior. Remove superseded effects as their replacements land. Finish messages, disclosures, and smaller controls against the inventory.
 
-Use shared timing values, initially 100 to 160 ms for feedback and 220 to 300 ms for larger transitions. Openings decelerate; dismissals finish promptly. Tune these on the phone. Gestures track input directly, and interrupted animations continue from their visible position. Use transforms and opacity; measure any necessary geometry animation under the repository's performance rules. Keep React and Capacitor and use existing dependencies.
+Use shared timing values, initially 100 to 160 ms for feedback and 220 to 300 ms for larger transitions. Openings decelerate; dismissals finish promptly. Tune these on the phone. Gestures track input directly, and interrupted animations continue from their visible position. Use transforms and opacity; measure any necessary geometry animation under the repository's performance rules. The approved native implementation uses the existing React Native, Reanimated and Gesture Handler dependencies.
 
 Completion requires before/after clips from the same phone and scenarios, reviewed at normal speed and frame by frame. Check combined sequences, rapid reversal, Android Back, keyboard already open, long drafts, larger text, reduced motion, and both modes. Test folder expansion and collapse with short, long, and nested lists, including repeated taps and folders near the viewport edge. Reject visible snaps, stretched text, blank frames, focus theft, lost drafts, and scroll jumps. Profile stalls separately and run relevant correctness checks.
 

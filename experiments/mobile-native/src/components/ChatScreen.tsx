@@ -27,6 +27,7 @@ import { SettingsScreen } from './SettingsScreen';
 import { createProvidersStore } from '../runtime/providers';
 import { createCustomProvidersStore } from '../runtime/custom-providers';
 import { createSettingsProjectsStore } from '../runtime/settings-projects';
+import { projectDirectoryKey, projectTitle } from '../runtime/sidebar-projects';
 import type { ModelVisibilityStore } from '../runtime/model-visibility';
 import type { PreviewImage } from './ImageAttachment';
 
@@ -52,6 +53,10 @@ export function ChatScreen({ runtime, foreground, openConnections, modelVisibili
     write: patch => runtime.json('/api/config/settings', sessionDefaultsSchema, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) }),
   }), [runtime]);
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
+  const registry = useSyncExternalStore(settingsProjects.subscribe, settingsProjects.getSnapshot);
+  useEffect(() => { if (state.activeId === null && state.draftDirectory) void settingsProjects.load().catch(() => {}); }, [state.activeId, state.draftDirectory, settingsProjects]);
+  const draftProjectPath = state.activeId === null ? state.draftDirectory : null;
+  const draftProject = draftProjectPath ? projectTitle(draftProjectPath, registry.projects.find(project => projectDirectoryKey(project.path) === projectDirectoryKey(draftProjectPath))?.label) : null;
   const visibility = useSyncExternalStore(modelVisibility.subscribe, modelVisibility.getSnapshot);
   const availableModels = state.modelCatalog.available ? state.models : [];
   const availableAgents = state.agentCatalog.available ? state.agents : [];
@@ -187,11 +192,11 @@ export function ChatScreen({ runtime, foreground, openConnections, modelVisibili
     <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} />
     <View onLayout={event => { mainHeight.value = event.nativeEvent.layout.height; }} style={[styles.main, { paddingTop: safe.top, paddingLeft: safe.left, paddingRight: safe.right }]} accessibilityElementsHidden={obscured} importantForAccessibility={obscured ? 'no-hide-descendants' : 'auto'}>
       <Animated.View style={[styles.header, headerMotion]}><Button icon="menu-2" label={t('sessions.sidebar.activity.chatsTitle')} onPress={() => { dismissInput(); setDrawer(true); }} testID="open-sidebar" />
-        <Animated.View key={active?.id ?? 'new'} entering={FadeIn.duration(180)} style={{ flex: 1, minWidth: 0 }}><Button variant="compact" label={t('chat.modelControls.selectModel') + ': ' + modelName} onPress={() => openSheet('models')} testID="model-picker-trigger"><View style={styles.headerTitle}><Text numberOfLines={1} style={[text(18, 24), { fontFamily: font.semibold, fontWeight: semiboldWeight, color: colors.surface.foreground }]}>{active?.title ?? 'Ivaldi'}</Text><View style={styles.headerModel}><Text numberOfLines={1} style={[styles.modelName, text(13, 18), { fontFamily: font.regular, color: colors.surface.mutedForeground }]}>{modelName}</Text><Icon name="arrow-down-s" size={14} color={colors.surface.mutedForeground} /></View></View></Button></Animated.View>
+        <Animated.View key={active?.id ?? 'new'} entering={reduceMotion ? undefined : FadeIn.duration(180)} style={{ flex: 1, minWidth: 0 }}><Button variant="compact" label={t('chat.modelControls.selectModel') + ': ' + modelName} onPress={() => openSheet('models')} testID="model-picker-trigger"><View style={styles.headerTitle}><Text numberOfLines={1} testID="chat-title" style={[text(18, 24), { fontFamily: font.semibold, fontWeight: semiboldWeight, color: colors.surface.foreground }]}>{active?.title ?? draftProject ?? 'Ivaldi'}</Text><View style={styles.headerModel}><Text numberOfLines={1} style={[styles.modelName, text(13, 18), { fontFamily: font.regular, color: colors.surface.mutedForeground }]}>{modelName}</Text><Icon name="arrow-down-s" size={14} color={colors.surface.mutedForeground} /></View></View></Button></Animated.View>
         <Button icon="more" label={t('mobile.header.actions')} onPress={() => openActions(state.activeId, 'chat')} testID="chat-actions" />
       </Animated.View>
       {state.stream !== 'live' && <Text accessibilityLiveRegion="polite" style={[styles.connection, text(12, 18), { fontFamily: font.regular, color: colors.surface.mutedForeground }]}>{t(state.stream === 'connecting' ? 'mobile.connect.connecting' : 'mobile.connect.recovery.description')}</Text>}
-      {(newChatState === 'failed' || newChatState === 'loading' && showNewChatProgress) && <Animated.View entering={FadeIn.duration(140)} exiting={FadeOut.duration(100)} style={styles.notice}>
+      {(newChatState === 'failed' || newChatState === 'loading' && showNewChatProgress) && <Animated.View entering={reduceMotion ? undefined : FadeIn.duration(140)} exiting={reduceMotion ? undefined : FadeOut.duration(100)} style={styles.notice}>
         <Text accessibilityLiveRegion="polite" style={[text(14, 21), { fontFamily: font.regular, color: newChatState === 'failed' ? colors.status.error : colors.surface.mutedForeground }]}>{t(newChatState === 'failed' ? 'mobile.native.defaults.loadFailed' : 'common.loading')}</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>{newChatState === 'failed' && <Button variant="compact" label={t('settings.common.actions.retry')} onPress={() => { void prepareNewChat(newChatIntent.current.directory, newChatIntent.current.startup); }} testID="new-chat-retry"><Text style={[text(14, 21), { fontFamily: font.regular, color: colors.surface.foreground }]}>{t('settings.common.actions.retry')}</Text></Button>}<Button variant="compact" label={t('settings.common.actions.cancel')} onPress={cancelNewChat} testID="new-chat-cancel"><Text style={[text(14, 21), { fontFamily: font.regular, color: colors.surface.foreground }]}>{t('settings.common.actions.cancel')}</Text></Button></View>
       </Animated.View>}
@@ -202,7 +207,7 @@ export function ChatScreen({ runtime, foreground, openConnections, modelVisibili
         {state.error === 'action' && <Text accessibilityRole="alert" style={[text(14, 21), { fontFamily: font.regular, color: colors.status.error }]}>{t('mobile.native.actionFailed')}</Text>}
         <Button variant="action" label={t(state.recoveringDraft ? 'common.loading' : 'mobile.native.session.recover')} disabled={state.recoveringDraft || newChatState === 'loading'} onPress={() => { cancelNewChat(); dismissInput(); void controller.recoverSessionDraft(newDirectory); }} testID="recover-session-draft" />
         <Button variant="setting" icon="restart" label={t('settings.common.actions.retry')} disabled={state.recoveringDraft} onPress={() => { void controller.retry(); }} testID="recover-session-retry" />
-      </ScrollView></Animated.View> : messages.length === 0 && permissions.length === 0 && questions.length === 0 && !pending ? <Welcome directory={newDirectory} mode={state.mode} keyboardHeight={keyboardHeight} /> : <FlatList ref={scroll} key={active?.id} data={messages} keyExtractor={item => item.info.id} testID="conversation" renderItem={({ item }) => <MessageRow message={item} previewImage={previewImage} />} initialNumToRender={12} maxToRenderPerBatch={8} windowSize={7} removeClippedSubviews={false}
+      </ScrollView></Animated.View> : messages.length === 0 && permissions.length === 0 && questions.length === 0 && !pending ? <Welcome project={draftProject} mode={state.mode} keyboardHeight={keyboardHeight} /> : <FlatList ref={scroll} key={active?.id} data={messages} keyExtractor={item => item.info.id} testID="conversation" renderItem={({ item }) => <MessageRow message={item} previewImage={previewImage} />} initialNumToRender={12} maxToRenderPerBatch={8} windowSize={7} removeClippedSubviews={false}
         renderScrollComponent={props => <KeyboardChatScrollView {...props} keyboardLiftBehavior="whenAtEnd" extraContentPadding={extraPadding} freeze={obscured} onEndVisible={value => { atEnd.current = value; setEndVisible(value); if (value) readingHistory.current = false; }} />}
         keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={[styles.messages, { gap: 24 * appearance.density / 100 }]} scrollEventThrottle={32}
         onScroll={event => { if (active) positions.current.set(active.id, event.nativeEvent.contentOffset.y); }}
@@ -215,7 +220,7 @@ export function ChatScreen({ runtime, foreground, openConnections, modelVisibili
       <LatestButton visible={!endVisible && messages.length > 0 && !obscured && !state.loading} onPress={jumpToLatest} extraPadding={extraPadding} keyboardHeight={keyboardHeight} keyboardProgress={keyboardProgress} mainHeight={mainHeight} />
     </View>
     {preview && <ImagePreview image={preview} close={() => setPreview(null)} />}
-    <Overlay open={drawer} foreground={sheet === null} kind="drawer" onClose={() => { dismissInput(); setDrawer(false); }}><Sidebar open={drawer} sessions={state.sessions} activeId={state.activeId} select={selectChat} actions={id => openActions(id, 'sidebar')} newChat={() => newChat()} mode={state.mode} openSettings={() => { dismissInput(); setDrawer(false); setSettingsOpen(true); }} openConnections={() => { dismissInput(); setDrawer(false); openConnections(); }} connection={runtime.connection.label} newProjectChat={newChat} /></Overlay>
+    <Overlay open={drawer} foreground={sheet === null} kind="drawer" onClose={() => { dismissInput(); setDrawer(false); }}><Sidebar open={drawer} sessions={state.sessions} projects={settingsProjects} activeId={state.activeId} select={selectChat} actions={id => openActions(id, 'sidebar')} newChat={() => newChat()} mode={state.mode} openSettings={() => { dismissInput(); setDrawer(false); setSettingsOpen(true); }} openConnections={() => { dismissInput(); setDrawer(false); openConnections(); }} connection={runtime.connection.label} newProjectChat={newChat} /></Overlay>
     <Overlay open={sheet !== null} kind="sheet" dismissible={!actionBusy} fitContent={lastSheet === 'actions' || lastSheet === 'rename'} onClose={closeSheet}>
       {lastSheet === 'models' ? <ModelPicker hiddenModels={visibility.hidden} open={sheet === 'models'} models={availableModels} model={state.model} variants={modelEffort} setVariants={setModelEffort} select={selectModel} close={() => closeSheet()} favorites={state.favorites} favorite={key => controller.favorite(key)} availability={state.modelCatalog} retry={refreshCatalog} /> : lastSheet === 'agents' ? <>
         {header(t('chat.modelControls.selectAgent'))}
@@ -264,18 +269,17 @@ function LatestButton({ visible, onPress, extraPadding, keyboardHeight, keyboard
   </Animated.View>;
 }
 function ResponseActivity({ status, animate }: { status: Exclude<SessionStatus, { type: 'idle' }>; animate: boolean }) {
-  const { t } = useI18n(); const { colors } = useTheme(); const { font, text } = useTypography(); const pulse = useSharedValue(1);
+  const { t } = useI18n(); const { colors } = useTheme(); const { font, text } = useTypography(); const pulse = useSharedValue(1); const reduceMotion = useReducedMotion();
   useEffect(() => { pulse.value = animate ? withRepeat(withTiming(0.35, { ...movement, duration: 800 }), -1, true) : 1; return () => cancelAnimation(pulse); }, [pulse, animate]);
   const animation = useAnimatedStyle(() => ({ opacity: pulse.value, transform: [{ scale: 0.8 + pulse.value * 0.2 }] }));
-  return <Animated.View entering={FadeIn.duration(180)} exiting={FadeOut.duration(140)} style={styles.activity} testID="response-activity">
+  return <Animated.View entering={reduceMotion ? undefined : FadeIn.duration(180)} exiting={reduceMotion ? undefined : FadeOut.duration(140)} style={styles.activity} testID="response-activity">
     <View style={styles.activityTitle}><Animated.View style={[styles.activityDot, { backgroundColor: status.type === 'retry' ? colors.status.warning : colors.surface.mutedForeground }, animation]} /><Text accessibilityLiveRegion="polite" style={[text(14, 21), { fontFamily: font.regular, color: colors.surface.mutedForeground }]}>{t(status.type === 'retry' ? 'startup.initRecovery.retrying' : 'chat.btw.working')}</Text></View>
     {status.type === 'retry' && <Text style={[text(14, 21), { fontFamily: font.regular, color: colors.surface.mutedForeground }]}>{status.message}</Text>}
   </Animated.View>;
 }
-function Welcome({ directory, mode, keyboardHeight }: { directory?: string; mode: 'work' | 'developer'; keyboardHeight: SharedValue<number> }) {
+function Welcome({ project, mode, keyboardHeight }: { project: string | null; mode: 'work' | 'developer'; keyboardHeight: SharedValue<number> }) {
   const { colors } = useTheme(); const { font, text } = useTypography(); const { t } = useI18n(); const { height } = useWindowDimensions();
   const position = useAnimatedStyle(() => ({ opacity: Math.max(0, Math.min(1, (height - Math.abs(keyboardHeight.value) - 230) / 100)), transform: [{ translateY: keyboardHeight.value / 2 }] }));
-  const project = directory?.replace(/\\/g, '/').split('/').filter(Boolean).at(-1);
   return <View style={styles.empty}><Animated.View style={[styles.welcome, position]}><Text textBreakStrategy="balanced" style={[styles.welcomeTitle, text(26, 34), { fontFamily: font.regular, color: colors.surface.foreground }]}>{t(mode === 'work' ? 'chat.emptyState.workDraftTitle' : 'chat.emptyState.draftTitle')}</Text>{project && <Text numberOfLines={2} style={[text(14, 21), { fontFamily: font.regular, color: colors.surface.mutedForeground, textAlign: 'center' }]}>{project}</Text>}</Animated.View></View>;
 }
 const styles = StyleSheet.create({

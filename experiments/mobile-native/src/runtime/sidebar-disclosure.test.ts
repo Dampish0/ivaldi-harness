@@ -5,6 +5,14 @@ import type { Session } from './schema.ts';
 
 const project: Session = { id: 'saved-chat', title: 'Saved chat', directory: '/work/project', time: { created: 1, updated: 2 } };
 
+test('selected Windows chats reveal the same folder as normalized registry paths', () => {
+  const session = { ...project, directory: 'C:\\work\\project\\' };
+  const opened = sidebarDisclosure(initialSidebarDisclosure(), { type: 'select', managed: false, activeId: session.id, session });
+  assert.deepEqual([...opened.openFolders], ['project:C:/work/project']);
+  const collapsed = sidebarDisclosure(opened, { type: 'toggle', folder: 'project:C:/work/project' });
+  assert.strictEqual(sidebarDisclosure(collapsed, { type: 'select', managed: false, activeId: session.id, session: { ...session, directory: 'C:/work/project' } }), collapsed);
+});
+
 test('a restored selected chat reveals its project after its session arrives', () => {
   const initial = initialSidebarDisclosure();
   const waiting = sidebarDisclosure(initial, { type: 'select', managed: false, activeId: project.id, session: undefined });

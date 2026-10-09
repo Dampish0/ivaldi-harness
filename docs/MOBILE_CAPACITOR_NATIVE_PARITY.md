@@ -1,10 +1,18 @@
 # Mobile app comparison: Capacitor and React Native
 
-Updated 15 September 2026. Settings is the main subject; the final comparison table covers other migration gaps.
+Updated 22 September 2026. Settings is the main subject; the final comparison table covers other migration gaps.
 
-The [current workflow plan](MOBILE_NATIVE_GAP_PLAN.md) covers 0.2.14 and the remaining migration priorities. The sections below retain their original version attribution.
+The [current workflow plan](MOBILE_NATIVE_GAP_PLAN.md) covers 0.2.15 and the remaining migration priorities. The sections below retain their original version attribution.
+
+## Registered projects in 0.2.15
+
+The native sidebar now reads project names and order from the host registry and includes projects that have no chats yet. Its expanded folder exposes the existing compose action. Unregistered directories with chats remain accessible, and failed registry reads retain the known list with local Retry. Project drafts show the registered name in both the header and welcome text, including after relaunch. Installed S24 Ultra checks cover metadata changes, failure recovery, draft preservation and large-text layout. See the [0.2.15 review](MOBILE_NATIVE_VISUAL_REVIEW.md#registered-projects-version-0215).
+
+This restores project recognition and entry into an empty project. Native project registration, rename/removal, defaults, worktree and child-chat structure still need implementation. Host registry order does not reproduce desktop's device-local manual sorting.
 
 ## Form refinements in 0.2.14
+
+The shared host persistence queue now recovers after failed saves and preserves unreadable Settings files. Native 0.2.14 passed save/read Retry and cold-relaunch checks on the S24 Ultra against the corrected host runtime. See the [recovery review](MOBILE_NATIVE_VISUAL_REVIEW.md#settings-persistence-recovery-on-the-s24-ultra). This closes a reliability defect shared with desktop; it does not add the missing native Settings pages.
 
 Short native action and rename sheets now fit their content, including larger text and local errors. Long rename values show their beginning before focus and select the old title when tapped. Saved-connection deletion uses Ivaldi's typography, colors and controls, with a concise Delete action and a localized explanation. The [visual review](MOBILE_NATIVE_VISUAL_REVIEW.md#short-forms-and-confirmations-version-0214) records installed layout, focus and failure checks. This closes the form refinements identified in 0.2.13; project management and the missing Settings workflows remain open.
 
