@@ -609,7 +609,7 @@ export const ContextPanelContent: React.FC = () => {
                   {isExpanded && (
                     <div className="border-t border-[var(--surface-subtle)] p-0">
                       <div className="group relative max-h-[26rem] w-full overflow-auto bg-[var(--surface-background)]">
-                        <div className="absolute top-1 right-2 z-10 opacity-0 transition-opacity group-hover:opacity-100">
+                        <div className="absolute top-1 right-2 z-10 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
                           <button
                             type="button"
                             className="rounded p-1 text-muted-foreground transition-colors hover:bg-interactive-hover/60 hover:text-foreground"

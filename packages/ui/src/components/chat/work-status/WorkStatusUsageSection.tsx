@@ -10,6 +10,7 @@ import { useQuotaAutoRefresh, useQuotaStore } from '@/stores/useQuotaStore';
 import { useUIStore } from '@/stores/useUIStore';
 import { useUsageProviderGroups } from '@/components/usage/usageGroups';
 import { useConfigStore } from '@/stores/useConfigStore';
+import { useProductModeStore } from '@/stores/useProductModeStore';
 import { pickUsageHeadline } from './usageHeadline';
 import { runBackgroundNetworkTask } from '@/lib/background-network';
 import { WorkStatusRow, WorkStatusCollapsibleSection, WorkStatusValue } from './WorkStatusPrimitives';
@@ -40,7 +41,15 @@ const windowTone = (window: UsageWindow): 'default' | 'warning' | 'error' => {
 
 export const WorkStatusUsageSection: React.FC = () => {
   const { t } = useI18n();
-  const groups = useUsageProviderGroups();
+  const isWorkMode = useProductModeStore((state) => state.mode === 'work');
+  const allGroups = useUsageProviderGroups();
+  // Work mode lists only AI services that report numbers. A status on its own,
+  // such as "Authentication required" for a service the user never set up,
+  // reads as an error they are expected to fix.
+  const groups = React.useMemo(
+    () => (isWorkMode ? allGroups.filter((group) => group.rows.length > 0) : allGroups),
+    [allGroups, isWorkMode],
+  );
   const displayMode = useQuotaStore((state) => state.displayMode);
   const isLoading = useQuotaStore((state) => state.isLoading);
   const quotaResults = useQuotaStore((state) => state.results);
@@ -75,14 +84,10 @@ export const WorkStatusUsageSection: React.FC = () => {
 
   if (groups.length === 0) return null;
 
-  const modeLabel = displayMode === 'remaining'
-    ? t('header.services.remaining')
-    : t('header.services.used');
-
   // Collapsed, the section shows the tightest quota of the provider the
   // composer is pointed at — the number that decides whether the next turn
-  // lands. With no match it falls back to the display-mode label rather than
-  // showing some other provider's quota as if it were the active one.
+  // lands. With no match it shows no summary rather than showing some other
+  // provider's quota as if it were the active one, or a bare "Used" label.
   const headline = pickUsageHeadline(groups, currentProviderId);
   const headlineMetric = headline
     ? formatQuotaValueLabel(
@@ -95,22 +100,17 @@ export const WorkStatusUsageSection: React.FC = () => {
     <WorkStatusCollapsibleSection
       id="usage"
       title={t('chat.workStatus.section.usage')}
-      icon="timer"
-      summary={(
+      summary={headline && headlineMetric && headlineMetric !== '-' ? (
         <span className="inline-flex items-center gap-1.5">
-          {headline && headlineMetric && headlineMetric !== '-' ? (
-            <>
-              <span className="truncate">{headline.row.label}</span>
-              <WorkStatusValue tone={windowTone(headline.row.window)}>{headlineMetric}</WorkStatusValue>
-            </>
-          ) : modeLabel}
+          <span className="truncate">{headline.row.label}</span>
+          <WorkStatusValue tone={windowTone(headline.row.window)}>{headlineMetric}</WorkStatusValue>
         </span>
-      )}
+      ) : undefined}
       action={(
         <Button
-          size="icon"
+          size="icon-xs"
           variant="ghost"
-          className="size-6 shrink-0 text-muted-foreground"
+          className="shrink-0 text-muted-foreground"
           onClick={() => void fetchQuotas(dropdownProviderIds)}
           aria-label={t('settings.usage.sidebar.actions.refreshAria')}
           title={t('settings.usage.sidebar.actions.refreshTitle')}
@@ -148,7 +148,7 @@ export const WorkStatusUsageSection: React.FC = () => {
                       {row.subtitle ? `${row.subtitle} · ${row.label}` : row.label}
                     </span>
                     {resetLabel ? (
-                      <span className="shrink-0 text-[11px] text-muted-foreground">{resetLabel}</span>
+                      <span className="typography-micro shrink-0 text-muted-foreground">{resetLabel}</span>
                     ) : null}
                   </span>
                 )}

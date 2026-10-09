@@ -25,36 +25,55 @@ const SKIP_PARTS = new Set(["patch", "step-start", "step-finish"])
 const DELTA_OVERLAP_FIELDS = ["text", "output"] as const
 const FINAL_TOOL_STATUSES = new Set(["completed", "error", "aborted", "failed", "timeout", "cancelled"])
 
+type DeltaOverlapField = (typeof DELTA_OVERLAP_FIELDS)[number]
+
+// Why this dedupe exists: the server can publish a `message.part.updated`
+// snapshot that already contains text whose `message.part.delta` is delivered
+// after it, because delta batching straddles the snapshot. That delta then
+// starts with exactly the text the snapshot added on top of what this store
+// already had. Deltas carry no sequence that ties them to a snapshot (event
+// IDs are opaque and coalesced deltas take the newest one), so the reducer
+// matches content, but only that narrow shape: the first delta after a
+// snapshot that grew the field, and only when the delta starts with the whole
+// growth. An unchanged or shrinking snapshot never trims a delta.
 type DedupeMetadata = {
-  __dedupeNextDeltaFields?: string[]
+  /** Field length before the latest snapshot grew it; consumed by the next delta on that field. */
+  __dedupeNextDeltaFrom?: Partial<Record<DeltaOverlapField, number>>
 }
 
-function appendNonOverlappingDelta(existingValue: string | undefined, delta: string) {
-  if (!existingValue || delta.length === 0) return (existingValue ?? "") + delta
-  if (existingValue.endsWith(delta)) return existingValue
+const isDeltaOverlapField = (field: string): field is DeltaOverlapField =>
+  field === "text" || field === "output"
 
-  const maxOverlap = Math.min(existingValue.length, delta.length)
-  for (let overlap = maxOverlap; overlap > 0; overlap--) {
-    if (existingValue.endsWith(delta.slice(0, overlap))) {
-      return existingValue + delta.slice(overlap)
-    }
+function appendDeltaAfterSnapshotGrowth(snapshotValue: string, delta: string, grownFrom: number) {
+  const growth = snapshotValue.slice(grownFrom)
+  if (growth.length > 0 && delta.startsWith(growth)) {
+    return snapshotValue + delta.slice(growth.length)
   }
-
-  return existingValue + delta
+  return snapshotValue + delta
 }
 
-function getUpdatedDeltaFields(previous: Part, next: Part) {
-  const dedupeFields: string[] = []
+function withoutGrowthOffset(
+  offsets: Partial<Record<DeltaOverlapField, number>> | undefined,
+  field: DeltaOverlapField,
+): Partial<Record<DeltaOverlapField, number>> | undefined {
+  if (!offsets) return undefined
+  const remaining = { ...offsets }
+  delete remaining[field]
+  return Object.keys(remaining).length > 0 ? remaining : undefined
+}
+
+function getSnapshotGrowthOffsets(previous: Part, next: Part) {
+  let offsets: Partial<Record<DeltaOverlapField, number>> | undefined
   for (const field of DELTA_OVERLAP_FIELDS) {
     const previousValue = (previous as Record<string, unknown>)[field]
     const nextValue = (next as Record<string, unknown>)[field]
     if (typeof previousValue !== "string" || typeof nextValue !== "string") continue
-    if (previousValue.length === 0 || nextValue.length === 0) continue
-    if (nextValue === previousValue || nextValue.startsWith(previousValue) || previousValue.startsWith(nextValue)) {
-      dedupeFields.push(field)
+    if (previousValue.length === 0) continue
+    if (nextValue.length > previousValue.length && nextValue.startsWith(previousValue)) {
+      offsets = { ...offsets, [field]: previousValue.length }
     }
   }
-  return dedupeFields
+  return offsets
 }
 
 function getPartEndTime(part: Part): number | undefined {
@@ -427,9 +446,9 @@ export function applyDirectoryEvent(
         if (shouldPreserveExistingPart(previous, part)) {
           return false
         }
-        const dedupeFields = getUpdatedDeltaFields(previous, part)
-        next[partIndex] = dedupeFields.length > 0
-          ? { ...part, __dedupeNextDeltaFields: dedupeFields } as unknown as Part
+        const growthOffsets = getSnapshotGrowthOffsets(previous, part)
+        next[partIndex] = growthOffsets
+          ? { ...part, __dedupeNextDeltaFrom: growthOffsets } as unknown as Part
           : part
       } else {
         // Replace optimistic part (no sessionID) with server part of same type.
@@ -499,16 +518,20 @@ export function applyDirectoryEvent(
           materialization: { type: "incomplete-session-snapshot", reason: "missing-delta-part", sessionID: props.sessionID, messageID: props.messageID, partID: props.partID },
         }
       }
-      const existing = parts[partIndex] as Record<string, unknown>
+      const existing = parts[partIndex] as Record<string, unknown> & DedupeMetadata
       const existingValue = existing[props.field] as string | undefined
-      const dedupeFields = (existing as DedupeMetadata).__dedupeNextDeltaFields ?? []
-      const shouldDedupe = dedupeFields.includes(props.field)
+      const growthOffsets = existing.__dedupeNextDeltaFrom
+      const overlapField = isDeltaOverlapField(props.field) ? props.field : undefined
+      const grownFrom = overlapField ? growthOffsets?.[overlapField] : undefined
       // Create new Part object + new array so React detects the change
       const next = [...parts]
       next[partIndex] = {
         ...existing,
-        [props.field]: shouldDedupe ? appendNonOverlappingDelta(existingValue, props.delta) : (existingValue ?? "") + props.delta,
-        __dedupeNextDeltaFields: dedupeFields.filter((field) => field !== props.field),
+        [props.field]: grownFrom !== undefined && existingValue !== undefined
+          ? appendDeltaAfterSnapshotGrowth(existingValue, props.delta, grownFrom)
+          : (existingValue ?? "") + props.delta,
+        // One-shot: only the first delta after the snapshot can repeat its growth.
+        __dedupeNextDeltaFrom: overlapField ? withoutGrowthOffset(growthOffsets, overlapField) : growthOffsets,
       } as unknown as Part
       draft.part[props.messageID] = next
       return true

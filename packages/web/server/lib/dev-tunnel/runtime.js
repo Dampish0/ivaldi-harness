@@ -56,6 +56,7 @@ export function createDevTunnelRuntime({
   discoverDevServers,
   uiAuthController,
   isRequestOriginAllowed,
+  getUntrustedUnauthenticatedUpgradeReason,
   rejectWebSocketUpgrade,
   logger = console,
 }) {
@@ -148,6 +149,9 @@ export function createDevTunnelRuntime({
             rejectWebSocketUpgrade(socket, 403, 'Client authentication required');
             return;
           }
+        } else if (await getUntrustedUnauthenticatedUpgradeReason(req)) {
+          rejectWebSocketUpgrade(socket, 403, 'Untrusted origin');
+          return;
         }
 
         const port = parseRequestedPort(req.url);

@@ -3,7 +3,12 @@ import { SignJWT, jwtVerify } from 'jose';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import { promisify } from 'util';
 import { createUiPasskeys } from './ui-passkeys.js';
+
+// Async so a burst of login attempts cannot stall the event loop that serves
+// every other request; scrypt is deliberately expensive.
+const scryptAsync = promisify(crypto.scrypt);
 
 const SESSION_COOKIE_NAME = 'oc_ui_session';
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
@@ -22,17 +27,10 @@ let rateLimitCleanupTimer = null;
 
 const rateLimitLocks = new Map();
 
+// req.ip honours X-Forwarded-For only from the proxies `trust proxy` allows,
+// so a remote client cannot rotate the header to dodge the login limiter.
 const getClientIp = (req) => {
-  const forwarded = req.headers['x-forwarded-for'];
-  if (typeof forwarded === 'string') {
-    const ip = forwarded.split(',')[0].trim();
-    if (ip.startsWith('::ffff:')) {
-      return ip.substring(7);
-    }
-    return ip;
-  }
-
-  const ip = req.ip || req.connection?.remoteAddress;
+  const ip = req.ip || req.socket?.remoteAddress || req.connection?.remoteAddress;
   if (ip) {
     if (ip.startsWith('::ffff:')) {
       return ip.substring(7);
@@ -669,7 +667,7 @@ export const createUiAuth = ({
     res.setHeader('Set-Cookie', header);
   };
 
-  const verifyPassword = (candidate) => {
+  const verifyPassword = async (candidate) => {
     if (!candidate) {
       return false;
     }
@@ -678,7 +676,7 @@ export const createUiAuth = ({
       return false;
     }
     try {
-      const candidateHash = crypto.scryptSync(normalizedCandidate, salt, 64);
+      const candidateHash = await scryptAsync(normalizedCandidate, salt, 64);
       return crypto.timingSafeEqual(candidateHash, expectedHash);
     } catch {
       return false;
@@ -824,7 +822,7 @@ export const createUiAuth = ({
     }
 
     const candidate = typeof req.body?.password === 'string' ? req.body.password : '';
-    if (!verifyPassword(candidate)) {
+    if (!(await verifyPassword(candidate))) {
       await recordFailedAttempt(req);
       clearSessionCookie(req, res);
       res.status(401).json({ error: 'Invalid credentials' });

@@ -188,15 +188,13 @@ const ImagePreview = memo(({ file, onRemove, onShowPopup, gallery, index = 0 }: 
   if (!imageUrl) {
     // Fallback to text-only for server images without preview
     return (
-      <button
-        type="button"
-        className="flex items-center gap-1.5 text-sm hover:opacity-80 transition-opacity text-left h-5"
-      >
+      <div className="flex items-center gap-1.5 text-sm hover:opacity-80 transition-opacity text-left h-5">
         <FileTypeIcon filePath={file.filename} extension={extension} className="h-4 w-4" />
         <span className="text-foreground truncate max-w-[200px]">
           {displayName}
         </span>
-        <span
+        <button
+          type="button"
           onClick={(e) => {
             e.stopPropagation();
             onRemove();
@@ -205,8 +203,8 @@ const ImagePreview = memo(({ file, onRemove, onShowPopup, gallery, index = 0 }: 
           aria-label={t('chat.fileAttachment.actions.removeNamed', { name: displayName })}
         >
           <Icon name="close" className="h-4 w-4 text-muted-foreground" />
-        </span>
-      </button>
+        </button>
+      </div>
     );
   }
 
@@ -238,7 +236,7 @@ const ImagePreview = memo(({ file, onRemove, onShowPopup, gallery, index = 0 }: 
         }}
         className={cn(
           "absolute top-0.5 right-0.5 h-4 w-4 rounded-full bg-background/80 text-foreground hover:text-destructive flex items-center justify-center transition-opacity focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-          alwaysShowActions ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+          alwaysShowActions ? "opacity-100" : "opacity-0 group-hover:opacity-100 focus-within:opacity-100"
         )}
         title={t('chat.fileAttachment.actions.removeImage')}
         aria-label={t('chat.fileAttachment.actions.removeNamed', { name: displayName })}
@@ -288,23 +286,14 @@ const FileChip = memo(({ file, onRemove }: FileChipProps) => {
   const { displayName, fileSize, extension } = useFileDetails(file);
 
   return (
-    <button
-      type="button"
-      onClick={(e) => {
-        // Prevent click from bubbling if clicking the remove button
-        if ((e.target as HTMLElement).closest('[data-remove-button]')) {
-          return;
-        }
-      }}
-      className="flex items-center gap-1.5 text-sm hover:opacity-80 transition-opacity text-left h-5"
-    >
+    <div className="flex items-center gap-1.5 text-sm hover:opacity-80 transition-opacity text-left h-5">
       <FileTypeIcon filePath={file.filename} extension={extension} className="h-4 w-4" />
       <span className="text-foreground truncate max-w-[200px]">
         {displayName}
         {fileSize && <span className="text-muted-foreground ml-1">({fileSize})</span>}
       </span>
-      <span
-        data-remove-button
+      <button
+        type="button"
         onClick={(e) => {
           e.stopPropagation();
           onRemove();
@@ -313,8 +302,8 @@ const FileChip = memo(({ file, onRemove }: FileChipProps) => {
         aria-label={t('chat.fileAttachment.actions.removeNamed', { name: displayName })}
       >
         <Icon name="close" className="h-4 w-4 text-muted-foreground" />
-      </span>
-    </button>
+      </button>
+    </div>
   );
 });
 
@@ -328,20 +317,13 @@ const VSCodeFileChip = memo(({ file, onRemove }: FileChipProps) => {
   const isSelectionAttachment = /:\d+(?:-\d+)?$/.test(displayName);
 
   return (
-    <button
-      type="button"
-      onClick={(e) => {
-        // Prevent click from bubbling if clicking the remove button
-        if ((e.target as HTMLElement).closest('[data-remove-button]')) {
-          return;
-        }
-      }}
+    <span
       className="inline-flex items-center gap-1 text-xs pr-1 rounded-sm border border-solid bg-transparent text-foreground not-italic hover:opacity-90 transition-colors text-left"
       style={{ borderColor: 'var(--syntax-punctuation)' }}
       title={file.vscodePath}
     >
-      <span
-        data-remove-button
+      <button
+        type="button"
         onClick={(e) => {
           e.stopPropagation();
           onRemove();
@@ -351,12 +333,12 @@ const VSCodeFileChip = memo(({ file, onRemove }: FileChipProps) => {
         title={t('chat.fileAttachment.activeEditor.remove')}
       >
         <Icon name="close" className="h-4 w-4 text-muted-foreground" />
-      </span>
+      </button>
         <FileTypeIcon filePath={file.filename} extension={extension} className="h-4 w-4" />
         <span className={cn('text-foreground', isSelectionAttachment ? 'whitespace-nowrap' : 'truncate max-w-[200px]')}>
           {displayName}
         </span>
-    </button>
+    </span>
   );
 });
 

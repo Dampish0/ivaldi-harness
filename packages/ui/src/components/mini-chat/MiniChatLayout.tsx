@@ -355,7 +355,7 @@ export const MiniChatLayout: React.FC<MiniChatLayoutProps> = ({ mode, autoOpenDr
           <div className="flex h-full items-center justify-center px-6 text-center typography-ui-label text-muted-foreground">
             <div className="max-w-sm rounded-lg border border-[var(--interactive-border)] bg-[var(--surface-elevated)] px-4 py-3">
               <div className="font-medium text-foreground">{t('miniChat.unavailable.title')}</div>
-              <div className="mt-1 typography-small text-muted-foreground">{t('miniChat.unavailable.description')}</div>
+              <div className="mt-1 typography-meta text-muted-foreground">{t('miniChat.unavailable.description')}</div>
             </div>
           </div>
         ) : (

@@ -237,7 +237,7 @@ const BtwFrame: React.FC<{
             'oc-glass-popover w-full overflow-hidden border border-[var(--interactive-border)]',
             isMobileSurface
                 ? 'rounded-md shadow-none'
-                : 'rounded-xl shadow-[0_4px_16px_-4px_rgb(0_0_0_/_0.12)]',
+                : 'rounded-xl shadow-float',
         )}>
             <div className="flex items-center gap-2 px-3 py-1.5">
                 {onTitleClick ? (

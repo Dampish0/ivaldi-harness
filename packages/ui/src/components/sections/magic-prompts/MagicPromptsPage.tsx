@@ -312,7 +312,7 @@ export const MagicPromptsPage: React.FC = () => {
     return (
       <div className="py-6 px-6 flex items-center gap-2 text-muted-foreground">
         <span className="inline-block h-1.5 w-1.5 rounded-full bg-current animate-busy-pulse" aria-label={t('settings.magicPrompts.page.loading.aria')} />
-        <span className="typography-ui">{t('settings.magicPrompts.page.loading.text')}</span>
+        <span className="typography-ui-label">{t('settings.magicPrompts.page.loading.text')}</span>
       </div>
     );
   }

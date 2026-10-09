@@ -32,7 +32,7 @@ The screenshots show Atlas, a small reading-list app built by a real OpenCode se
 
 ## Choose how you work
 
-- Switch between Work and Developer mode from your profile.
+- Switch between Work and Developer mode from the sidebar's "..." menu, under Mode.
 - Choose Manual, Auto, or Full access for agent permissions.
 - Set bounded goals and follow progress, questions, and completion across projects.
 - Compare model runs and combine useful results.

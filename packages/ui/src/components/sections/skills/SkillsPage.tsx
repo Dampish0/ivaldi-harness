@@ -558,7 +558,7 @@ const SkillsInstalledPage: React.FC = () => {
     return (
       <div className="flex h-full items-center justify-center px-4">
         <div className="text-center text-muted-foreground">
-          <p className="typography-body">{t('settings.skills.page.loading.details')}</p>
+          <p className="typography-ui-label">{t('settings.skills.page.loading.details')}</p>
         </div>
       </div>
     );
@@ -774,17 +774,20 @@ const SkillsInstalledPage: React.FC = () => {
                       className="flex items-center gap-2 py-1.5 cursor-pointer group"
                       onClick={() => handleEditFile(file.path)}
                     >
-                      <Icon name="file" className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                      <span className="typography-ui-label text-foreground truncate">{file.path}</span>
+                      {/* Keyboard activation clicks this button, and the row handles the click. */}
+                      <button type="button" className="flex min-w-0 items-center gap-2 text-left">
+                        <Icon name="file" className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                        <span className="typography-ui-label text-foreground truncate">{file.path}</span>
+                      </button>
                       {isNewSkill && (
                         <span className="typography-micro text-[var(--status-warning)] bg-[var(--status-warning)]/10 px-1.5 py-0.5 rounded flex-shrink-0">
                           {t('settings.skills.page.badge.pending')}
                         </span>
                       )}
                       {!isReadOnlySkill && (
-                        <Button size="sm"
+                        <Button aria-label={t('common.actions.delete')} size="sm"
                           variant="ghost"
-                          className="h-5 w-5 px-0 flex-shrink-0 text-muted-foreground hover:text-[var(--status-error)] opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="h-5 w-5 px-0 flex-shrink-0 text-muted-foreground hover:text-[var(--status-error)] opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDeleteFile(file.path);

@@ -5,17 +5,49 @@
  * Normal mode). The context panel still closes on Escape when focus is on
  * non-terminal panel chrome.
  */
-import { describe, expect, test } from 'bun:test';
+import { afterAll, afterEach, beforeEach, describe, expect, mock, test } from 'bun:test';
+import { Window } from 'happy-dom';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const contextPanelSource = readFileSync(join(__dirname, '..', 'ContextPanel.tsx'), 'utf-8');
-const mobileWorkspaceDrawerSource = readFileSync(
-  join(__dirname, '..', '..', '..', 'apps', 'MobileWorkspaceDrawer.tsx'),
-  'utf-8',
-);
+
+// The mobile drawer is rendered for real in a DOM. Only its tab contents and
+// the stores behind the unmounted MCP pane are stubbed: the Escape handling
+// under test lives in the drawer and its modal focus hook, not in them.
+const testWindow = new Window({ url: 'http://localhost:3000' });
+const savedGlobals = new Map<string, PropertyDescriptor | undefined>();
+for (const [name, value] of Object.entries({
+  window: testWindow, document: testWindow.document, navigator: testWindow.navigator,
+  HTMLElement: testWindow.HTMLElement, Node: testWindow.Node,
+  requestAnimationFrame: testWindow.requestAnimationFrame.bind(testWindow),
+  cancelAnimationFrame: testWindow.cancelAnimationFrame.bind(testWindow),
+  IS_REACT_ACT_ENVIRONMENT: true,
+})) {
+  savedGlobals.set(name, Object.getOwnPropertyDescriptor(globalThis, name));
+  Object.defineProperty(globalThis, name, { configurable: true, writable: true, value });
+}
+const React = await import('react');
+const pane = (name: string) => () => React.createElement('div', { 'data-pane': name, tabIndex: 0 });
+mock.module('@/components/views/TerminalView', () => ({ TerminalView: pane('terminal') }));
+mock.module('@/apps/MobileFilesSurface', () => ({ MobileFilesSurface: pane('files') }));
+mock.module('@/apps/MobileChangesSurface', () => ({ MobileChangesSurface: pane('changes') }));
+mock.module('@/components/layout/RightSidebarTabs', () => ({ ProjectContextPanel: pane('notes') }));
+mock.module('@/components/mcp/McpDropdown', () => ({ McpDropdownContent: pane('mcp') }));
+mock.module('@/hooks/useEffectiveDirectory', () => ({ useEffectiveDirectory: () => '/repo' }));
+mock.module('@/stores/useProductModeStore', () => ({
+  useProductModeStore: <T,>(select: (state: { mode: 'developer' }) => T) => select({ mode: 'developer' }),
+}));
+mock.module('@/stores/useDirectoryStore', () => ({ useDirectoryStore: () => '/repo' }));
+mock.module('@/stores/useMcpStore', () => ({ useMcpStore: () => async () => {} }));
+mock.module('@/stores/useMcpConfigStore', () => ({ useMcpConfigStore: () => async () => {} }));
+const { act } = React;
+const { createRoot } = await import('react-dom/client');
+const { I18nProvider } = await import('@/lib/i18n');
+const { MobileWorkspaceDrawer } = await import('@/apps/MobileWorkspaceDrawer');
+type MobileWorkspaceTab = import('@/apps/MobileWorkspaceDrawer').MobileWorkspaceTab;
 
 describe('issue #2644: Escape in terminal must not close the context panel', () => {
   test('the context panel captures Escape at the panel level', () => {
@@ -48,12 +80,53 @@ describe('issue #2644: Escape in terminal must not close the context panel', () 
     expect(contextPanelSource).toContain('isTerminalEventTarget');
   });
 
-  test('mobile drawer keeps its terminal Escape exception', () => {
-    const handlerStart = mobileWorkspaceDrawerSource.indexOf("if (event.key === 'Escape'");
-    expect(handlerStart).toBeGreaterThan(-1);
-    const handler = mobileWorkspaceDrawerSource.slice(handlerStart, handlerStart + 200);
-    expect(handler).toContain("tabRef.current !== 'terminal'");
+});
+
+describe('issue #2644: the mobile workspace keeps its terminal Escape exception', () => {
+  let root: ReturnType<typeof createRoot>;
+
+  beforeEach(() => {
+    const container = document.createElement('div');
+    document.body.append(container);
+    root = createRoot(container);
   });
+  afterEach(async () => {
+    await act(async () => root.unmount());
+    document.body.replaceChildren();
+  });
+  afterAll(async () => {
+    await testWindow.happyDOM.abort();
+    for (const [name, descriptor] of savedGlobals) {
+      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+      else Reflect.deleteProperty(globalThis, name);
+    }
+  });
+
+  const pressEscapeInPane = async (variant: 'drawer' | 'panel', tab: MobileWorkspaceTab) => {
+    let closed = 0;
+    const onClose = () => { closed += 1; };
+    await act(async () => root.render(React.createElement(I18nProvider, null,
+      React.createElement(MobileWorkspaceDrawer, {
+        open: true, onClose, tab, onTabChange: () => {}, pendingChangesDiff: null,
+        onOpenPlan: () => {}, onOpenMcpSettings: () => {}, variant,
+      }))));
+    await act(async () => testWindow.happyDOM.waitUntilComplete());
+    const target = testWindow.document.querySelector(`[data-pane="${tab}"]`);
+    expect(target).not.toBeNull();
+    const event = new testWindow.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+    await act(async () => { target?.dispatchEvent(event); });
+    return { closed, defaultPrevented: event.defaultPrevented };
+  };
+
+  for (const variant of ['drawer', 'panel'] as const) {
+    test(`${variant}: Escape in the terminal tab stays with the terminal`, async () => {
+      expect(await pressEscapeInPane(variant, 'terminal')).toEqual({ closed: 0, defaultPrevented: false });
+    });
+
+    test(`${variant}: Escape in another tab closes the workspace`, async () => {
+      expect(await pressEscapeInPane(variant, 'files')).toEqual({ closed: 1, defaultPrevented: true });
+    });
+  }
 });
 
 type Listener = { capture: boolean; onEvent: (event: SimulatedEvent) => void };

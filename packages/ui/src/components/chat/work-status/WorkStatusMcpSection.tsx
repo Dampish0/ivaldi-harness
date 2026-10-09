@@ -2,7 +2,6 @@ import React from 'react';
 import { useI18n } from '@/lib/i18n';
 import { Switch } from '@/components/ui/switch';
 import { useMcpStore } from '@/stores/useMcpStore';
-import { McpIcon } from '@/components/icons/McpIcon';
 import { runBackgroundNetworkTask } from '@/lib/background-network';
 import { toast } from 'sonner';
 import { startMcpAuthorization } from '@/components/sections/mcp/startMcpAuthorization';
@@ -92,7 +91,6 @@ export const WorkStatusMcpSection: React.FC<Props> = ({ directory }) => {
     <WorkStatusCollapsibleSection
       id="mcp"
       title={t('chat.workStatus.section.mcp')}
-      iconNode={<McpIcon className="size-4 shrink-0 text-muted-foreground" />}
       summary={`${mcpConnected}/${mcpServers.length}`}
     >
       {mcpServers.map(([name, entry]) => {

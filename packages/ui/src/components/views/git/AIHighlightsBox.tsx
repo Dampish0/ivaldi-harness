@@ -30,8 +30,8 @@ export const AIHighlightsBox: React.FC<AIHighlightsBoxProps> = ({
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
-              size="icon"
-              className="size-6"
+              size="icon-xs"
+             
               onClick={handleInsert}
               aria-label={t('gitView.commit.aiHighlights.insertAria')}
             >

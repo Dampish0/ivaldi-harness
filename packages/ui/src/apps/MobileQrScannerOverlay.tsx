@@ -81,7 +81,7 @@ export const MobileQrScannerOverlay: React.FC<{ onCancel: () => void }> = ({ onC
     >
       <div className="flex flex-1 flex-col items-center justify-center gap-5">
         <div className="aspect-square w-full max-w-72 rounded-xl border border-foreground/90 shadow-[0_0_0_9999px_color-mix(in_srgb,var(--surface-background)_18%,transparent)]" aria-hidden />
-        <p className="max-w-sm rounded-md border border-border/60 bg-background/95 px-3.5 py-2.5 text-center typography-small text-foreground">
+        <p className="max-w-sm rounded-md border border-border/60 bg-background/95 px-3.5 py-2.5 text-center typography-meta text-foreground">
           {t('mobile.connect.welcome.scanHint')}
         </p>
       </div>

@@ -150,6 +150,18 @@ describe('layout-independent key matching', () => {
     expect(eventMatchesShortcut(event({ ctrlKey: true, key: 'y', code: 'KeyT' }), 'mod+t')).toBe(false);
   });
 
+  test('a shifted punctuation chord matches through the physical key on any layout', () => {
+    // US layout: Shift+. produces ">".
+    expect(eventMatchesShortcut(event({ ctrlKey: true, shiftKey: true, key: '>', code: 'Period' }), 'mod+shift+period')).toBe(true);
+    // Nordic layouts: Shift+. produces ":".
+    expect(eventMatchesShortcut(event({ ctrlKey: true, shiftKey: true, key: ':', code: 'Period' }), 'mod+shift+period')).toBe(true);
+    // The unshifted chord still needs the unshifted press.
+    expect(eventMatchesShortcut(event({ ctrlKey: true, key: '.', code: 'Period' }), 'mod+period')).toBe(true);
+    expect(eventMatchesShortcut(event({ ctrlKey: true, shiftKey: true, key: '>', code: 'Period' }), 'mod+period')).toBe(false);
+    // A shifted symbol from another physical key does not match.
+    expect(eventMatchesShortcut(event({ ctrlKey: true, shiftKey: true, key: ':', code: 'Semicolon' }), 'mod+shift+period')).toBe(false);
+  });
+
   test('resolveShortcutEventDigit reads the digit from the code under Option', () => {
     expect(resolveShortcutEventDigit({ key: '¡', code: 'Digit1' })).toBe('1');
     expect(resolveShortcutEventDigit({ key: '5', code: 'Digit5' })).toBe('5');

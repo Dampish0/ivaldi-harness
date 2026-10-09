@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 import { dict as enDict, type I18nKey } from './messages/en';
+import { workDict as enWorkDict } from './messages/en.work';
 import { DEFAULT_LOCALE, detectInitialLocale, type Locale, writeStoredLocale } from './runtime';
 
 export type I18nParams = Record<string, string | number | boolean | null | undefined>;
@@ -18,12 +19,31 @@ const settingsDictionaries = new Map<Locale, I18nDictionary>();
 const settingsDictionaryLoads = new Map<Locale, Promise<I18nDictionary>>();
 let settingsCatalogActivated = false;
 
+// Work mode swaps developer words for everyday ones. Only English has this
+// wording so far, so other languages keep their usual text in Work mode.
+const workDictionaries = new Map<Locale, I18nDictionary>([[DEFAULT_LOCALE, enWorkDict]]);
+let workWording = false;
+// The active dictionary and its locale without the Work wording, kept so the
+// wording can be switched off again.
+let baseDictionary: I18nDictionary = enDict;
+let baseLocale: Locale = DEFAULT_LOCALE;
+
+const withWorkWording = (locale: Locale, dictionary: I18nDictionary): I18nDictionary => {
+  baseDictionary = dictionary;
+  baseLocale = locale;
+  const work = workWording ? workDictionaries.get(locale) : undefined;
+  return work ? { ...dictionary, ...work } : dictionary;
+};
+
 export function resetI18nDictionaryCacheForTests(): void {
   dictionaries.clear();
   dictionaries.set(DEFAULT_LOCALE, enDict);
   settingsDictionaries.clear();
   settingsDictionaryLoads.clear();
   settingsCatalogActivated = false;
+  workWording = false;
+  baseDictionary = enDict;
+  baseLocale = DEFAULT_LOCALE;
 }
 
 async function loadDictionary(locale: Locale): Promise<I18nDictionary> {
@@ -139,7 +159,7 @@ export const useI18nStore = create<I18nState>()((set, get) => ({
 
     set({
       locale,
-      dictionary: cached ?? current.dictionary,
+      dictionary: cached ? withWorkWording(locale, cached) : current.dictionary,
       loadingLocale: cached ? null : locale,
     });
 
@@ -151,11 +171,11 @@ export const useI18nStore = create<I18nState>()((set, get) => ({
       if (get().locale !== locale) {
         return;
       }
-      set({ dictionary, loadingLocale: null });
+      set({ dictionary: withWorkWording(locale, dictionary), loadingLocale: null });
     }).catch((error) => {
       console.error(`[i18n] failed to load locale ${locale}`, error);
       if (get().locale === locale) {
-        set({ dictionary: enDict, loadingLocale: null });
+        set({ dictionary: withWorkWording(locale, enDict), loadingLocale: null });
       }
     });
   },
@@ -170,7 +190,16 @@ export async function ensureSettingsDictionary(locale = useI18nStore.getState().
   if (useI18nStore.getState().locale !== locale) {
     return;
   }
-  useI18nStore.setState({ dictionary: { ...core, ...settings } });
+  useI18nStore.setState({ dictionary: withWorkWording(locale, { ...core, ...settings }) });
+}
+
+// Called when the product mode changes.
+export function setWorkWording(enabled: boolean): void {
+  if (workWording === enabled) {
+    return;
+  }
+  workWording = enabled;
+  useI18nStore.setState({ dictionary: withWorkWording(baseLocale, baseDictionary) });
 }
 
 export function initializeLocale(): void {

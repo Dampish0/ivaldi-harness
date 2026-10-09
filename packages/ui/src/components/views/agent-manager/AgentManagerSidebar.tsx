@@ -138,7 +138,7 @@ const AgentGroupItem: React.FC<AgentGroupItemProps> = ({ group, isSelected, isBu
                   type="button"
                   className={cn(
                     'inline-flex h-3.5 w-[18px] items-center justify-center rounded-md text-muted-foreground transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
-                    'opacity-0 group-hover:opacity-100',
+                    'opacity-0 group-hover:opacity-100 focus-within:opacity-100',
                     menuOpen && 'opacity-100',
                   )}
                   aria-label={t('agentManager.sidebar.item.groupMenuAria')}

@@ -96,6 +96,22 @@ export const dict = {
   "profile.error.storage": "Impossible d’enregistrer votre nom. Veuillez réessayer.",
   'common.loading': 'Chargement...',
   'common.unavailable': 'Indisponible',
+
+  'common.actions.close': 'Fermer',
+
+  'common.actions.remove': 'Retirer',
+
+  'common.actions.moreActions': 'Plus d\'actions',
+
+  'common.actions.back': 'Retour',
+
+  'common.actions.cancel': 'Annuler',
+
+  'common.actions.delete': 'Supprimer',
+
+  'common.actions.copy': 'Copier',
+
+  'common.actions.reset': 'Réinitialiser',
   'common.language.english': 'Anglais',
   'common.language.german': 'Allemand',
   'common.language.french': 'Français',
@@ -327,6 +343,7 @@ export const dict = {
   'sessions.sidebar.header.actions.sortProjects': 'Trier les projets',
   'sessions.sidebar.header.actions.sessionDisplayMode': 'Mode d\'affichage des sessions',
   'sessions.sidebar.header.displayMode.label': 'Mode d\'affichage',
+  'sessions.sidebar.header.actions.moreLabel': 'Plus d\'actions',
   'sessions.sidebar.header.productMode.label': 'Mode',
   'sessions.sidebar.header.productMode.work': 'Travail',
   'sessions.sidebar.header.productMode.developer': 'Développeur',
@@ -562,6 +579,8 @@ export const dict = {
   'sessions.sidebar.folderItem.newSubfolderAria': 'Nouveau sous-dossier dans {folderName}',
   'sessions.sidebar.folderItem.newSubfolder': 'Nouveau sous-dossier',
   'sessions.sidebar.folderItem.renameAria': 'Renommer le dossier {folderName}',
+  'sessions.sidebar.folderItem.renameSave': 'Enregistrer le nom du dossier',
+  'sessions.sidebar.folderItem.renameCancel': 'Annuler le changement de nom du dossier',
   'sessions.sidebar.folderItem.deleteArchivedInFolderAria': 'Supprimer les sessions archivées dans le dossier {folderName}',
   'sessions.sidebar.folderItem.deleteFolderAria': 'Supprimer le dossier {folderName}',
   'sessions.sidebar.folderItem.emptyFolder': 'Dossier vide',
@@ -1092,7 +1111,6 @@ export const dict = {
   'walkthrough.importance.criticalHint': "Cette étape porte l'essentiel du changement, lisez-la attentivement. Ce n'est pas un problème détecté dans votre code.",
   'walkthrough.importance.context': 'Contexte',
   'walkthrough.importance.contextHint': 'Un changement de soutien, présent pour que le reste ait du sens.',
-  'walkthrough.help.guide': 'Comment fonctionnent les walkthroughs',
   'walkthrough.blocked.noModel.title': 'Aucun petit modèle disponible',
   'walkthrough.blocked.noModel.description': 'Connectez-vous à un fournisseur de modèles pour générer une revue.',
   'walkthrough.blocked.emptyDiff.title': 'Rien à examiner',
@@ -2110,6 +2128,7 @@ export const dict = {
   'chat.chatInput.placeholder.chat': '@ pour les fichiers/agents ; / pour les commandes et les skills ; ! pour shell ; # pour les extraits',
   'chat.chatInput.placeholder.chatCompact': 'Utiliser @ / ! # pour les aides',
   'chat.chatInput.placeholder.chatCompactWork': 'Utiliser @ / # pour les aides',
+  'chat.chatInput.agentChangedAnnouncement': 'Agent changé pour {agent}',
   'chat.chatInput.placeholder.selectSession': 'Sélectionnez ou créez une session pour commencer à discuter',
   'chat.dictation.start': 'Démarrer la dictée',
   'chat.dictation.overlayAria': 'Dictée',
@@ -2163,6 +2182,7 @@ export const dict = {
   'chat.toolOutputDialog.image.previousAria': 'Image précédente',
   'chat.toolOutputDialog.image.nextAria': 'Image suivante',
   'chat.toolOutputDialog.image.closeAria': 'Fermer l\'aperçu de l\'image',
+  'chat.toolOutputDialog.image.previewAria': 'Aperçu de l\'image',
   'chat.toolOutputDialog.mermaid.missingSource': 'URL de source Mermaid manquante.',
   'chat.toolOutputDialog.mermaid.loadFailed': 'Impossible de charger le diagramme Mermaid.',
   'chat.toolOutputDialog.mermaid.dataUrlMalformed': 'L\'URL de données Mermaid est mal formée.',
@@ -2171,6 +2191,9 @@ export const dict = {
   'chat.toolOutputDialog.mermaid.unsupportedUrlProtocol': 'Le protocole de l\'URL Mermaid n\'est pas pris en charge.',
   'chat.toolOutputDialog.mermaid.loadFailedWithStatus': 'Impossible de charger le diagramme Mermaid. Statut : {status}.',
   'chat.toolOutputDialog.mermaid.closeAria': 'Fermer l\'aperçu du diagramme',
+  'chat.toolOutputDialog.mermaid.previewAria': 'Aperçu du diagramme',
+
+  'chat.toolOutputDialog.mermaid.diagramTitle': 'Diagramme {number}',
   'chat.toolOutputDialog.mermaid.loading': 'Diagramme de chargement...',
   'chat.toolOutputDialog.mermaid.renderFailed': 'Impossible d\'afficher le diagramme Mermaid.',
   'chat.toolOutputDialog.mermaid.retry': 'Réessayer',
@@ -2806,7 +2829,7 @@ export const dict = {
   'updateDialog.changelog.title': 'Nouveautés',
   'updateDialog.status.updating': 'Mise à jour...',
   'updateDialog.error.updateFailed': 'La mise à jour a échoué',
-  'updateDialog.error.takingLonger': 'La mise à jour prend plus de temps que prévu. Attendez un peu et actualisez, ou exécutez : openchamber update',
+  'updateDialog.error.takingLonger': 'La mise à jour prend plus de temps que prévu. Attendez un peu et actualisez, ou exécutez : ivaldi update',
   'mobileUpdate.toast.available.title': 'Mise à jour Ivaldi disponible',
   'mobileUpdate.toast.available.description': 'La version {version} est prête pour Android.',
   'mobileUpdate.toast.actions.download': 'Télécharger',

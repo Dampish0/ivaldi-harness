@@ -410,6 +410,7 @@ export const HistoryCommitRow = React.memo(({
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
+                  aria-label={t('gitView.history.copySha')}
                   variant="ghost"
                   size="sm"
                   className="h-5 px-1 shrink-0"

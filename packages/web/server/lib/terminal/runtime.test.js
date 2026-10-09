@@ -42,6 +42,7 @@ function createRuntime(server, overrides = {}) {
     searchPathFor: () => null,
     isExecutable: () => false,
     isRequestOriginAllowed: async () => true,
+    getUntrustedUnauthenticatedUpgradeReason: async () => null,
     rejectWebSocketUpgrade() {},
     TERMINAL_INPUT_WS_HEARTBEAT_INTERVAL_MS: 30_000,
     TERMINAL_INPUT_WS_REBIND_WINDOW_MS: 1_000,
@@ -590,4 +591,31 @@ describe('terminal runtime', () => {
       await new Promise((resolve) => server.close(resolve));
     }
   }, 15_000);
+
+  it('refuses the terminal websocket from an untrusted page when no UI password is set', async () => {
+    const server = http.createServer();
+    const rejected = [];
+    const runtime = createRuntime(server, {
+      getUntrustedUnauthenticatedUpgradeReason: async () => 'cross-site',
+      rejectWebSocketUpgrade(socket, status) {
+        rejected.push(status);
+        socket.destroy();
+      },
+    });
+    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+    const socket = new WebSocket(`ws://127.0.0.1:${server.address().port}/api/terminal/ws`);
+    try {
+      const outcome = await new Promise((resolve) => {
+        socket.once('open', () => resolve('open'));
+        socket.once('error', () => resolve('error'));
+      });
+      expect(outcome).toBe('error');
+      expect(rejected).toEqual([403]);
+    } finally {
+      socket.terminate();
+      await runtime.shutdown();
+      server.closeAllConnections?.();
+      await new Promise((resolve) => server.close(resolve));
+    }
+  });
 });

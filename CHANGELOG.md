@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+- **Manual mode asks before edits.** In Ivaldi's own OpenCode, every file edit and shell command now raises a permission request. Manual leaves the answer to you, Auto decides per request, and Full access approves. Agent and session deny rules still win, and allow rules for edits and shell commands in your OpenCode config now ask too. New sessions start in Full access. External OpenCode servers and VS Code are unchanged. Work-mode scheduled tasks now wait for approval on edits.
+- Composer: Tab moves focus out of the composer instead of switching agents. Switching between Build and Plan moved to Cmd/Ctrl+Period, and screen readers announce the new agent.
+- Security: the server checks the Host and Origin of HTTP and WebSocket requests, refuses cross-site form posts, and rate-limits login per client. HTML, SVG and XML previews run sandboxed, so with a UI password set an HTML preview can no longer load its own relative CSS, JS or images. The desktop app opens only http, https and mailto links from page navigation.
+- Projects: removing your last project no longer brings your home folder back as a project.
+- Connection: the event stream counts as connected only once its first event arrives. A stream that errors, ends empty or gets an HTTP error now retries with backoff.
+- Accessibility: keyboard focus is visible everywhere, icon-only buttons have names, and controls that appear on hover also appear on keyboard focus.
+- English labels use sentence case throughout, and the command palette shows settings page names in your language.
+- Work mode uses everyday English words: chats instead of sessions, assistants instead of agents, connectors instead of MCP servers, extensions instead of plugins, and AI services instead of providers. Developer mode is unchanged.
+- Restart messages say "Restart Ivaldi" instead of "Restart OpenCode".
+- New chats start in Full access, so the agent edits files and runs commands without asking. Switch to Auto or Manual in the composer to review them first.
+- Desktop: the app ships OpenCode 1.18.35, so newer OpenCode Zen models such as Ling 3.1 Flash Free show up in the model picker.
+- Chat: questions and permission requests from the agent use one card style. Each answer is a full-width row, a recommended answer gets one "Recommended" tag, and Work mode hides the copy buttons. A dismissed question no longer shows as an error.
+- UI: hints and tags are a step smaller than labels, so secondary text no longer looks the same size as the main text. Settings page titles use the normal text color, corners and shadows follow one scale, and archive and delete confirmations use the standard buttons, with red only for delete. Text fields and the assistant picker now match the size of the dropdowns beside them.
+- Work status panel: it has a title row with a close button, its headings match the left sidebar, and a section heading no longer shows when the section is empty. In Work mode it is called "Chat details", stays closed until you open it from the header, and opens over the chat instead of pushing it aside. Usage lists only services that report numbers.
+- Work mode: tool steps use plain names such as "Run command" and "Edit file", a command step shows what it is for instead of the command itself, and the reply footer no longer shows the agent name. Opening a step still shows the full command.
+- Updates: the desktop app checks Ivaldi's GitHub releases for updates. The VS Code extension no longer sends its version and install ID to OpenChamber's update service.
+- The desktop Help menu links to Ivaldi's repository, and the Join Discord item and the walkthrough guide button are gone.
+- Only English is kept up to date, and Swedish is planned. Other languages show English for new text.
+
 ## [1.21.0] - 2026-08-26
 
 - **Chat scrolling rebuilt around your message.** Sending parks your message near the top and the reply streams in below it, gliding smoothly a paragraph at a time. Scrolling up immediately hands you the wheel; the scroll-to-bottom pill carries the model's working status while you're away.

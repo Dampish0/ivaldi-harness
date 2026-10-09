@@ -163,7 +163,7 @@ export const MobileInstancesSurface: React.FC<{
               </span>
               <div className="min-w-0">
                 <p className="truncate typography-ui-label text-foreground">{pendingConnection.label}</p>
-                <p className="truncate typography-small text-muted-foreground">
+                <p className="truncate typography-meta text-muted-foreground">
                   {pendingConnection.candidates.some((c) => c.kind === 'direct') ? connectionDisplayUrl(pendingConnection) : t('mobile.connect.relay.badge')}
                 </p>
               </div>
@@ -178,7 +178,7 @@ export const MobileInstancesSurface: React.FC<{
               autoFocus
               className={inputClass}
             />
-            {error ? <p className="px-1 typography-small text-[var(--status-error)]">{error}</p> : null}
+            {error ? <p className="px-1 typography-meta text-[var(--status-error)]">{error}</p> : null}
             <Button type="submit" size="lg" className="mt-1 h-12 w-full" disabled={isPasswordBusy || !password.trim()}>
               {isPasswordBusy ? t('mobile.connect.connecting') : t('mobile.connect.unlockButton')}
             </Button>
@@ -240,7 +240,7 @@ export const MobileInstancesSurface: React.FC<{
                       <span className="min-w-0 flex-1">
                         <span className="block truncate typography-ui-label text-foreground">{connection.label}</span>
                         <span className={cn(
-                          'block truncate typography-small',
+                          'block truncate typography-meta',
                           isActive && !isConnectingRow ? 'text-[var(--status-success)]' : 'text-muted-foreground',
                         )}>
                           {statusText}
@@ -300,7 +300,7 @@ export const MobileInstancesSurface: React.FC<{
               })}
             </div>
           ) : (
-            <p {...debugLongPress} className="border-y border-border/60 px-4 py-6 text-center typography-small text-muted-foreground">
+            <p {...debugLongPress} className="border-y border-border/60 px-4 py-6 text-center typography-meta text-muted-foreground">
               {t('mobile.connect.saved.empty')}
             </p>
           )}
@@ -331,7 +331,7 @@ export const MobileInstancesSurface: React.FC<{
                 <Icon name="add" className="size-[18px]" />
                 {t('mobile.instances.addManual')}
               </Button>
-              {error ? <p className="px-1 text-center typography-small text-[var(--status-error)]">{error}</p> : null}
+              {error ? <p className="px-1 text-center typography-meta text-[var(--status-error)]">{error}</p> : null}
             </div>
           ) : (
             <form className="space-y-3" onSubmit={saveInstance}>
@@ -381,7 +381,7 @@ export const MobileInstancesSurface: React.FC<{
                 />
                 <p className="px-1 typography-micro text-muted-foreground">{t('mobile.connect.token.hint')}</p>
               </label>
-              {error ? <p className="px-1 typography-small text-[var(--status-error)]">{error}</p> : null}
+              {error ? <p className="px-1 typography-meta text-[var(--status-error)]">{error}</p> : null}
               <Button type="submit" size="lg" className="mt-1 h-12 w-full">
                 {editingConnection ? t('mobile.instances.saveEdit') : t('mobile.instances.saveNew')}
               </Button>

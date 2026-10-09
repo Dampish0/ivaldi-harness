@@ -820,6 +820,67 @@ describe('client auth routes', () => {
     })).toBe('unknown-public');
   });
 
+  describe('/health diagnostics', () => {
+    const snapshot = () => ({
+      openCodeRunning: true,
+      isOpenCodeReady: true,
+      opencodeBinaryResolved: 'C:\Users\someone\.bun\bin\opencode.exe',
+      nodeBinaryResolved: '/home/someone/.nvm/versions/node/bin/node',
+      lastOpenCodeError: 'spawn failed in /home/someone/repo',
+    });
+    const registerHealth = ({ scope = 'local', auth = null }) => {
+      const app = express();
+      registerServerStatusRoutes(app, {
+        gracefulShutdown: vi.fn(async () => {}),
+        getHealthSnapshot: snapshot,
+        openchamberVersion: '1.0.0',
+        runtimeName: 'test',
+        express,
+        tunnelAuthController: { classifyRequestScope: () => scope },
+        uiAuthController: auth,
+      });
+      return app;
+    };
+
+    it('includes diagnostics for local callers when no UI password is set', async () => {
+      const response = await request(registerHealth({})).get('/health');
+
+      expect(response.status).toBe(200);
+      expect(response.body.opencodeBinaryResolved).toContain('opencode');
+      expect(response.body.lastOpenCodeError).toContain('spawn failed');
+    });
+
+    it('hides paths and errors from callers that have not logged in', async () => {
+      const app = registerHealth({
+        auth: { enabled: true, resolveAuthContext: vi.fn(async () => null) },
+      });
+      const response = await request(app).get('/health');
+
+      expect(response.status).toBe(200);
+      expect(response.body.openCodeRunning).toBe(true);
+      expect(response.body.isOpenCodeReady).toBe(true);
+      expect(response.body).not.toHaveProperty('opencodeBinaryResolved');
+      expect(response.body).not.toHaveProperty('nodeBinaryResolved');
+      expect(response.body).not.toHaveProperty('lastOpenCodeError');
+    });
+
+    it('includes diagnostics for an authenticated local caller', async () => {
+      const app = registerHealth({
+        auth: { enabled: true, resolveAuthContext: vi.fn(async () => ({ type: 'session' })) },
+      });
+      const response = await request(app).get('/health');
+
+      expect(response.body.opencodeBinaryResolved).toContain('opencode');
+    });
+
+    it('never sends diagnostics through a tunnel', async () => {
+      const response = await request(registerHealth({ scope: 'tunnel' })).get('/health');
+
+      expect(response.body.openCodeRunning).toBe(true);
+      expect(response.body).not.toHaveProperty('opencodeBinaryResolved');
+    });
+  });
+
   it('reports null port and tunnel URL on /api/system/info when no getters are wired', async () => {
     const app = express();
     registerServerStatusRoutes(app, {

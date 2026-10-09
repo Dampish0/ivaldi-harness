@@ -311,6 +311,7 @@ const ImagePreviewDialog: React.FC<{
     isMobile: boolean;
 }> = ({ popup, onOpenChange, isMobile }) => {
     const { t } = useI18n();
+    const titleId = React.useId();
     const gallery = React.useMemo(() => {
         const baseImage = popup.image;
         if (!baseImage) return [] as Array<{ url: string; mimeType?: string; filename?: string; size?: number }>;
@@ -353,7 +354,7 @@ const ImagePreviewDialog: React.FC<{
     }, [gallery, popup.image?.index, popup.image?.url, popup.open]);
 
     const currentImage = gallery[currentIndex] ?? gallery[0] ?? popup.image;
-    const imageTitle = currentImage?.filename || popup.title || 'Image preview';
+    const imageTitle = currentImage?.filename || popup.title || t('chat.toolOutputDialog.image.previewAria');
     const hasMultipleImages = gallery.length > 1;
 
     const showPrevious = React.useCallback(() => {
@@ -424,8 +425,15 @@ const ImagePreviewDialog: React.FC<{
         return null;
     }
 
+    // The dialog role sits on the full overlay so the previous and next
+    // buttons, which float outside the image panel, stay inside the modal.
     const content = (
-        <div className={cn('fixed inset-0 z-50', popup.open ? 'pointer-events-auto' : 'pointer-events-none')}>
+        <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            className={cn('fixed inset-0 z-50', popup.open ? 'pointer-events-auto' : 'pointer-events-none')}
+        >
             <div
                 aria-hidden="true"
                 className={cn(
@@ -474,7 +482,7 @@ const ImagePreviewDialog: React.FC<{
                     style={{ width: `${imageDisplaySize.width}px` }}
                 >
                     <div className="flex items-center justify-between gap-2">
-                        <div className="min-w-0 flex-1 text-foreground typography-ui-header font-semibold truncate" title={imageTitle}>
+                        <div id={titleId} className="min-w-0 flex-1 text-foreground typography-ui-header font-semibold truncate" title={imageTitle}>
                             {imageTitle}
                         </div>
                         <button
@@ -881,7 +889,12 @@ const MermaidPreviewDialog: React.FC<{
     }
 
     const content = (
-        <div className={cn('fixed inset-0 z-50', popup.open ? 'pointer-events-auto' : 'pointer-events-none')}>
+        <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={popup.title || t('chat.toolOutputDialog.mermaid.previewAria')}
+            className={cn('fixed inset-0 z-50', popup.open ? 'pointer-events-auto' : 'pointer-events-none')}
+        >
             <div
                 aria-hidden="true"
                 className={cn(
@@ -981,6 +994,7 @@ const MermaidPreviewDialog: React.FC<{
 
 const ToolOutputDialog: React.FC<ToolOutputDialogProps> = ({ popup, onOpenChange, isMobile }) => {
     const { t } = useI18n();
+    const titleId = React.useId();
     const [diffViewMode, setDiffViewMode] = React.useState<DiffViewMode>('unified');
     const pierreThemeConfig = usePierreThemeConfig();
 
@@ -1000,6 +1014,7 @@ const ToolOutputDialog: React.FC<ToolOutputDialogProps> = ({ popup, onOpenChange
     return (
         <Dialog open={popup.open} onOpenChange={onOpenChange}>
             <DialogContent
+                aria-labelledby={titleId}
                 className={cn(
                     'overflow-hidden flex flex-col min-h-0 pt-3 pb-4 px-4 gap-1',
                     '[&>button]:top-1.5',
@@ -1013,7 +1028,7 @@ const ToolOutputDialog: React.FC<ToolOutputDialogProps> = ({ popup, onOpenChange
                         {popup.metadata?.tool ? getToolIcon(popup.metadata.tool as string) : (
                             <Icon name="tools" className="h-3.5 w-3.5 text-foreground flex-shrink-0" />
                         )}
-                        <span className="break-words flex-1 leading-tight">{popup.title}</span>
+                        <span id={titleId} className="break-words flex-1 leading-tight">{popup.title}</span>
                         {popup.isDiff && (
                             <DiffViewToggle
                                 mode={diffViewMode}

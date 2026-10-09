@@ -1,6 +1,4 @@
 import React from 'react';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Radio } from '@/components/ui/radio';
 import { Button } from '@/components/ui/button';
 import { Icon } from "@/components/icon/Icon";
 
@@ -10,12 +8,14 @@ import { copyTextToClipboard } from '@/lib/clipboard';
 import { toast } from '@/components/ui';
 import type { QuestionRequest } from '@/types/question';
 import { useUIStore } from '@/stores/useUIStore';
+import { useProductModeStore } from '@/stores/useProductModeStore';
 import { useSessionUIStore } from '@/sync/session-ui-store';
 import { useSessions } from '@/sync/sync-context';
 import * as sessionActions from '@/sync/session-actions';
 import { useI18n } from '@/lib/i18n';
 import { serializeQuestionAsJson, serializeQuestionAsMarkdown } from './questionSerializers';
 import { QUESTION_CUSTOM_TEXTAREA_MIN_HEIGHT, getQuestionCustomTextareaHeight } from './questionTextareaSizing';
+import { ChatRequestCard } from './ChatRequestCard';
 
 interface QuestionCardProps {
   question: QuestionRequest;
@@ -23,6 +23,27 @@ interface QuestionCardProps {
 
 type TabKey = string;
 const SUMMARY_TAB = 'summary';
+const RECOMMENDED_PATTERN = /\s*\(recommended\)\s*/i;
+
+const OPTION_ROW_CLASS = 'flex w-full items-start gap-3 rounded-lg border px-3 py-2 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60';
+const OPTION_ROW_IDLE_CLASS = 'border-border/60 text-foreground hover:bg-interactive-hover';
+const OPTION_ROW_SELECTED_CLASS = 'border-[color-mix(in_srgb,var(--primary-base)_45%,var(--interactive-border))] bg-interactive-selection text-interactive-selection-foreground';
+
+// Decorative radio or checkbox mark. The whole option row is the control.
+const OptionIndicator: React.FC<{ multiple: boolean; selected: boolean }> = ({ multiple, selected }) => (
+  <span
+    aria-hidden="true"
+    className={cn(
+      'mt-0.5 flex size-4 shrink-0 items-center justify-center border transition-colors',
+      multiple ? 'rounded-sm' : 'rounded-full',
+      selected
+        ? 'border-[var(--primary-base)] bg-[var(--primary-base)] text-[var(--primary-foreground)]'
+        : 'border-[var(--interactive-border)] bg-[var(--surface-background)]',
+    )}
+  >
+    {selected ? (multiple ? <Icon name="check" className="size-3" /> : <span className="size-1.5 rounded-full bg-current" />) : null}
+  </span>
+);
 
 interface CustomAnswerTextareaProps {
   value: string;
@@ -80,7 +101,7 @@ const CustomAnswerTextarea = React.memo(function CustomAnswerTextarea({
       onKeyDown={onKeyDown}
       style={{ height }}
       className={cn(
-        'w-full resize-none rounded border border-[var(--interactive-border)] bg-transparent px-2 py-1 typography-meta text-foreground outline-none transition-colors placeholder:text-muted-foreground/50 focus:border-[var(--interactive-border-focus)]',
+        'w-full resize-none rounded-lg border border-[var(--interactive-border)] bg-[var(--surface-background)] px-3 py-2 typography-ui-label text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-[var(--interactive-border-focus)]',
         isScrollable ? 'overflow-y-auto' : 'overflow-hidden'
       )}
       autoFocus
@@ -93,6 +114,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
   const respondToQuestion = sessionActions.respondToQuestion;
   const rejectQuestion = sessionActions.rejectQuestion;
   const isMobile = useUIStore((state) => state.isMobile);
+  const isWorkMode = useProductModeStore((state) => state.mode === 'work');
   const sessions = useSessions();
   const currentSessionId = useSessionUIStore((state) => state.currentSessionId);
   const isFromSubagent = React.useMemo(() => {
@@ -323,245 +345,193 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
     return null;
   }
 
+  const copyActions = isWorkMode ? null : (
+    <>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-xs"
+        onClick={handleCopyMarkdown}
+        title={t('chat.questionCard.copyMarkdown')}
+        aria-label={t('chat.questionCard.copyMarkdown')}
+        className="text-muted-foreground"
+      >
+        <Icon name="file-text" />
+      </Button>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-xs"
+        onClick={handleCopyJson}
+        title={t('chat.questionCard.copyJson')}
+        aria-label={t('chat.questionCard.copyJson')}
+        className="text-muted-foreground"
+      >
+        <Icon name="code-box" />
+      </Button>
+    </>
+  );
+
   return (
-    <div className="group w-full pt-0 pb-2">
-      <div className="chat-column">
-        <div className="-mt-1 border-l-2 border-[var(--interactive-border-focus)] py-1 pl-3">
-          <div className="mb-2 flex min-w-0 items-center gap-2">
-            <Icon name="question" className="size-3.5 shrink-0 text-[var(--status-info)]" />
-            <span className="typography-meta font-medium text-foreground">{t('chat.questionCard.inputNeeded')}</span>
-            {activeHeader ? (
-              <span className="typography-micro min-w-0 truncate text-muted-foreground">{activeHeader}</span>
-            ) : null}
-            {isFromSubagent ? (
-              <span className="typography-micro ml-auto shrink-0 text-muted-foreground">
-                {t('chat.questionCard.fromSubagent')}
-              </span>
-            ) : null}
-            <div className={cn('flex shrink-0 items-center gap-0.5', isFromSubagent ? null : 'ml-auto')}>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="xs"
-                  onClick={handleCopyMarkdown}
-                  title={t('chat.questionCard.copyMarkdown')}
-                  aria-label={t('chat.questionCard.copyMarkdown')}
-                  className="size-6 p-0 text-muted-foreground"
-                >
-                  <Icon name="file-text" className="h-3 w-3" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="xs"
-                  onClick={handleCopyJson}
-                  title={t('chat.questionCard.copyJson')}
-                  aria-label={t('chat.questionCard.copyJson')}
-                  className="size-6 p-0 text-muted-foreground"
-                >
-                  <Icon name="code-box" className="h-3 w-3" />
-                </Button>
+    <ChatRequestCard
+      icon="question"
+      tone="info"
+      title={t('chat.questionCard.inputNeeded')}
+      meta={tabs.length > 1 || !activeHeader ? null : <span className="truncate">{activeHeader}</span>}
+      aside={isFromSubagent || copyActions ? (
+        <>
+          {isFromSubagent ? (
+            <span className="typography-micro mr-1 text-muted-foreground">{t('chat.questionCard.fromSubagent')}</span>
+          ) : null}
+          {copyActions}
+        </>
+      ) : null}
+      footer={(
+        <>
+          <Button
+            type="button"
+            variant="default"
+            size="sm"
+            onClick={requiredSatisfied ? handleConfirm : handleNextUnanswered}
+            disabled={isResponding}
+            className="w-full sm:w-auto"
+          >
+            {requiredSatisfied ? <Icon name="check" className="size-3.5" /> : <Icon name="arrow-right-s" className="size-3.5" />}
+            {requiredSatisfied ? t('chat.questionCard.submit') : t('chat.questionCard.next')}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleDismiss}
+            disabled={isResponding}
+            className="w-full text-muted-foreground sm:w-auto"
+          >
+            {t('chat.questionCard.dismiss')}
+          </Button>
+          {isResponding ? (
+            <div className="flex justify-center text-muted-foreground sm:ml-auto">
+              <Icon name="loader-4" className="size-3.5 animate-spin" />
             </div>
-          </div>
-
-          <div className="pr-1">
-            {/* Minimal inline tabs for multiple questions */}
-            {tabs.length > 1 ? (
-              <div className="flex items-center gap-1 mb-2 flex-wrap">
-                {tabs.map((tab) => {
-                  const isActive = activeTab === tab.value;
-                  const isSummary = tab.value === SUMMARY_TAB;
-                  const tabIndex = isSummary ? -1 : Number(tab.value);
-                  const isAnswered = !isSummary && Number.isFinite(tabIndex) && !unansweredIndexes.includes(tabIndex);
-                  return (
-                    <button
-                      key={tab.value}
-                      type="button"
-                      onClick={() => setActiveTab(tab.value)}
-                      className={cn(
-                        'px-2 py-0.5 typography-meta font-medium rounded transition-colors flex items-center gap-1',
-                        isActive
-                          ? 'bg-interactive-selection text-interactive-selection-foreground'
-                          : isSummary
-                            ? 'text-muted-foreground hover:text-foreground hover:bg-interactive-hover/20'
-                            : isAnswered
-                              ? 'text-muted-foreground/60 hover:text-muted-foreground hover:bg-interactive-hover/20'
-                              : 'text-foreground/85 hover:text-foreground hover:bg-interactive-hover/20'
-                      )}
-                    >
-                      {isSummary ? <Icon name="list-check-3" className="h-3 w-3" /> : null}
-                      {tab.label}
-                    </button>
-                  );
-                })}
-              </div>
-            ) : null}
-
-            {/* Summary view */}
-            {isSummaryTab ? (
-              <div className="space-y-2">
-                {questions.map((q, index) => {
-                  const answer = getAnswerDisplay(index);
-                  const hasAnswer = answer !== t('chat.questionCard.noAnswer');
-                  return (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => setActiveTab(String(index))}
-                      className="w-full text-left rounded px-1.5 py-1 hover:bg-interactive-hover/20 transition-colors"
-                    >
-                      <div className="typography-micro text-muted-foreground">{q.header || t('chat.questionCard.questionFallback', { index: index + 1 })}</div>
-                      <div className={cn(
-                        'typography-meta',
-                        hasAnswer ? 'text-foreground' : 'text-muted-foreground/50 italic'
-                      )}>
-                        {answer}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            ) : activeQuestion ? (
-              <>
-                <div className="typography-meta font-medium text-foreground mb-1.5">{activeQuestion.question}</div>
-
-                {isMultiple ? (
-                  <div className="typography-micro text-muted-foreground mb-1.5">{t('chat.questionCard.selectMultiple')}</div>
-                ) : null}
-
-                <div className="space-y-0.5">
-                  {activeQuestion.options.map((option, index) => {
-                    const selected = selectedForActive.includes(option.label);
-                    const recommended = /\(recommended\)/i.test(option.label);
-
-                    return (
-                      <button
-                        key={`${index}:${option.label}`}
-                        type="button"
-                        onClick={() => handleToggleOption(option.label)}
-                        disabled={isResponding}
-                        className={cn(
-                          'w-full px-1.5 py-1 text-left rounded transition-colors',
-                          'hover:bg-interactive-hover/30',
-                          selected ? 'bg-interactive-selection text-interactive-selection-foreground' : null,
-                          isResponding ? 'opacity-60 cursor-not-allowed' : null
-                        )}
-                      >
-                        <div className="flex items-start gap-2">
-                          <div className="mt-0.5 shrink-0">
-                            {isMultiple ? (
-                              <Checkbox
-                                checked={selected}
-                                onChange={() => handleToggleOption(option.label)}
-                                disabled={isResponding}
-                              />
-                            ) : (
-                              <Radio
-                                checked={selected}
-                                onChange={() => handleToggleOption(option.label)}
-                                disabled={isResponding}
-                              />
-                            )}
-                          </div>
-
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-1.5">
-                              <span className={cn(
-                                'typography-meta break-all',
-                                selected ? 'font-medium text-interactive-selection-foreground' : 'text-foreground/80'
-                              )}>
-                                {option.label}
-                              </span>
-                              {recommended ? (
-                                <span className={cn(
-                                  'typography-micro',
-                                  selected ? 'text-interactive-selection-foreground/70' : 'text-muted-foreground',
-                                )}>{t('chat.questionCard.recommended')}</span>
-                              ) : null}
-                            </div>
-                            {option.description ? (
-                              <div className="typography-micro text-muted-foreground break-words">{option.description}</div>
-                            ) : null}
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
-
-                  {/* Custom answer option */}
-                  <button
-                    type="button"
-                    onClick={handleSelectCustom}
-                    disabled={isResponding}
-                    className={cn(
-                      'w-full px-1.5 py-1 text-left rounded transition-colors',
-                      'hover:bg-interactive-hover/30',
-                      isCustomActive ? 'bg-interactive-selection text-interactive-selection-foreground' : null,
-                      isResponding ? 'opacity-60 cursor-not-allowed' : null
-                    )}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Icon name="edit" className={cn(
-                        'h-3.5 w-3.5',
-                        isCustomActive ? 'text-interactive-selection-foreground' : 'text-muted-foreground/50'
-                      )} />
-                      <span className={cn(
-                        'typography-meta',
-                        isCustomActive ? 'font-medium text-interactive-selection-foreground' : 'text-muted-foreground'
-                      )}>
-                        {t('chat.questionCard.other')}
-                      </span>
-                    </div>
-                  </button>
-
-                  {isCustomActive ? (
-                    <div className="pl-6 pr-1 pt-0.5">
-                      <CustomAnswerTextarea
-                        value={customTextRef.current[activeIndex] ?? ''}
-                        onValueChange={handleCustomValueChange}
-                        placeholder={t('chat.questionCard.yourAnswer')}
-                        disabled={isResponding}
-                        onKeyDown={handleKeyDown}
-                      />
-                    </div>
-                  ) : null}
-                </div>
-              </>
-            ) : null}
-          </div>
-
-          <div className="mt-3 flex items-center gap-1.5">
-            <Button
-              type="button"
-              variant="default"
-              size="sm"
-              onClick={requiredSatisfied ? handleConfirm : handleNextUnanswered}
-              disabled={isResponding}
-            >
-              {requiredSatisfied ? <Icon name="check" className="h-3 w-3" /> : <Icon name="arrow-right-s" className="h-3 w-3" />}
-              {requiredSatisfied ? t('chat.questionCard.submit') : t('chat.questionCard.next')}
-            </Button>
-
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleDismiss}
-              disabled={isResponding}
-              className="text-muted-foreground hover:text-[var(--status-error)]"
-            >
-              <Icon name="close" className="h-3 w-3" />
-              {t('chat.questionCard.dismiss')}
-            </Button>
-
-            {isResponding ? (
-              <div className="ml-auto text-muted-foreground">
-                <Icon name="loader-4" className="size-3.5 animate-spin" />
-              </div>
-            ) : null}
-          </div>
+          ) : null}
+        </>
+      )}
+    >
+      {tabs.length > 1 ? (
+        <div className="mb-3 flex flex-wrap items-center gap-1.5">
+          {tabs.map((tab) => {
+            const isSummary = tab.value === SUMMARY_TAB;
+            const tabIndex = isSummary ? -1 : Number(tab.value);
+            const isAnswered = !isSummary && Number.isFinite(tabIndex) && !unansweredIndexes.includes(tabIndex);
+            return (
+              <Button
+                key={tab.value}
+                type="button"
+                variant="chip"
+                size="xs"
+                aria-pressed={activeTab === tab.value}
+                onClick={() => setActiveTab(tab.value)}
+              >
+                {isSummary ? <Icon name="list-check-3" /> : null}
+                {isAnswered ? <Icon name="check" /> : null}
+                {tab.label}
+              </Button>
+            );
+          })}
         </div>
-      </div>
-    </div>
+      ) : null}
+
+      {isSummaryTab ? (
+        <div className="space-y-1.5">
+          {questions.map((q, index) => {
+            const answer = getAnswerDisplay(index);
+            const hasAnswer = answer !== t('chat.questionCard.noAnswer');
+            return (
+              <button
+                key={index}
+                type="button"
+                onClick={() => setActiveTab(String(index))}
+                className="w-full rounded-lg border border-border/60 px-3 py-2 text-left transition-colors hover:bg-interactive-hover"
+              >
+                <div className="typography-meta text-muted-foreground">{q.header || t('chat.questionCard.questionFallback', { index: index + 1 })}</div>
+                <div className={cn('typography-ui-label', hasAnswer ? 'text-foreground' : 'italic text-muted-foreground')}>
+                  {answer}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      ) : activeQuestion ? (
+        <>
+          <p className="typography-ui-header font-medium text-foreground">{activeQuestion.question}</p>
+          {isMultiple ? (
+            <p className="typography-meta mt-0.5 text-muted-foreground">{t('chat.questionCard.selectMultiple')}</p>
+          ) : null}
+
+          <div
+            role={isMultiple ? 'group' : 'radiogroup'}
+            aria-label={activeQuestion.question}
+            className="mt-3 space-y-1.5"
+          >
+            {activeQuestion.options.map((option, index) => {
+              const selected = selectedForActive.includes(option.label);
+              const recommended = RECOMMENDED_PATTERN.test(option.label);
+              const label = recommended ? option.label.replace(RECOMMENDED_PATTERN, ' ').trim() || option.label : option.label;
+
+              return (
+                <button
+                  key={`${index}:${option.label}`}
+                  type="button"
+                  role={isMultiple ? 'checkbox' : 'radio'}
+                  aria-checked={selected}
+                  onClick={() => handleToggleOption(option.label)}
+                  disabled={isResponding}
+                  className={cn(OPTION_ROW_CLASS, selected ? OPTION_ROW_SELECTED_CLASS : OPTION_ROW_IDLE_CLASS)}
+                >
+                  <OptionIndicator multiple={isMultiple} selected={selected} />
+                  <span className="min-w-0 flex-1">
+                    <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className={cn('typography-ui-label break-words', selected ? 'font-medium' : null)}>{label}</span>
+                      {recommended ? (
+                        <span className="rounded-full border border-border/60 px-1.5 typography-micro text-muted-foreground">
+                          {t('chat.questionCard.recommended')}
+                        </span>
+                      ) : null}
+                    </span>
+                    {option.description ? (
+                      <span className="typography-meta mt-0.5 block break-words text-muted-foreground">{option.description}</span>
+                    ) : null}
+                  </span>
+                </button>
+              );
+            })}
+
+            <button
+              type="button"
+              role={isMultiple ? 'checkbox' : 'radio'}
+              aria-checked={isCustomActive}
+              onClick={handleSelectCustom}
+              disabled={isResponding}
+              className={cn(OPTION_ROW_CLASS, isCustomActive ? OPTION_ROW_SELECTED_CLASS : OPTION_ROW_IDLE_CLASS)}
+            >
+              <OptionIndicator multiple={isMultiple} selected={isCustomActive} />
+              <span className={cn('typography-ui-label', isCustomActive ? 'font-medium' : 'text-muted-foreground')}>
+                {t('chat.questionCard.other')}
+              </span>
+            </button>
+
+            {isCustomActive ? (
+              <CustomAnswerTextarea
+                value={customTextRef.current[activeIndex] ?? ''}
+                onValueChange={handleCustomValueChange}
+                placeholder={t('chat.questionCard.yourAnswer')}
+                disabled={isResponding}
+                onKeyDown={handleKeyDown}
+              />
+            ) : null}
+          </div>
+        </>
+      ) : null}
+    </ChatRequestCard>
   );
 };

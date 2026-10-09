@@ -43,7 +43,7 @@ export const MobileConnectionDebugPanel: React.FC<{ onClose: () => void }> = ({ 
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 py-3">
         {entries.length === 0 ? (
-          <p className="typography-small text-muted-foreground">{t('mobile.connectionDebug.empty')}</p>
+          <p className="typography-meta text-muted-foreground">{t('mobile.connectionDebug.empty')}</p>
         ) : (
           <pre className="whitespace-pre-wrap break-words typography-code text-muted-foreground">
             {entries.map(formatMobileConnectDebugEntry).join('\n')}

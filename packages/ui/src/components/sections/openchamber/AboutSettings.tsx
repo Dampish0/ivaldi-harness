@@ -130,7 +130,7 @@ export const AboutSettings: React.FC<AboutSettingsProps> = ({ initialUpdateDialo
         <div className="flex flex-col items-center text-center">
           <OpenChamberLogo width={72} height={72} />
           <h2 className={`mt-4 ${SETTINGS_BRAND_TITLE_CLASS}`}>Ivaldi</h2>
-          <div className="mt-2 space-y-1 typography-ui text-muted-foreground">
+          <div className="mt-2 space-y-1 typography-ui-label text-muted-foreground">
             <p>{t('aboutDialog.openChamberVersionLabel', { version: currentVersion })}</p>
             <p>{t('aboutDialog.openCodeVersionLabel', { version: openCodeVersion || t('settings.openchamber.about.state.unknown') })}</p>
           </div>
@@ -184,7 +184,7 @@ export const AboutSettings: React.FC<AboutSettingsProps> = ({ initialUpdateDialo
           </a>
         </div>
 
-        <p className="text-center typography-ui text-muted-foreground/60">
+        <p className="text-center typography-ui-label text-muted-foreground/60">
           {t('aboutDialog.footerNote')}
         </p>
 

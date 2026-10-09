@@ -158,10 +158,18 @@ export const McpSidebar: React.FC<McpSidebarProps> = ({ onItemSelect }) => {
     setIsDeleting(true);
     const result = await deleteMcp(deleteTarget.name, settingsDirectory);
     if (result.ok) {
+      // Server messages name OpenCode, so Work mode shows its own wording.
+      const useWorkWording = !isDeveloperMode && !result.requiresManualRestart;
       if (result.reloadFailed) {
-        toast.warning(result.message || `MCP server "${deleteTarget.name}" deleted, but OpenCode reload failed`, {
+        toast.warning(useWorkWording
+          ? t('settings.mcp.page.toast.deletedReloadFailedWork', { name: deleteTarget.name })
+          : result.message || t('settings.mcp.page.toast.serverDeletedReloadFailed', { name: deleteTarget.name }), {
           description: result.warning || t('settings.mcp.sidebar.toast.refreshListIfStale'),
         });
+      } else if (useWorkWording) {
+        toast.success(result.restartDeferred
+          ? t('settings.mcp.page.toast.deletedRestartWork', { name: deleteTarget.name })
+          : t('settings.mcp.sidebar.toast.serverDeleted', { name: deleteTarget.name }));
       } else {
         toast.success(result.message || t('settings.mcp.sidebar.toast.serverDeleted', { name: deleteTarget.name }));
       }
@@ -289,7 +297,7 @@ export const McpSidebar: React.FC<McpSidebarProps> = ({ onItemSelect }) => {
 
                       <DropdownMenu open={openMenuMcp === server.name} onOpenChange={(open) => { if (open) setRightClickMenuMcp(null); setOpenMenuMcp(open ? server.name : null); }}>
                         <DropdownMenuTrigger asChild>
-                          <Button size="xs" variant="ghost" className="flex-shrink-0 -mr-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
+                          <Button aria-label={t('common.actions.moreActions')} size="xs" variant="ghost" className="flex-shrink-0 -mr-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:data-[state=open]:opacity-100">
                             <Icon name="more-2" className="h-3.5 w-3.5" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -352,7 +360,7 @@ export const McpSidebar: React.FC<McpSidebarProps> = ({ onItemSelect }) => {
 
                       <DropdownMenu open={openMenuMcp === server.name} onOpenChange={(open) => { if (open) setRightClickMenuMcp(null); setOpenMenuMcp(open ? server.name : null); }}>
                         <DropdownMenuTrigger asChild>
-                          <Button size="xs" variant="ghost" className="flex-shrink-0 -mr-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
+                          <Button aria-label={t('common.actions.moreActions')} size="xs" variant="ghost" className="flex-shrink-0 -mr-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:data-[state=open]:opacity-100">
                             <Icon name="more-2" className="h-3.5 w-3.5" />
                           </Button>
                         </DropdownMenuTrigger>

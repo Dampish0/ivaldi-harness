@@ -36,7 +36,7 @@ export const Checkbox = React.memo<CheckboxProps>(function Checkbox({
       aria-label={ariaLabel}
       className={cn(
         // AlignUI-style rounded box. Use a real border so press/hover states never lose the outline.
-        'group/checkbox relative flex shrink-0 self-center items-center justify-center rounded-[4px] border outline-none',
+        'group/checkbox relative flex shrink-0 self-center items-center justify-center rounded-sm border outline-none',
         boxSize,
         'transition-[background-color,border-color,box-shadow] duration-200 ease-out',
         // Drive fill directly from React props so the initial paint matches

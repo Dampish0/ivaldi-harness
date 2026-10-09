@@ -50,9 +50,9 @@ export const SETTINGS_OPTION_STACK_CLASS = 'space-y-1.5';
  * Settings heading classes by context (size + default color).
  * Prefer these over ad-hoc typography-* + color combinations.
  */
-/** L1 — page / detail-pane title (larger, quieter than section titles). */
+/** L1 — page / detail-pane title (the largest heading on the page). */
 export const SETTINGS_PAGE_TITLE_CLASS =
-  'typography-settings-page-title text-muted-foreground';
+  'typography-settings-page-title text-foreground';
 /** L2 — section title inside a settings page. */
 export const SETTINGS_SECTION_TITLE_CLASS =
   'typography-settings-section-title text-foreground';

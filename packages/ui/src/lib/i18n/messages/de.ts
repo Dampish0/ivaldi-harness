@@ -72,6 +72,22 @@ export const dict = {
   "profile.error.storage": "Dein Name konnte nicht gespeichert werden. Bitte versuche es erneut.",
   'common.loading': 'Wird geladen...',
   'common.unavailable': 'Nicht verfügbar',
+
+  'common.actions.close': 'Schließen',
+
+  'common.actions.remove': 'Entfernen',
+
+  'common.actions.moreActions': 'Weitere Aktionen',
+
+  'common.actions.back': 'Zurück',
+
+  'common.actions.cancel': 'Abbrechen',
+
+  'common.actions.delete': 'Löschen',
+
+  'common.actions.copy': 'Kopieren',
+
+  'common.actions.reset': 'Zurücksetzen',
   'common.language.english': 'Englisch',
   'common.language.french': 'Französisch',
   'common.language.simplifiedChinese': 'Chinesisch (Vereinfacht)',
@@ -458,6 +474,7 @@ export const dict = {
   'sessions.sidebar.header.actions.sortProjects': 'Projekte sortieren',
   'sessions.sidebar.header.actions.sessionDisplayMode': 'Sitzungs-Anzeigemodus',
   'sessions.sidebar.header.displayMode.label': 'Anzeigemodus',
+  'sessions.sidebar.header.actions.moreLabel': 'Weitere Aktionen',
   'sessions.sidebar.header.productMode.label': 'Modus',
   'sessions.sidebar.header.productMode.work': 'Arbeit',
   'sessions.sidebar.header.productMode.developer': 'Entwickler',
@@ -659,6 +676,8 @@ export const dict = {
   'sessions.sidebar.folderItem.newSubfolderAria': 'Neuer Unterordner in {folderName}',
   'sessions.sidebar.folderItem.newSubfolder': 'Neuer Unterordner',
   'sessions.sidebar.folderItem.renameAria': 'Ordner {folderName} umbenennen',
+  'sessions.sidebar.folderItem.renameSave': 'Ordnernamen speichern',
+  'sessions.sidebar.folderItem.renameCancel': 'Umbenennung abbrechen',
   'sessions.sidebar.folderItem.deleteArchivedInFolderAria': 'Archivierte Sitzungen im Ordner {folderName} löschen',
   'sessions.sidebar.folderItem.deleteFolderAria': 'Ordner {folderName} löschen',
   'sessions.sidebar.folderItem.emptyFolder': 'Leerer Ordner',
@@ -2208,6 +2227,7 @@ export const dict = {
   'chat.chatInput.placeholder.chat': '@ für Dateien/Agenten; / für Befehle und Fähigkeiten; ! für Shell; # für Snippets',
   'chat.chatInput.placeholder.chatCompact': 'Verwende @ / ! # für Hilfsmittel',
   'chat.chatInput.placeholder.chatCompactWork': 'Verwende @ / # für Hilfsmittel',
+  'chat.chatInput.agentChangedAnnouncement': 'Agent gewechselt zu {agent}',
   'chat.chatInput.placeholder.selectSession': 'Sitzung auswählen oder erstellen, um zu chatten',
   'chat.dictation.start': 'Dictation starten',
   'chat.dictation.overlayAria': 'Dictation',
@@ -2268,6 +2288,7 @@ export const dict = {
   'chat.toolOutputDialog.image.previousAria': 'Vorheriges Bild',
   'chat.toolOutputDialog.image.nextAria': 'Nächstes Bild',
   'chat.toolOutputDialog.image.closeAria': 'Bildvorschau schließen',
+  'chat.toolOutputDialog.image.previewAria': 'Bildvorschau',
   'chat.toolOutputDialog.mermaid.missingSource': 'Fehlende Mermaid-Quell-URL.',
   'chat.toolOutputDialog.mermaid.loadFailed': 'Kann Mermaid-Diagramm nicht laden.',
   'chat.toolOutputDialog.mermaid.dataUrlMalformed': 'Die Mermaid-Daten-URL ist fehlerhaft formatiert.',
@@ -2276,6 +2297,9 @@ export const dict = {
   'chat.toolOutputDialog.mermaid.unsupportedUrlProtocol': 'Das Mermaid-URL-Protokoll wird nicht unterstützt.',
   'chat.toolOutputDialog.mermaid.loadFailedWithStatus': 'Kann Mermaid-Diagramm nicht laden. Status: {status}.',
   'chat.toolOutputDialog.mermaid.closeAria': 'Diagrammvorschau schließen',
+  'chat.toolOutputDialog.mermaid.previewAria': 'Diagrammvorschau',
+
+  'chat.toolOutputDialog.mermaid.diagramTitle': 'Diagramm {number}',
   'chat.toolOutputDialog.mermaid.loading': 'Diagramm wird geladen...',
   'chat.toolOutputDialog.mermaid.renderFailed': 'Kann Mermaid-Diagramm nicht rendern.',
   'chat.toolOutputDialog.mermaid.retry': 'Wiederholen',
@@ -2926,7 +2950,7 @@ export const dict = {
   'updateDialog.actions.openMobileUpdate': 'Update öffnen',
   'updateDialog.status.updating': 'Aktualisierung läuft...',
   'updateDialog.error.updateFailed': 'Aktualisierung fehlgeschlagen',
-  'updateDialog.error.takingLonger': 'Die Aktualisierung dauert länger als erwartet. Warten Sie einen Moment und aktualisieren Sie die Seite oder führen Sie folgenden Befehl aus: openchamber update',
+  'updateDialog.error.takingLonger': 'Die Aktualisierung dauert länger als erwartet. Warten Sie einen Moment und aktualisieren Sie die Seite oder führen Sie folgenden Befehl aus: ivaldi update',
   'mobileUpdate.toast.available.title': 'Ivaldi-Update verfügbar',
   'mobileUpdate.toast.available.description': 'Version {version} ist für Android bereit.',
   'mobileUpdate.toast.actions.download': 'Herunterladen',
@@ -3194,7 +3218,6 @@ export const dict = {
   'walkthrough.importance.criticalHint': 'Dieser Schritt trägt die eigentliche Änderung, lesen Sie ihn genau. Es ist kein in Ihrem Code gefundenes Problem.',
   'walkthrough.importance.context': 'Kontext',
   'walkthrough.importance.contextHint': 'Eine unterstützende Änderung, damit der Rest verständlich bleibt.',
-  'walkthrough.help.guide': 'So funktionieren Walkthroughs',
   'walkthrough.blocked.noModel.title': 'Kein Modell ausgewählt',
   'walkthrough.blocked.noModel.description': 'Wählen Sie zuerst ein Modell aus.',
   'walkthrough.blocked.emptyDiff.title': 'Kein Diff vorhanden',

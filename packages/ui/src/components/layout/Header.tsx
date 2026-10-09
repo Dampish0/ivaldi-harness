@@ -382,13 +382,24 @@ export const Header: React.FC = () => {
   const workStatusPanelShownInline = workStatusPanelEnabled && workStatusPanelFits;
   const workStatusToggleActive = workStatusPanelShownInline || workStatusOverlayOpen;
   const handleWorkStatusToggle = React.useCallback(() => {
-    if (workStatusPanelEnabled && !workStatusPanelFits) {
+    if (!workStatusPanelEnabled) {
+      setWorkStatusPanelEnabled(true);
+      // Without room beside the chat, and always in Work mode, switching it on
+      // alone showed nothing, so the first press looked broken.
+      if (!workStatusPanelFits) setWorkStatusOverlayOpen(true);
+      return;
+    }
+    if (!workStatusPanelFits) {
       setWorkStatusOverlayOpen(!workStatusOverlayOpen);
       return;
     }
-    setWorkStatusPanelEnabled(!workStatusPanelEnabled);
+    setWorkStatusPanelEnabled(false);
   }, [setWorkStatusOverlayOpen, setWorkStatusPanelEnabled, workStatusOverlayOpen, workStatusPanelEnabled, workStatusPanelFits]);
+  // Work mode leaves it to the chat details panel: there the panel is closed
+  // by default, and a bare percentage with token counts in its tooltip means
+  // nothing to someone who does not know what a context window is.
   const showDesktopHeaderContextUsage = !isVSCode
+    && isDeveloperMode
     && !workStatusPanelVisible
     && !!stableDesktopContextUsage
     && stableDesktopContextUsage.totalTokens > 0;
@@ -573,8 +584,8 @@ export const Header: React.FC = () => {
       return activeProjectLabel ?? 'Ivaldi';
     }
     const trimmedTitle = currentSession?.title?.trim();
-    return trimmedTitle && trimmedTitle.length > 0 ? trimmedTitle : 'Untitled Session';
-  }, [activeProjectLabel, currentSession?.title, currentSessionId]);
+    return trimmedTitle && trimmedTitle.length > 0 ? trimmedTitle : t('sessions.sidebar.session.untitled');
+  }, [activeProjectLabel, currentSession?.title, currentSessionId, t]);
   const headerDirectoryStore = useDirectoryStore(openDirectory || undefined, { bootstrap: false });
   const sync = useSync();
   const updateSessionTitle = useSessionUIStore((state) => state.updateSessionTitle);

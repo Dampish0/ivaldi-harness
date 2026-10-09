@@ -1,10 +1,11 @@
+// Desktop scale: micro 12px < meta 13px < ui-label 14px < ui-header 15px.
 export const SEMANTIC_TYPOGRAPHY = {
   markdown: '0.9375rem',
   code: '0.8125rem',
   uiHeader: '0.9375rem',
-  uiLabel: '0.8750rem',
-  meta: '0.875rem',
-  micro: '0.875rem',
+  uiLabel: '0.875rem',
+  meta: '0.8125rem',
+  micro: '0.75rem',
   /** Settings page / detail-pane title — larger than section headers */
   settingsPageTitle: '1.125rem',
 } as const;

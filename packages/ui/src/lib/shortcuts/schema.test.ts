@@ -61,6 +61,11 @@ describe('shortcut schema', () => {
     expect(getShortcutAction('focus_input')?.category).toBe('session');
   });
 
+  test('cycles agents with a modified chord so plain Tab leaves the composer', () => {
+    expect(getShortcutAction('cycle_agent')?.defaultBinding).toBe('mod+period');
+    expect(getEffectiveShortcutCombo('cycle_agent')).not.toBe('tab');
+  });
+
   test('splits the held digit prefixes between session tabs and surfaces', () => {
     expect(getShortcutAction('switch_session_tab')?.defaultBinding).toBe('mod');
     expect(getShortcutAction('switch_context_surface')?.defaultBinding).toBe('mod+alt');

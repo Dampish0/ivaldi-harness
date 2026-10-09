@@ -8,7 +8,7 @@ kept at this root in `types.ts` and `utils.tsx`.
   layout-owned synchronization, authoritative cleanup, and nearby-session prefetch.
 - `projects/` owns project zones, grouping, ordering, scroller behavior, project
   view state, repository state, and worktree presentation.
-- The all-projects scroller shows a localized Projects heading before its project zones. Its Add project button appears on hover or keyboard focus, and stays visible on touch layouts or when always-show-actions is enabled. It opens the existing directory-dialog event. Single-project and main-workspace views keep their compact headers.
+- The all-projects scroller shows a localized Projects heading before its project zones. Its Add project button is always visible. It opens the existing directory-dialog event. Single-project and main-workspace views keep their compact headers.
 - `DirectoryExplorerDialog` separates navigation from adding. Work mode offers an existing-folder choice or a new project with an explicit folder name and save location. It uses native folder selection where available and an expandable folder browser elsewhere. Browsing never registers a project. New names must be valid folder names and absent from the chosen location; failed reads and failed creation keep the form open. Developer mode keeps the path field and clone action. Folder rows and Enter navigate, while the footer and Ctrl/Cmd+Enter share submission checks. Submissions wait for the selected location's listing, and Show hidden belongs to the list toolbar, clear of the dialog close control.
 - `sessions/` owns session rows, row actions, expansion, ownership, and activity indicators.
 - `recent/` owns Recent and managed Chats activity projections.

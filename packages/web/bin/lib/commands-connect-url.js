@@ -64,11 +64,22 @@ function createSettingsAccessors() {
       return {};
     }
   };
-  const writeSettingsToDisk = async (settings) => {
+  // Only a missing file counts as empty. A corrupt file throws, so the CLI
+  // never mints a new relay identity or writes the keys over the user's settings.
+  const updateSettings = async (mutate) => {
+    let current = {};
+    try {
+      current = JSON.parse(await fs.promises.readFile(settingsPath, 'utf8'));
+    } catch (error) {
+      if (error?.code !== 'ENOENT') throw error;
+    }
+    const next = await mutate(current);
+    if (!next) return current;
     await fs.promises.mkdir(path.dirname(settingsPath), { recursive: true });
-    await fs.promises.writeFile(settingsPath, JSON.stringify(settings, null, 2), 'utf8');
+    await fs.promises.writeFile(settingsPath, JSON.stringify(next, null, 2), 'utf8');
+    return next;
   };
-  return { readSettingsFromDiskMigrated, writeSettingsToDisk };
+  return { readSettingsFromDiskMigrated, updateSettings };
 }
 
 // Resolves the instance's relay identity (serverId + encryption public key,

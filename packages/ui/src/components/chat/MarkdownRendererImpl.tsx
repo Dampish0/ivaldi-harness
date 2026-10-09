@@ -595,6 +595,7 @@ const useMermaidInlineInteractions = ({
   enablePanZoom?: boolean;
   allowMermaidWheelEvents?: boolean;
 }) => {
+  const { t } = useI18n();
   React.useEffect(() => {
     const container = containerRef.current;
     if (!container) {
@@ -636,7 +637,7 @@ const useMermaidInlineInteractions = ({
         return;
       }
 
-      const filename = `Diagram ${blockIndex + 1}`;
+      const filename = t('chat.toolOutputDialog.mermaid.diagramTitle', { number: blockIndex + 1 });
       onShowPopup({
         open: true,
         title: filename,
@@ -679,7 +680,7 @@ const useMermaidInlineInteractions = ({
       container.removeEventListener('click', handleMermaidClick);
       container.removeEventListener('wheel', handleInlineWheel, true);
     };
-  }, [allowMermaidWheelEvents, containerRef, enableFullscreen, enablePanZoom, onShowPopup]);
+  }, [allowMermaidWheelEvents, containerRef, enableFullscreen, enablePanZoom, onShowPopup, t]);
 };
 
 // ---------------------------------------------------------------------------

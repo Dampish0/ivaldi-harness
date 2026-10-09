@@ -354,9 +354,10 @@ const IdentityRow: React.FC<IdentityRowProps> = ({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
-            size="icon"
+            aria-label={t('common.actions.moreActions')}
+            size="icon-xs"
             variant="ghost"
-            className="h-6 w-6 shrink-0 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100"
+            className="shrink-0 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:data-[state=open]:opacity-100"
             onClick={(e) => e.stopPropagation()}
           >
             <Icon name="more-2" className="h-3.5 w-3.5" />

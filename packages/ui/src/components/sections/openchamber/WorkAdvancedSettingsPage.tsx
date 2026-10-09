@@ -59,7 +59,7 @@ export const WorkAdvancedSettingsPage: React.FC<WorkAdvancedSettingsPageProps> =
   };
 
   return (
-    <SettingsPageLayout title={t('settings.view.nav.group.advanced')} showSaveStatus={false}>
+    <SettingsPageLayout title={t('settings.view.nav.workAdvancedPage')} showSaveStatus={false}>
       <SettingsSection title={t('settings.page.work.ai.title')} divider={false}>
         {AI_DESTINATIONS.map(renderDestination)}
       </SettingsSection>

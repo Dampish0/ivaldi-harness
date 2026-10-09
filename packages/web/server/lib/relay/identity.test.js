@@ -4,15 +4,27 @@ import crypto from 'node:crypto';
 import { createRelayIdentityRuntime } from './identity.js';
 import { canonicalPublicJwkString } from './signing-key.js';
 
-// In-memory settings store standing in for the on-disk settings file.
+// In-memory settings store standing in for the on-disk settings file. Updates
+// run one at a time, like the queue in settings-runtime.js.
 const makeSettingsStore = (initial = {}) => {
   let settings = { ...initial };
+  let queue = Promise.resolve();
+  let writes = 0;
   return {
-    readSettingsFromDiskMigrated: async () => ({ ...settings }),
-    writeSettingsToDisk: async (next) => {
-      settings = { ...next };
+    updateSettings: (mutate) => {
+      const run = queue.then(async () => {
+        const next = await mutate({ ...settings });
+        if (next) {
+          writes += 1;
+          settings = { ...next };
+        }
+        return { ...settings };
+      });
+      queue = run.then(() => undefined, () => undefined);
+      return run;
     },
     peek: () => settings,
+    writeCount: () => writes,
   };
 };
 
@@ -56,6 +68,29 @@ describe('relay identity', () => {
       .update(canonicalPublicJwkString(pair.publicKey.export({ format: 'jwk' })))
       .digest('base64url');
     expect(identity.serverId).toBe(expected);
+  });
+
+  it('creates one identity when two runtimes ask at the same time', async () => {
+    const store = makeSettingsStore();
+    const [first, second] = await Promise.all([
+      createRelayIdentityRuntime({ crypto, ...store }).getRelayIdentity(),
+      createRelayIdentityRuntime({ crypto, ...store }).getRelayIdentity(),
+    ]);
+
+    expect(first.serverId).toBe(second.serverId);
+    expect(first.hostEncPubJwk).toEqual(second.hostEncPubJwk);
+    expect(store.writeCount()).toBe(2);
+  });
+
+  it('never creates keys when the settings file cannot be read', async () => {
+    const runtime = createRelayIdentityRuntime({
+      crypto,
+      updateSettings: async () => {
+        throw new SyntaxError('Unexpected end of JSON input');
+      },
+    });
+
+    await expect(runtime.getRelayIdentity()).rejects.toThrow('Unexpected end of JSON input');
   });
 
   it('produces a verifiable relay auth signature', async () => {

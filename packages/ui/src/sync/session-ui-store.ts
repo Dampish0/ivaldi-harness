@@ -97,7 +97,6 @@ import {
   permissionModeFromLegacyAutoAccept,
   type PermissionMode,
 } from "@/lib/permissionModes"
-import { useProductModeStore } from "@/stores/useProductModeStore"
 
 export type { AttachedFile }
 
@@ -787,7 +786,7 @@ export async function materializeOpenDraftSession(selection: {
   const store = useSessionUIStore.getState()
   const draft = draftOverride ?? store.newSessionDraft
   if (!draft?.open) return null
-  const draftPermissionMode = draft.permissionMode ?? getDefaultPermissionMode(useProductModeStore.getState().mode)
+  const draftPermissionMode = draft.permissionMode ?? getDefaultPermissionMode()
 
   const trimmedAgent = typeof selection.agent === "string" && selection.agent.trim().length > 0
     ? selection.agent.trim()
@@ -1155,7 +1154,7 @@ export const useSessionUIStore = create<SessionUIState>()((set, get) => ({
       permissionMode: options?.permissionMode
         ?? (typeof options?.permissionAutoAcceptEnabled === "boolean"
           ? permissionModeFromLegacyAutoAccept(options.permissionAutoAcceptEnabled)
-          : getDefaultPermissionMode(useProductModeStore.getState().mode)),
+          : getDefaultPermissionMode()),
       pendingWorktreeRequestId: options?.pendingWorktreeRequestId ?? null,
       bootstrapPendingDirectory: normalizePath(options?.bootstrapPendingDirectory ?? null),
       preserveDirectoryOverride: options?.preserveDirectoryOverride === true,

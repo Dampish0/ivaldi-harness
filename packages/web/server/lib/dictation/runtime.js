@@ -44,6 +44,7 @@ export function createDictationRuntime({
   express,
   uiAuthController,
   isRequestOriginAllowed,
+  getUntrustedUnauthenticatedUpgradeReason,
   rejectWebSocketUpgrade,
   modelsDir,
 }) {
@@ -242,6 +243,11 @@ export function createDictationRuntime({
             rejectWebSocketUpgrade(socket, 403, 'Invalid origin');
             return;
           }
+        } else if (await getUntrustedUnauthenticatedUpgradeReason(req)) {
+          // No UI password: the socket would otherwise accept any page that
+          // can reach this port, including a cross-site or rebound one.
+          rejectWebSocketUpgrade(socket, 403, 'Untrusted origin');
+          return;
         }
 
         wsServer.handleUpgrade(req, socket, head, (ws) => {

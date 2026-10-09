@@ -98,6 +98,22 @@ export const dict: Partial<Record<I18nKey, string>> = {
   "profile.error.storage": "Nie udało się zapisać nazwy. Spróbuj ponownie.",
   'common.loading': 'Ładowanie...',
   'common.unavailable': 'Niedostępne',
+
+  'common.actions.close': 'Zamknij',
+
+  'common.actions.remove': 'Usuń',
+
+  'common.actions.moreActions': 'Więcej działań',
+
+  'common.actions.back': 'Wstecz',
+
+  'common.actions.cancel': 'Anuluj',
+
+  'common.actions.delete': 'Usuń',
+
+  'common.actions.copy': 'Kopiuj',
+
+  'common.actions.reset': 'Resetuj',
   'common.language.english': 'Angielski',
   'common.language.german': 'Niemiecki',
   'common.language.french': 'Francuski',
@@ -312,6 +328,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'sessions.sidebar.header.actions.sortProjects': 'Sortuj projekty',
   'sessions.sidebar.header.actions.sessionDisplayMode': 'Tryb wyświetlania sesji',
   'sessions.sidebar.header.displayMode.label': 'Tryb wyświetlania',
+  'sessions.sidebar.header.actions.moreLabel': 'Więcej działań',
   'sessions.sidebar.header.productMode.label': 'Tryb',
   'sessions.sidebar.header.productMode.work': 'Praca',
   'sessions.sidebar.header.productMode.developer': 'Deweloper',
@@ -738,6 +755,8 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'sessions.sidebar.folderItem.newSubfolderAria': 'Nowy pod-folder w {folderName}',
   'sessions.sidebar.folderItem.newSubfolder': 'Nowy pod-folder',
   'sessions.sidebar.folderItem.renameAria': 'Zmień nazwę folderu {folderName}',
+  'sessions.sidebar.folderItem.renameSave': 'Zapisz nazwę folderu',
+  'sessions.sidebar.folderItem.renameCancel': 'Anuluj zmianę nazwy folderu',
   'sessions.sidebar.folderItem.deleteArchivedInFolderAria': 'Usuń zarchiwizowane sesje w folderze {folderName}',
   'sessions.sidebar.folderItem.deleteFolderAria': 'Usuń folder {folderName}',
   'sessions.sidebar.folderItem.emptyFolder': 'Pusty folder',
@@ -1365,6 +1384,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'chat.chatInput.placeholder.chat': '@ dla plików/agentów; / dla poleceń i umiejętności; ! dla shell; # dla fragmentów',
   'chat.chatInput.placeholder.chatCompact': 'Użyj @ / ! # dla pomocników',
   'chat.chatInput.placeholder.chatCompactWork': 'Użyj @ / # dla pomocników',
+  'chat.chatInput.agentChangedAnnouncement': 'Zmieniono agenta na {agent}',
   'chat.chatInput.placeholder.selectSession': 'Wybierz lub utwórz sesję, aby zacząć czatować',
   'chat.chatInput.placeholder.shell': 'Wpisz polecenie powłoki...',
   'chat.dictation.start': 'Rozpocznij dyktowanie',
@@ -1532,9 +1552,13 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'chat.todo.total': 'Łącznie',
   'chat.toolOutputDialog.commandCompleted': 'Polecenie zakończone pomyślnie',
   'chat.toolOutputDialog.image.closeAria': 'Zamknij podgląd obrazu',
+  'chat.toolOutputDialog.image.previewAria': 'Podgląd obrazu',
   'chat.toolOutputDialog.image.nextAria': 'Następny obraz',
   'chat.toolOutputDialog.image.previousAria': 'Poprzedni obraz',
   'chat.toolOutputDialog.mermaid.closeAria': 'Zamknij podgląd diagramu',
+  'chat.toolOutputDialog.mermaid.previewAria': 'Podgląd diagramu',
+
+  'chat.toolOutputDialog.mermaid.diagramTitle': 'Diagram {number}',
   'chat.toolOutputDialog.mermaid.loadFailed': 'Nie udało się wczytać diagramu Mermaid.',
   'chat.toolOutputDialog.mermaid.dataUrlMalformed': 'Adres URL danych Mermaid ma nieprawidłowy format.',
   'chat.toolOutputDialog.mermaid.invalidLocalPath': 'Lokalna ścieżka pliku Mermaid jest nieprawidłowa.',
@@ -1659,7 +1683,6 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'walkthrough.importance.criticalHint': 'Ten krok napędza resztę zmiany, więc przeczytaj go uważnie. To nie jest problem znaleziony w Twoim kodzie.',
   'walkthrough.importance.context': 'Kontekst',
   'walkthrough.importance.contextHint': 'Zmiana pomocnicza, dołączona po to, by reszta miała sens.',
-  'walkthrough.help.guide': 'Jak działają walkthroughy',
   'walkthrough.blocked.noModel.title': 'Brak dostępnego małego modelu',
   'walkthrough.blocked.noModel.description': 'Zaloguj się u dostawcy modeli, aby wygenerować przegląd.',
   'walkthrough.blocked.emptyDiff.title': 'Nie ma czego przeglądać',
@@ -3106,7 +3129,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'updateDialog.actions.openMobileUpdate': 'Otwórz aktualizację',
   'updateDialog.actions.restartToUpdate': 'Uruchom ponownie, aby zaktualizować',
   'updateDialog.actions.updateNow': 'Aktualizuj teraz',
-  'updateDialog.error.takingLonger': 'Aktualizacja trwa dłużej niż oczekiwano. Poczekaj chwilę i odśwież albo uruchom: openchamber update',
+  'updateDialog.error.takingLonger': 'Aktualizacja trwa dłużej niż oczekiwano. Poczekaj chwilę i odśwież albo uruchom: ivaldi update',
   'updateDialog.error.updateFailed': 'Aktualizacja nie powiodła się',
   'mobileUpdate.toast.available.title': 'Dostępna aktualizacja Ivaldi',
   'mobileUpdate.toast.available.description': 'Wersja {version} jest gotowa dla Androida.',

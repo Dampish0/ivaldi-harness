@@ -316,8 +316,11 @@ describe('OpenCode proxy SSE forwarding', () => {
     upstream.get('/global/event', (_req, res) => {
       res.setHeader('Content-Type', 'text/event-stream');
       res.flushHeaders();
+      // The data arrives after the first stall deadline, so it only gets through
+      // if the comment reset the timer. Each gap leaves 100ms or more of slack,
+      // because Windows timers and loopback reads can run late.
       setTimeout(() => res.write(':upstream-alive\n\n'), 40);
-      setTimeout(() => res.write('data: still-alive\n\n'), 80);
+      setTimeout(() => res.write('data: still-alive\n\n'), 250);
     });
     upstreamServer = await listen(upstream);
     const upstreamPort = upstreamServer.address().port;
@@ -331,7 +334,7 @@ describe('OpenCode proxy SSE forwarding', () => {
       SSE_HEARTBEAT_INTERVAL_MS: 10,
       getSseUpstreamStallTimeoutMs: () => {
         stallTimeoutReads += 1;
-        return stallTimeoutReads === 1 ? 50 : 100;
+        return stallTimeoutReads === 1 ? 150 : 400;
       },
       getRuntime: () => ({
         openCodePort: upstreamPort,

@@ -56,7 +56,8 @@ export interface BridgeContext {
 
 const CLIENT_RELOAD_DELAY_MS = 800;
 
-const UPDATE_CHECK_URL = process.env.OPENCHAMBER_UPDATE_API_URL || 'https://api.openchamber.dev/v1/update/check';
+// Off unless set. VS Code updates the extension through its marketplace.
+const UPDATE_CHECK_URL = process.env.IVALDI_UPDATE_API_URL?.trim() || process.env.OPENCHAMBER_UPDATE_API_URL?.trim() || '';
 const GITHUB_BACKEND_DISABLED_ERROR = 'Ivaldi VS Code backend GitHub integration is disabled. Use native VS Code GitHub integrations.';
 
 

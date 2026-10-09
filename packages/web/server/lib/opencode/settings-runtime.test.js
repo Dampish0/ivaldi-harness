@@ -43,6 +43,92 @@ const createRuntime = async (overrides = {}) => {
 };
 
 describe('settings runtime', () => {
+  describe('legacy lastDirectory migration', () => {
+    const readMigrated = async (buildSettings, overrides = {}) => {
+      const { runtime, settingsFilePath, tempRoot, cleanup } = await createRuntime(overrides);
+      try {
+        const settings = buildSettings(tempRoot);
+        await fsPromises.writeFile(settingsFilePath, JSON.stringify(settings), 'utf8');
+        return { migrated: await runtime.readSettingsFromDiskMigrated(), tempRoot };
+      } finally {
+        await cleanup();
+      }
+    };
+
+    it('turns a pre-projects lastDirectory into the first project', async () => {
+      const { migrated, tempRoot } = await readMigrated((root) => ({ lastDirectory: root }), {
+        homeDirectory: path.join(os.tmpdir(), 'not-this-folder'),
+      });
+      expect(migrated.projects).toEqual([expect.objectContaining({ path: tempRoot })]);
+    });
+
+    it('never adds the home folder as an implicit project', async () => {
+      const home = await fsPromises.mkdtemp(path.join(os.tmpdir(), 'oc-settings-home-'));
+      try {
+        const { migrated } = await readMigrated(() => ({ lastDirectory: home }), { homeDirectory: home });
+        expect(migrated.projects ?? []).toEqual([]);
+      } finally {
+        await fsPromises.rm(home, { recursive: true, force: true });
+      }
+    });
+
+    it('keeps an emptied project list empty', async () => {
+      const { migrated } = await readMigrated((root) => ({ projects: [], lastDirectory: root }), {
+        homeDirectory: path.join(os.tmpdir(), 'not-this-folder'),
+      });
+      expect(migrated.projects ?? []).toEqual([]);
+    });
+  });
+
+  describe('updateSettings', () => {
+    it('keeps a save that arrives while a module updates its own field', async () => {
+      const { runtime, settingsFilePath, cleanup } = await createRuntime({
+        mergePersistedSettings: (current, changes) => ({ ...current, ...changes }),
+      });
+      try {
+        await Promise.all([
+          runtime.updateSettings((current) => ({ ...current, publicOrigin: 'https://example.test' })),
+          runtime.persistSettings({ lifecycleHooks: [{ id: 'a' }] }),
+        ]);
+        const stored = JSON.parse(await fsPromises.readFile(settingsFilePath, 'utf8'));
+        expect(stored).toMatchObject({ publicOrigin: 'https://example.test', lifecycleHooks: [{ id: 'a' }] });
+      } finally {
+        await cleanup();
+      }
+    });
+
+    it('leaves a corrupt file alone and never asks for changes', async () => {
+      const { runtime, settingsFilePath, cleanup } = await createRuntime();
+      try {
+        await fsPromises.writeFile(settingsFilePath, '{"broken', 'utf8');
+        let asked = false;
+        await expect(runtime.updateSettings(() => {
+          asked = true;
+          return { relaySigningKey: {} };
+        })).rejects.toThrow();
+        expect(asked).toBe(false);
+        expect(await fsPromises.readFile(settingsFilePath, 'utf8')).toBe('{"broken');
+      } finally {
+        await cleanup();
+      }
+    });
+
+    it('writes nothing when the module has no change', async () => {
+      const observed = [];
+      const { runtime, settingsFilePath, cleanup } = await createRuntime({
+        onSettingsChanged: (settings) => observed.push(settings),
+      });
+      try {
+        await fsPromises.writeFile(settingsFilePath, JSON.stringify({ vapidKeys: { publicKey: 'a', privateKey: 'b' } }), 'utf8');
+        const result = await runtime.updateSettings(() => null);
+        expect(result).toEqual({ vapidKeys: { publicKey: 'a', privateKey: 'b' } });
+        expect(observed).toEqual([]);
+      } finally {
+        await cleanup();
+      }
+    });
+  });
+
   it('notifies observers after settings writes and migrated reads', async () => {
     const observed = [];
     const { runtime, cleanup } = await createRuntime({

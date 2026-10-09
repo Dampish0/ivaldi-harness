@@ -246,6 +246,30 @@ type AttemptAbortReason =
   | `${"ws" | "sse"}_${string}`
   | null
 
+// The SDK reports a non-OK SSE response only as the message
+// `SSE failed: <status> <statusText>`. Recover the status so permanent 4xx
+// failures take the long backoff cap and the disconnect reason names the code.
+const SSE_HTTP_STATUS_PATTERN = /^SSE failed: (\d{3})\b/
+
+class SseAttemptError extends Error {
+  readonly status: number | undefined
+  readonly reason: string | undefined
+
+  constructor(message: string, options: { status?: number; reason?: string } = {}) {
+    super(message)
+    this.name = "SseAttemptError"
+    this.status = options.status
+    this.reason = options.reason
+  }
+}
+
+const toSseAttemptError = (message: string): SseAttemptError => {
+  const match = SSE_HTTP_STATUS_PATTERN.exec(message)
+  if (!match) return new SseAttemptError(message)
+  const status = Number(match[1])
+  return new SseAttemptError(message, { status, reason: `sse_http_${status}` })
+}
+
 export function createEventPipeline(input: EventPipelineInput): EventPipeline {
   const {
     sdk,
@@ -307,6 +331,7 @@ export function createEventPipeline(input: EventPipelineInput): EventPipeline {
       clearTimeout(d.timer)
       d.timer = undefined
     }
+    if (abort.signal.aborted) return
     if (d.queue.length === 0) return
 
     const events = d.queue
@@ -323,15 +348,31 @@ export function createEventPipeline(input: EventPipelineInput): EventPipeline {
     if (onEvents) {
       onEvents(directory, events)
     } else if (onEvent) {
-      for (const payload of events) onEvent(directory, payload)
+      for (const payload of events) {
+        // A consumer callback may tear the pipeline down mid-batch.
+        if (abort.signal.aborted) break
+        onEvent(directory, payload)
+      }
     }
 
     d.buffer.length = 0
   }
 
-  const flushAll = () => {
-    for (const directory of directories.keys()) {
-      flushDir(directory)
+  // Teardown drops undelivered events instead of flushing them. The consumer
+  // that owned this pipeline is unmounting (for example on a runtime switch),
+  // and the event handlers also write module-level stores that outlive it, so
+  // a late flush would publish the old runtime's events into the next one.
+  // The next pipeline resyncs authoritative state over HTTP.
+  const discardAll = () => {
+    for (const d of directories.values()) {
+      if (d.timer) {
+        clearTimeout(d.timer)
+        d.timer = undefined
+      }
+      // Truncate only the pending queue. `d.buffer` may be the batch that is
+      // being delivered right now, and flushDir clears it afterwards.
+      d.queue.length = 0
+      d.coalesced.clear()
     }
   }
 
@@ -443,6 +484,10 @@ export function createEventPipeline(input: EventPipelineInput): EventPipeline {
   let attemptAbortReason: AttemptAbortReason = null
   let consecutiveFailures = 0
   let backpressureUntil = 0
+  // Set when auto mode falls back from WS to SSE. The consumer's transport
+  // switch hook reports the connection as live and resyncs, so it waits until
+  // the replacement transport has actually delivered data.
+  let transportSwitchPending = false
 
   const notifyDisconnected = (reason: string) => {
     if (disconnected) {
@@ -460,10 +505,19 @@ export function createEventPipeline(input: EventPipelineInput): EventPipeline {
     // to be flipped positively; without this the send button throws
     // "Connection lost" until something else (HTTP health check) happens
     // to race a setState({isConnected: true}) through.
+    // Callers invoke this only once the transport has proven live: the WS
+    // `ready` frame, or the first SSE frame. An SSE response object alone
+    // proves nothing, because the SDK opens the request lazily.
     onReconnect?.()
+    if (transportSwitchPending) {
+      transportSwitchPending = false
+      onTransportSwitch?.()
+    }
   }
 
   const enqueueEvent = (directory: string, payload: Event) => {
+    // A stream read that resolves after teardown must not refill the queue.
+    if (abort.signal.aborted) return
     countSyncPerformance("pipelineRawEvents")
     const normalizedPayload = normalizeEventType(payload)
     const routedDirectory = routeDirectory?.(directory, normalizedPayload) || directory
@@ -555,30 +609,42 @@ export function createEventPipeline(input: EventPipelineInput): EventPipeline {
   }
 
   const runSseAttempt = async (signal: AbortSignal) => {
+    // `sdk.global.event()` resolves before any request is sent: the SDK opens
+    // the fetch lazily when the stream is first pulled. Report the connection
+    // only once a frame arrives, so a dead server, a 401, or a proxy that
+    // never answers stays disconnected.
+    let live = false
+    const markLive = () => {
+      if (live || signal.aborted) return
+      live = true
+      markConnected()
+    }
+    let streamErrorMessage: string | undefined
     const events = await sdk.global.event({
       signal,
       ...(lastEventId && lastEventId.length > 0 ? { headers: { "Last-Event-ID": lastEventId } } : {}),
+      // The pipeline owns retry and backoff. Without this cap the SDK retries
+      // inside the generator forever and the failure never reaches the loop.
+      sseMaxRetryAttempts: 1,
       onSseEvent: (event: { id?: unknown }) => {
         resetHeartbeat()
         if (typeof event.id === "string" && event.id.length > 0) {
           lastEventId = event.id
         }
+        markLive()
       },
       onSseError: (error: unknown) => {
         if (isAbortError(error)) return
-        if (streamErrorLogged) return
-        streamErrorLogged = true
-        console.error("[event-pipeline] SSE stream error", error)
+        streamErrorMessage = error instanceof Error ? error.message : String(error)
       },
     })
-
-    markConnected()
 
     let yielded = Date.now()
     resetHeartbeat()
 
     for await (const event of events.stream) {
       resetHeartbeat()
+      markLive()
       streamErrorLogged = false
 
       const payload = resolveEventPayload((event as { payload?: Event }).payload ?? event)
@@ -592,6 +658,15 @@ export function createEventPipeline(input: EventPipelineInput): EventPipeline {
       yielded = Date.now()
       await wait(0)
     }
+
+    if (signal.aborted) return
+    // The SDK ends the stream instead of throwing when the request fails, so
+    // rethrow here. A clean end is also a lost connection: the loop counts it
+    // as a failure, reports the disconnect, and backs off.
+    if (streamErrorMessage !== undefined) {
+      throw toSseAttemptError(streamErrorMessage)
+    }
+    throw new SseAttemptError("SSE stream ended", { reason: "sse_stream_ended" })
   }
 
   const runWsAttempt = async (signal: AbortSignal) => {
@@ -823,7 +898,8 @@ export function createEventPipeline(input: EventPipelineInput): EventPipeline {
           // Transport switch (WS → SSE fallback), not a real disconnection.
           // The consumer still gets a hook so it can resync authoritative
           // state; real networks can lose/buffer events around transport flips.
-          onTransportSwitch?.()
+          // markConnected fires it once SSE delivers its first frame.
+          transportSwitchPending = true
         } else if (!isAbortError(error)) {
           consecutiveFailures += 1
           if (!streamErrorLogged) {
@@ -882,7 +958,7 @@ export function createEventPipeline(input: EventPipelineInput): EventPipeline {
         await waitForRetry(retryDelayMs)
       }
     }
-  })().finally(flushAll)
+  })().finally(discardAll)
 
   const onVisibility = () => {
     if (typeof document === "undefined") return
@@ -951,7 +1027,7 @@ export function createEventPipeline(input: EventPipelineInput): EventPipeline {
       globalThis.window.removeEventListener("offline", onOffline)
     }
     abort.abort()
-    flushAll()
+    discardAll()
   }
 
   return { cleanup, reconnect }

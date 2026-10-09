@@ -142,7 +142,8 @@ const SessionTabItem: React.FC<{
       style={{ transform: DndCSS.Translate.toString(transform), transition }}
       className={cn(
         'app-region-no-drag session-tab-slot flex h-7 shrink-0 touch-none',
-        isSolo ? 'w-auto max-w-56 min-w-0' : 'w-44',
+        // A lone tab is the header title, so it may use the free width.
+        isSolo ? 'w-auto max-w-full min-w-0' : 'w-44',
         isDragging && 'z-10 opacity-60',
       )}
       data-active={isActive ? 'true' : 'false'}
@@ -200,6 +201,10 @@ const SessionTabItem: React.FC<{
                     <div className={cn(
                       'min-w-0 flex-1 overflow-hidden whitespace-nowrap',
                       !suppressControls && 'session-tab-title',
+                      // A lone tab sizes to its text, so the 14px fade would
+                      // always eat the last letters. Padding gives the fade empty
+                      // space until the title really overflows.
+                      isSolo && !suppressControls && 'pr-3.5',
                     )}
                     >
                       {isActive ? children : (
@@ -608,7 +613,7 @@ export const SessionTabsStrip: React.FC<{
             role="tab"
             aria-selected
             className={cn(
-              'session-tab-slot flex h-7 min-w-0 max-w-56 shrink items-center px-1.5',
+              'session-tab-slot flex h-7 min-w-0 max-w-full shrink items-center px-1.5',
               suppressActiveTabControls && 'app-region-no-drag',
             )}
             data-active="true"

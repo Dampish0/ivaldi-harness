@@ -1,6 +1,7 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Icon } from "@/components/icon/Icon";
+import { Button } from "@/components/ui/button";
 import type { Session } from '@opencode-ai/sdk/v2';
 import { useI18n } from '@/lib/i18n';
 
@@ -73,20 +74,12 @@ export function SessionDeleteConfirmDialog(props: {
             {t('sessions.sidebar.dialogs.neverAsk')}
           </button>
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setValue(null)}
-              className="inline-flex h-8 items-center justify-center rounded-md border border-border px-3 typography-ui-label text-foreground hover:bg-interactive-hover/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--interactive-focus-ring)]"
-            >
+            <Button variant="outline" size="sm" onClick={() => setValue(null)}>
               {t('sessions.sidebar.dialogs.cancel')}
-            </button>
-            <button
-              type="button"
-              onClick={() => void onConfirm()}
-              className="inline-flex h-8 items-center justify-center rounded-md bg-destructive px-3 typography-ui-label text-destructive-foreground hover:bg-destructive/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/50"
-            >
+            </Button>
+            <Button variant={value?.archivedBucket ? 'destructive' : 'default'} size="sm" onClick={() => void onConfirm()}>
               {value?.archivedBucket ? t('sessions.sidebar.bulkActions.delete') : t('sessions.sidebar.bulkActions.archive')}
-            </button>
+            </Button>
           </div>
         </DialogFooter>
       </DialogContent>
@@ -143,20 +136,12 @@ export function BulkSessionDeleteConfirmDialog(props: {
             {t('sessions.sidebar.dialogs.neverAsk')}
           </button>
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setValue(null)}
-              className="inline-flex h-8 items-center justify-center rounded-md border border-border px-3 typography-ui-label text-foreground hover:bg-interactive-hover/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--interactive-focus-ring)]"
-            >
+            <Button variant="outline" size="sm" onClick={() => setValue(null)}>
               {t('sessions.sidebar.dialogs.cancel')}
-            </button>
-            <button
-              type="button"
-              onClick={() => void onConfirm()}
-              className="inline-flex h-8 items-center justify-center rounded-md bg-destructive px-3 typography-ui-label text-destructive-foreground hover:bg-destructive/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/50"
-            >
+            </Button>
+            <Button variant={archived ? 'destructive' : 'default'} size="sm" onClick={() => void onConfirm()}>
               {archived ? t('sessions.sidebar.bulkActions.delete') : t('sessions.sidebar.bulkActions.archive')}
-            </button>
+            </Button>
           </div>
         </DialogFooter>
       </DialogContent>
@@ -206,20 +191,12 @@ export function FolderDeleteConfirmDialog(props: {
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <button
-            type="button"
-            onClick={() => setValue(null)}
-            className="inline-flex h-8 items-center justify-center rounded-md border border-border px-3 typography-ui-label text-foreground hover:bg-interactive-hover/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--interactive-focus-ring)]"
-          >
+          <Button variant="outline" size="sm" onClick={() => setValue(null)}>
             {t('sessions.sidebar.dialogs.cancel')}
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            className="inline-flex h-8 items-center justify-center rounded-md bg-destructive px-3 typography-ui-label text-destructive-foreground hover:bg-destructive/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/50"
-          >
+          </Button>
+          <Button variant="destructive" size="sm" onClick={onConfirm}>
             {t('sessions.sidebar.bulkActions.delete')}
-          </button>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

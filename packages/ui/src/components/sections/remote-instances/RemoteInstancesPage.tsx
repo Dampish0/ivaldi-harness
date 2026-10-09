@@ -2732,6 +2732,7 @@ export const RemoteInstancesPage: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <Switch checked={forward.enabled} onCheckedChange={(checked) => updateForward((item) => ({ ...item, enabled: checked }))} aria-label={t('settings.remoteInstances.page.actions.enableForwardAria')} />
                     <Button
+                      aria-label={t('common.actions.delete')}
                       type="button"
                       variant="ghost"
                       size="xs"

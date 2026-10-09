@@ -1,4 +1,17 @@
 @layer components {
+  /* Text fields: chat text size on small screens, label size on desktop so they
+     match the dropdowns beside them. Declared first, so a size class passed by
+     the caller still wins. */
+  .typography-field {
+    font-size: var(--text-markdown);
+  }
+
+  @media (min-width: 48rem) {
+    .typography-field {
+      font-size: var(--text-ui-label);
+    }
+  }
+
   /* Semantic typography classes - font-size only */
   .typography-markdown {
     font-size: var(--text-markdown);
@@ -30,7 +43,7 @@
 
   /*
    * Settings heading scale (by context):
-   * L1 page title  → typography-settings-page-title (+ text-muted-foreground)
+   * L1 page title  → typography-settings-page-title (+ text-foreground)
    * L2 section     → typography-settings-section-title (+ text-foreground)
    * L3 group       → typography-settings-group-title (+ text-foreground)
    * L4 field label → typography-settings-field-label (+ text-foreground)

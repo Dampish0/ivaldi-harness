@@ -14,13 +14,23 @@ import { isDesktopShell, requestFileAccess } from '@/lib/desktop';
 import { updateDesktopSettings } from '@/lib/persistence';
 import { recordDeferredOpenCodeRestart } from '@/lib/opencode/deferredRestart';
 import { useUIStore } from '@/stores/useUIStore';
-import { useI18n } from '@/lib/i18n';
+import { useI18n, type I18nKey } from '@/lib/i18n';
 import { runtimeFetch } from '@/lib/runtime-fetch';
 import { isWindowsArm64 } from '@/lib/platform';
+import { isMacOS, isWindows } from '@/lib/utils';
 import { toast } from '@/components/ui';
+
+// The browser platform stands in for the host platform. They match on desktop,
+// which is the common case for a local binary path.
+const getBinaryPathPlaceholderKey = (): I18nKey => {
+  if (isWindows()) return 'settings.openchamber.opencodeCli.field.binaryPathPlaceholderWindows';
+  if (isMacOS()) return 'settings.openchamber.opencodeCli.field.binaryPathPlaceholder';
+  return 'settings.openchamber.opencodeCli.field.binaryPathPlaceholderLinux';
+};
 
 export const OpenCodeCliSettings: React.FC = () => {
   const { t } = useI18n();
+  const binaryPathPlaceholderKey = React.useMemo(getBinaryPathPlaceholderKey, []);
   const [value, setValue] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSaving, setIsSaving] = React.useState(false);
@@ -124,7 +134,7 @@ export const OpenCodeCliSettings: React.FC = () => {
           <Input
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            placeholder={t('settings.openchamber.opencodeCli.field.binaryPathPlaceholder')}
+            placeholder={t(binaryPathPlaceholderKey)}
             disabled={isLoading || isSaving}
             className="h-8 min-w-0 flex-1 font-mono text-xs"
           />

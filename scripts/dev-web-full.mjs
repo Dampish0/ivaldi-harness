@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -56,6 +56,13 @@ function waitForExit(child, timeoutMs) {
 function signalChild(child, signal) {
   if (!child || child.exitCode !== null || child.signalCode !== null) {
     return;
+  }
+
+  if (process.platform === 'win32') {
+    // child.kill only ends the direct child on Windows. The server, nodemon and
+    // OpenCode below it would keep running and hold their ports.
+    const result = spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], { stdio: 'ignore', windowsHide: true });
+    if (!result.error && result.status === 0) return;
   }
 
   try {

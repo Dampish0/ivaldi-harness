@@ -228,10 +228,11 @@ const DebugPanel: React.FC<DebugPanelProps> = ({ onClose }) => {
         <div className="flex items-center gap-1">
           {activeTab === 'streaming' ? (
             <>
-              <Button size="xs" variant="ghost" onClick={handleCopyStreamingDebug}>
+              <Button aria-label={t('common.actions.copy')} size="xs" variant="ghost" onClick={handleCopyStreamingDebug}>
                 <Icon name="file-copy" className="h-3.5 w-3.5" />
               </Button>
               <Button
+                aria-label={t('common.actions.reset')}
                 size="xs"
                 variant="ghost"
                 onClick={() => {
@@ -245,7 +246,7 @@ const DebugPanel: React.FC<DebugPanelProps> = ({ onClose }) => {
             </>
           ) : null}
           {onClose ? (
-            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={onClose}>
+            <Button aria-label={t('common.actions.close')} size="icon-xs" variant="ghost" onClick={onClose}>
               <Icon name="close" className="h-4 w-4" />
             </Button>
           ) : null}

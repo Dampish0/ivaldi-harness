@@ -278,7 +278,7 @@ export function getSettingsNavIcon(slug: SettingsPageSlug): IconName | null {
     case 'shortcuts':
       return 'command';
     case 'sessions':
-      return 'chat-history';
+      return 'sparkling';
 
     case 'providers':
       return 'cloud';

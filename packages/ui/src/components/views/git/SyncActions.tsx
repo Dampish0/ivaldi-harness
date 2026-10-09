@@ -71,7 +71,7 @@ export const SyncActions: React.FC<SyncActionsProps> = ({
   };
 
   return (
-    <div className="inline-flex items-center rounded-[9px] [corner-shape:squircle] supports-[corner-shape:squircle]:rounded-[50px] border border-border/60 bg-[var(--surface-elevated)] overflow-hidden">
+    <div className="inline-flex items-center rounded-lg [corner-shape:squircle] supports-[corner-shape:squircle]:rounded-full border border-border/60 bg-[var(--surface-elevated)] overflow-hidden">
       <Tooltip>
         <TooltipTrigger asChild>
           <span className="inline-flex" tabIndex={blocksRebaseSync ? 0 : undefined}>

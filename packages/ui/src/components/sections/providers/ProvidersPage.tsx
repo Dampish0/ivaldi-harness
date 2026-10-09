@@ -170,6 +170,7 @@ export const ProvidersPage: React.FC = () => {
   const [providerSearchQuery, setProviderSearchQuery] = React.useState('');
   const [providerDropdownOpen, setProviderDropdownOpen] = React.useState(false);
   const [providerSources, setProviderSources] = React.useState<Record<string, ProviderSources>>({});
+  const [providerSourcesFailed, setProviderSourcesFailed] = React.useState<Record<string, boolean>>({});
   const [showAuthPanel, setShowAuthPanel] = React.useState(false);
   const [editingCustomProviderId, setEditingCustomProviderId] = React.useState<string | null>(null);
   const [editingCustomFormInitial, setEditingCustomFormInitial] = React.useState<CustomProviderFormState | null>(null);
@@ -363,10 +364,12 @@ export const ProvidersPage: React.FC = () => {
             ...prev,
             [selectedProviderId]: sources,
           }));
+          setProviderSourcesFailed((prev) => ({ ...prev, [selectedProviderId]: false }));
         }
       } catch (error) {
         if (!cancelled) {
           console.error('Failed to load provider sources:', error);
+          setProviderSourcesFailed((prev) => ({ ...prev, [selectedProviderId]: true }));
         }
       }
     };
@@ -380,6 +383,10 @@ export const ProvidersPage: React.FC = () => {
 
   const selectedProvider = providers.find((provider) => provider.id === selectedProviderId);
   const selectedSources = selectedProviderId ? providerSources[selectedProviderId] : undefined;
+  const selectedSourcesFailed = Boolean(selectedProviderId && providerSourcesFailed[selectedProviderId]);
+  const hasActiveSource = Boolean(selectedSources && (
+    selectedSources.auth.exists || selectedSources.user.exists || selectedSources.project.exists || selectedSources.custom?.exists
+  ));
 
   const handleSaveApiKey = async (providerId: string) => {
     const apiKey = apiKeyInputs[providerId]?.trim() ?? '';
@@ -927,7 +934,7 @@ export const ProvidersPage: React.FC = () => {
       >
             <div className="flex flex-col gap-2 py-1.5 @xl:flex-row @xl:items-center @xl:justify-between @xl:gap-8">
               <div className="flex min-w-0 flex-col">
-                {selectedSources && (selectedSources.auth.exists || selectedSources.user.exists || selectedSources.project.exists || selectedSources.custom?.exists) ? (
+                {selectedSources && hasActiveSource ? (
                   <span className="typography-meta text-muted-foreground">
                     {t('settings.providers.page.connectionDetails.configuredIn')}{' '}
                     {[
@@ -937,20 +944,27 @@ export const ProvidersPage: React.FC = () => {
                       selectedSources.custom?.exists ? t('settings.providers.page.connectionDetails.source.customConfig') : null,
                     ].filter(Boolean).join(', ')}
                   </span>
+                ) : selectedSourcesFailed ? (
+                  <span className="typography-meta text-[var(--status-error)]">{t('settings.providers.page.toast.providerSourcesLoadFailed')}</span>
+                ) : !selectedSources ? (
+                  <span className="typography-meta text-muted-foreground">{t('common.loading')}</span>
                 ) : (
                   <span className="typography-meta text-muted-foreground">{t('settings.providers.page.connectionDetails.noActiveSource')}</span>
                 )}
               </div>
 
-              <Button
-                variant="ghost"
-                size="xs"
-                className="!font-normal text-[var(--status-error)] hover:text-[var(--status-error)]"
-                onClick={() => handleDisconnectProvider(selectedProvider.id)}
-                disabled={authBusyKey === `disconnect:${selectedProvider.id}`}
-              >
-                {authBusyKey === `disconnect:${selectedProvider.id}` ? t('settings.providers.page.actions.disconnecting') : t('settings.providers.page.actions.disconnect')}
-              </Button>
+              {/* Disconnect removes saved credentials and config, so it has nothing to do without them. */}
+              {hasActiveSource ? (
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  className="!font-normal text-[var(--status-error)] hover:text-[var(--status-error)]"
+                  onClick={() => handleDisconnectProvider(selectedProvider.id)}
+                  disabled={authBusyKey === `disconnect:${selectedProvider.id}`}
+                >
+                  {authBusyKey === `disconnect:${selectedProvider.id}` ? t('settings.providers.page.actions.disconnecting') : t('settings.providers.page.actions.disconnect')}
+                </Button>
+              ) : null}
             </div>
       </SettingsSection>
 

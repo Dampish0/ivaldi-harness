@@ -73,6 +73,7 @@ import {
 } from "./materialization"
 import { openSessionFromToast } from "./session-navigation"
 import { getPermissionToastKey, showPermissionNeededToast } from "./permission-toast"
+import { createServerAnswerWaits, willServerApprovePermission } from "./permission-server-answer"
 import { getRuntimeLiveStatusSeed, LIVE_STATUS_TTL_MS } from "./runtime-live-memory"
 import { getRuntimeKey } from "@/lib/runtime-switch"
 import { getRegisteredRuntimeAPIs } from "@/contexts/runtimeAPIRegistry"
@@ -460,6 +461,10 @@ function pruneExternallyViewedSessions(now = Date.now()) {
 const pendingQuestionToastIds = new Set<string>()
 const pendingPermissionToastIds = new Set<string>()
 const pendingVSCodePermissionEvents = new Map<string, symbol>()
+const serverAnswerWaits = createServerAnswerWaits({
+  set: (callback, delayMs) => setTimeout(callback, delayMs),
+  clear: (handle) => clearTimeout(handle),
+})
 
 const getVSCodePermissionEventKey = (
   runtimeKey: string,
@@ -1485,7 +1490,7 @@ export function handleEvent(
   childStores: ChildStoreManager,
   routingIndex: EventRoutingIndex,
   expectedRuntimeKey: string,
-  skipVSCodeAutoAccept = false,
+  skipAutoAcceptCheck = false,
   streamingDirectory?: string,
   batch?: DirectoryEventBatch,
   globalEffectsAlreadyApplied = false,
@@ -1595,8 +1600,8 @@ export function handleEvent(
 
   if (payload.type === "permission.asked") {
     const permission = payload.properties as PermissionRequest
-    if (isVSCodeRuntime() && !skipVSCodeAutoAccept) {
-      const eventKey = getVSCodePermissionEventKey(expectedRuntimeKey, resolvedDirectory, permission.sessionID, permission.id)
+    const eventKey = getVSCodePermissionEventKey(expectedRuntimeKey, resolvedDirectory, permission.sessionID, permission.id)
+    if (isVSCodeRuntime() && !skipAutoAcceptCheck) {
       const eventToken = Symbol(eventKey ?? permission.id)
       if (eventKey) pendingVSCodePermissionEvents.set(eventKey, eventToken)
       updateRoutingIndexFromEvent(routingIndex, resolvedDirectory, payload)
@@ -1622,8 +1627,25 @@ export function handleEvent(
       )
       return
     }
-    if (!isVSCodeRuntime() && usePermissionStore.getState().isSessionAutoAccepting(permission.sessionID)) {
+    // The server answers this request itself, so it gets no card or toast. If
+    // no answer arrives within the grace period, it is shown after all.
+    const mode = usePermissionStore.getState().getSessionMode(permission.sessionID)
+    if (!isVSCodeRuntime() && !skipAutoAcceptCheck && eventKey && willServerApprovePermission(mode, permission, resolvedDirectory)) {
       updateRoutingIndexFromEvent(routingIndex, resolvedDirectory, payload)
+      serverAnswerWaits.wait(eventKey, () => {
+        if (expectedRuntimeKey !== getRuntimeKey()) return
+        handleEvent(
+          rawDirectory,
+          payload,
+          childStores,
+          routingIndex,
+          expectedRuntimeKey,
+          true,
+          streamingDirectory,
+          undefined,
+          true,
+        )
+      })
       return
     }
 
@@ -1642,7 +1664,10 @@ export function handleEvent(
     const props = payload.properties as { sessionID?: string; requestID?: string }
     const toastKey = getPermissionToastKey(props.sessionID, props.requestID)
     const eventKey = getVSCodePermissionEventKey(expectedRuntimeKey, resolvedDirectory, props.sessionID, props.requestID)
-    if (eventKey) pendingVSCodePermissionEvents.delete(eventKey)
+    if (eventKey) {
+      pendingVSCodePermissionEvents.delete(eventKey)
+      serverAnswerWaits.answered(eventKey)
+    }
     if (toastKey) {
       pendingPermissionToastIds.delete(toastKey)
       toast.dismiss(`permission-${toastKey}`)
@@ -2284,7 +2309,11 @@ export function SyncProvider(props: {
   }, [props.sdk])
 
   // Event pipeline — created once per mount. No class, no start/stop.
-  // Abort controller owned by the pipeline closure. Cleanup aborts + flushes.
+  // Abort controller owned by the pipeline closure. Cleanup aborts and drops
+  // undelivered events. A remounted provider bootstraps from HTTP, and a
+  // pipeline recreated in the same mount resyncs when it connects.
+  // onReconnect and onTransportSwitch fire only after the transport delivers
+  // its first frame (WS `ready` or the first SSE frame).
   useEffect(() => {
     const pipeline = createEventPipeline({
       sdk: props.sdk,

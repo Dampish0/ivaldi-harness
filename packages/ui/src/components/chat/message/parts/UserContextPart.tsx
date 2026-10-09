@@ -49,6 +49,14 @@ const ContextCard: React.FC<{
             <div
                 className="my-1 flex min-w-0 max-w-full cursor-pointer items-center gap-1.5 border-l-2 border-[var(--interactive-border)] pl-3 text-xs text-[var(--surface-mutedForeground)]"
                 onClick={onExpand}
+                onKeyDown={onExpand ? (event) => {
+                    if (event.key !== 'Enter' && event.key !== ' ') return;
+                    event.preventDefault();
+                    onExpand();
+                } : undefined}
+                role={onExpand ? 'button' : undefined}
+                tabIndex={onExpand ? 0 : undefined}
+                aria-expanded={onExpand ? false : undefined}
                 title={title}
             >
                 <Icon name={icon} className="h-3.5 w-3.5 shrink-0" />
@@ -67,6 +75,15 @@ const ContextCard: React.FC<{
             <div
                 className={cn('min-w-0 border-l-2 border-[var(--interactive-border)] pl-3', hasBody && 'cursor-pointer')}
                 onClick={hasBody ? () => setExpanded((value) => !value) : undefined}
+                onKeyDown={hasBody ? (event) => {
+                    if (event.target !== event.currentTarget) return;
+                    if (event.key !== 'Enter' && event.key !== ' ') return;
+                    event.preventDefault();
+                    setExpanded((value) => !value);
+                } : undefined}
+                role={hasBody ? 'button' : undefined}
+                tabIndex={hasBody ? 0 : undefined}
+                aria-expanded={hasBody ? expanded : undefined}
                 title={title}
             >
                 <div className="flex items-center gap-1.5 text-xs text-[var(--surface-mutedForeground)]">

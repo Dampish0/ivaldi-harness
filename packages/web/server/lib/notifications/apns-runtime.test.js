@@ -30,14 +30,20 @@ const createMemoryFs = () => {
 const makeDeps = (overrides = {}) => {
   // Stateful settings so the auto-generated relay signing keypair persists + reads back.
   let settings = {};
+  const persist = vi.fn((next) => { settings = next; });
   return {
+    persist,
     fsPromises: createMemoryFs(),
     path: { dirname: () => '/tmp' },
     crypto,
     http2: { connect: vi.fn(() => { throw new Error('http2 must not be used in relay mode'); }) },
     APNS_TOKENS_FILE_PATH: '/tmp/apns-tokens.json',
     readSettingsFromDiskMigrated: vi.fn(async () => settings),
-    writeSettingsToDisk: vi.fn(async (next) => { settings = next; }),
+    updateSettings: vi.fn(async (mutate) => {
+      const next = await mutate(settings);
+      if (next) persist(next);
+      return settings;
+    }),
     ...overrides,
   };
 };
@@ -143,7 +149,7 @@ describe('apns runtime relay mode (default)', () => {
     expect(keys.length).toBeGreaterThanOrEqual(2);
     expect(keys.every((k) => k.x === keys[0].x && k.y === keys[0].y)).toBe(true);
     // Keypair was generated + persisted exactly once.
-    expect(deps.writeSettingsToDisk).toHaveBeenCalledTimes(1);
+    expect(deps.persist).toHaveBeenCalledTimes(1);
   });
 
   it('honors an explicit sandbox environment override for every token', async () => {

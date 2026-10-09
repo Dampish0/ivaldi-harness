@@ -151,7 +151,7 @@ export const MobileConnectionWelcome: React.FC<{
             <span className="flex size-8 shrink-0 items-center justify-center text-[var(--status-warning)]">
               <Icon name={notice.kind === 'auth-expired' ? 'lock' : 'cloud-off'} className="size-[18px]" />
             </span>
-            <p className="min-w-0 flex-1 typography-small text-foreground">
+            <p className="min-w-0 flex-1 typography-meta text-foreground">
               {notice.kind === 'auth-expired'
                 ? t('mobile.connect.notice.authExpired', { label: notice.label })
                 : t('mobile.connect.notice.unreachable', { label: notice.label })}
@@ -167,7 +167,7 @@ export const MobileConnectionWelcome: React.FC<{
               </span>
               <div className="min-w-0 text-left">
                 <p className="truncate typography-ui-label text-foreground">{pendingConnection.label}</p>
-                <p className="truncate typography-small text-muted-foreground">
+                <p className="truncate typography-meta text-muted-foreground">
                   {pendingConnection.candidates.some((c) => c.kind === 'direct') ? connectionDisplayUrl(pendingConnection) : t('mobile.connect.relay.badge')}
                 </p>
               </div>
@@ -182,7 +182,7 @@ export const MobileConnectionWelcome: React.FC<{
               autoFocus
               className={mobileConnectionInputClass}
             />
-            {error ? <p className="px-1 text-center typography-small text-[var(--status-error)]">{error}</p> : null}
+            {error ? <p className="px-1 text-center typography-meta text-[var(--status-error)]">{error}</p> : null}
             <Button type="submit" size="lg" className="mt-1 h-12 w-full" disabled={isPasswordBusy || !password.trim()}>
               {isPasswordBusy ? t('mobile.connect.connecting') : t('mobile.connect.unlockButton')}
             </Button>
@@ -211,13 +211,13 @@ export const MobileConnectionWelcome: React.FC<{
                   <Icon name="scan-2" className={cn('size-[18px]', isScanning && 'animate-pulse')} />
                   {isBusy ? t('mobile.connect.connecting') : t('mobile.connect.scanQr')}
                 </Button>
-                <p className="px-2 text-center typography-small text-muted-foreground">
+                <p className="px-2 text-center typography-meta text-muted-foreground">
                   {t('mobile.connect.welcome.scanHint')}
                 </p>
               </div>
             ) : null}
 
-            {error && !manualOpen ? <p className="px-1 text-center typography-small text-[var(--status-error)]">{error}</p> : null}
+            {error && !manualOpen ? <p className="px-1 text-center typography-meta text-[var(--status-error)]">{error}</p> : null}
 
             {connections.length > 0 ? (
               <section className="flex w-full flex-col gap-2.5">
@@ -244,7 +244,7 @@ export const MobileConnectionWelcome: React.FC<{
                         </span>
                         <span className="min-w-0 flex-1">
                           <span className="block truncate typography-ui-label text-foreground">{connection.label}</span>
-                          <span className={cn('block truncate typography-small', isConnectingRow ? 'text-foreground' : 'text-muted-foreground')}>
+                          <span className={cn('block truncate typography-meta', isConnectingRow ? 'text-foreground' : 'text-muted-foreground')}>
                             {isConnectingRow
                               ? t('mobile.connect.connecting')
                               : connection.candidates.some((c) => c.kind === 'direct') ? connectionDisplayUrl(connection) : t('mobile.connect.relay.badge')}
@@ -313,7 +313,7 @@ export const MobileConnectionWelcome: React.FC<{
                       className={cn(mobileConnectionInputClass, 'text-center')}
                     />
                     <p className="px-1 text-center typography-micro text-muted-foreground">{t('mobile.connect.token.hint')}</p>
-                    {error ? <p className="px-1 text-center typography-small text-[var(--status-error)]">{error}</p> : null}
+                    {error ? <p className="px-1 text-center typography-meta text-[var(--status-error)]">{error}</p> : null}
                     <Button type="submit" variant={qrScanSupported ? 'outline' : 'default'} size="lg" className="h-12 w-full" disabled={isBusy || isScanning || !serverUrl.trim()}>
                       {isBusy ? t('mobile.connect.connecting') : t('mobile.connect.connectButton')}
                     </Button>

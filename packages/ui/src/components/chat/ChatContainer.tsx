@@ -571,7 +571,7 @@ const DraftWelcome: React.FC<{ exiting?: boolean }> = ({ exiting = false }) => {
             {isWorkMode && !isMobileSurface ? (
                 <p className={cn(
                     'max-w-xl text-balance text-muted-foreground',
-                    isMobileSurface ? 'mt-2.5 typography-ui-label' : 'mt-3 typography-body',
+                    isMobileSurface ? 'mt-2.5 typography-ui-label' : 'mt-3 typography-markdown',
                 )}>
                     {t('chat.emptyState.workDraftSubtitle')}
                 </p>
@@ -816,9 +816,12 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     // It yields to the context panel and to a narrow chat; `rowRef` goes on the
     // row that holds both columns, so its width never depends on the panel's
     // own visibility.
+    // Work mode keeps it out of the way: it only opens from the header button.
+    const workStatusOverlayOnly = useProductModeStore((state) => state.mode === 'work');
     const { rowRef: workStatusRowRef, visible: workStatusVisible, fits: workStatusFits } = useWorkStatusVisibility({
         isMobile,
         isVSCode,
+        overlayOnly: workStatusOverlayOnly,
     });
     // Surfaces that never host the panel skip it entirely; the rest keep it
     // mounted so its visibility can animate rather than snap.

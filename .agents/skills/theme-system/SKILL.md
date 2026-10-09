@@ -57,9 +57,20 @@ Use `Button` from `packages/ui/src/components/ui/button.tsx`.
 | `sm` | Compact action |
 | `default` | Standard action |
 | `lg` | Prominent action |
-| `icon` | Icon-only square action |
+| `icon` | Icon-only square action, 36px |
+| `icon-sm` | Icon-only square next to `sm` buttons, 32px |
+| `icon-xs` | Icon-only square in dense rows next to `xs` buttons, 24px |
 
-Do not hardcode button height/padding when a size variant exists. Do not recreate selection/destructive styling with ad-hoc classes.
+Do not hardcode button height/padding when a size variant exists. Do not recreate selection/destructive styling with ad-hoc classes. Some toolbars still override `sm` or `xs` to `h-7`; do not copy that into new code.
+
+## Shape And Type Scale
+
+- Corners use the radius tokens: `rounded-sm` 4px for checkboxes and tags, `rounded-md` 7px for small controls, `sm` and `xs` buttons and code blocks, `rounded-lg` 9px for default buttons and option rows, `rounded-xl` 12px for cards, popovers and dialogs, `rounded-full` for pills and squircle buttons. Arbitrary values such as `rounded-[9px]` are reserved for icons and thumbnails under 16px.
+- Shadows: menus and popovers use `oc-glass-floating`, small floating surfaces use `shadow-float`, and dialogs and cards stay flat.
+- Text uses the semantic classes, smallest first: `typography-micro` 12px, `typography-meta` 13px, `typography-ui-label` 14px, `typography-ui-header` 15px. Change `SEMANTIC_TYPOGRAPHY` and the design-system.css defaults together.
+- `Input` and `Textarea` use `typography-field`, which is 14px on desktop and the chat size on small screens. A size class passed by the caller still wins. Responsive variants such as `md:typography-ui-label` do nothing, because the typography classes are plain CSS and not Tailwind utilities.
+- `text-destructive`, `text-status-error` and `text-[var(--status-error)]` resolve to the same color. Prefer `text-[var(--status-error)]` in new code.
+- Chat cards that wait on the user, such as questions and permission prompts, use `ChatRequestCard`.
 
 ## Icon Contract
 

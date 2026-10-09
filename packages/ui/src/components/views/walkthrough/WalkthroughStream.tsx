@@ -65,7 +65,7 @@ const StopHeader = ({ stopView }: { stopView: WalkthroughStopView }) => {
           </Tooltip>
         )}
       </div>
-      <p className="typography-body text-muted-foreground">{stop.prose}</p>
+      <p className="typography-markdown text-muted-foreground">{stop.prose}</p>
       {stopView.isStale && (
         <p className="typography-meta flex items-center gap-1.5 text-status-warning">
           <Icon name="error-warning" className="size-3.5 shrink-0" />

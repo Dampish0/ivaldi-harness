@@ -19,6 +19,13 @@ sections above it decided to render.
 Sections render nothing when they have no rows, so the panel collapses upward
 instead of reserving empty space.
 
+The pane starts with a title row: the panel name, the section chooser and a
+close button. Closing there does what the header button does, so the panel is
+never something the user can open but not dismiss from where they are looking.
+Section headings use the left sidebar's group label style, small uppercase
+muted text with a trailing chevron, so the two sidebars read as one family.
+Rows use `typography-meta`, and pills and counts use `typography-micro`.
+
 ## What it is not
 
 It is **not** a context-panel surface. It is not registered in
@@ -55,12 +62,21 @@ transcript width.
   directory this panel reports about: a managed Chat reports about none, and
   that empty key answered "closed" for a context panel that was plainly open;
 - the row cannot fit `WORK_STATUS_MIN_CHAT_WIDTH` of transcript alongside
-  `WORK_STATUS_PANEL_WIDTH` of panel.
+  `WORK_STATUS_PANEL_WIDTH` of panel;
+- the app is in Work mode. `ChatContainer` passes `overlayOnly`, which makes
+  the hook report no fit at any width, so the panel is only ever the overlay
+  and opens only from the header button. Testers found a pane sliding in on
+  their first message confusing, and Work mode users rarely need it.
+
+When the panel has no room, which is always the case in Work mode, the first
+press of the header button switches it on and opens the overlay in one go.
+Before, that press only switched the preference on and showed nothing, so the
+button looked broken.
 
 `ChatContainer` additionally suppresses it in mini-chat and in expanded-input
-mode. It remains available on a new-session draft: when the draft targets a
-project or pending worktree, the panel uses that directory for project, MCP,
-and usage readouts before a session exists.
+mode, and it never mounts on the new-session draft (see "Appearing and
+disappearing"). The draft-directory branch in `ChatContainer` therefore has no
+visible effect on this panel today.
 
 Managed Chats never render or warm the Project repository section. A Chat draft
 also passes no fallback directory to the panel, so an active project's branch
@@ -280,9 +296,9 @@ Selection rules live in `usageHeadline.ts` and are pinned by
   per-model quota is not the provider's;
 - rows without a window duration (credit balances, tool counters) are a last
   resort, never preferred over a real window;
-- **no match means no headline.** The section falls back to the display-mode
-  label, because showing an unmatched provider's quota would read as the active
-  one.
+- **no match means no headline.** The section shows no summary, because showing
+  an unmatched provider's quota would read as the active one, and a bare
+  display-mode label ("Used") reads as a missing value.
 
 ## Actions
 

@@ -8,9 +8,10 @@ are tracked in [futureJourneys.md](../futureJourneys.md).
 
 Ivaldi releases belong to [Dampish0/ivaldi-harness](https://github.com/Dampish0/ivaldi-harness/releases).
 There are no GitHub Actions workflows. Builds, validation, review, and publishing
-are manual. Desktop automatic updates are disabled; users install newer Ivaldi
-builds while retaining application data. Workspace packages use `@ivaldi/*` and
-the VS Code extension uses `dampish0.ivaldi`. npm and Marketplace publication
+are manual. Updater-enabled desktop builds check the stable GitHub release feed
+on launch. Builds created before the first updater-enabled bridge release need a
+one-time manual install because they cannot discover that release. Workspace
+packages use `@ivaldi/*` and the VS Code extension uses `dampish0.ivaldi`. npm and Marketplace publication
 require separate release setup and are not implied by these names.
 
 Run local validation on the reviewed checkout, commit the intended changes, and
@@ -87,7 +88,8 @@ Use a disposable project and OS account or test machine. Test the actual install
 - [ ] Review a file change and open the correct file in the correct project.
 - [ ] If remote or mobile access is included, pair, disconnect, and reconnect. Confirm sessions and pending requests return.
 - [ ] Install over the previous Ivaldi version. Confirm data is retained and the new version launches.
-- [ ] Confirm automatic updates stay disabled and manual update instructions identify the correct artifacts.
+- [ ] Confirm the packaged app detects, downloads, and applies a newer release while retaining application data.
+- [ ] Record that pre-updater builds require a one-time manual bridge install.
 - [ ] Record failures and retest fixes on the rebuilt candidate.
 
 ## Restart recovery gate

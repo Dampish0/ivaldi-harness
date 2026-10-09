@@ -78,7 +78,7 @@ export function ProfileSetup() {
         <header className="space-y-3">
           <p className="typography-meta text-muted-foreground">Ivaldi</p>
           <h1 className="text-2xl font-semibold tracking-tight">{t('profile.setup.title')}</h1>
-          <p className="typography-body text-muted-foreground">{t('profile.setup.description')}</p>
+          <p className="typography-markdown text-muted-foreground">{t('profile.setup.description')}</p>
         </header>
         <ProfileForm />
       </div>

@@ -41,6 +41,7 @@ import { formatShortcutForDisplay, getEffectiveShortcutCombo, shortcutRegistry }
 import { showOpenCodeStatus } from '@/lib/openCodeStatus';
 import { canUseElectronDesktopIPC, invokeDesktop, isDesktopShell, isVSCodeRuntime, isWebRuntime } from '@/lib/desktop';
 import { SETTINGS_PAGE_METADATA, type SettingsRuntimeContext } from '@/lib/settings/metadata';
+import { getSettingsPageTitle } from '@/lib/settings/page-titles';
 
 const EMPTY_PINNED_SESSION_IDS = new Set<string>();
 import { getSettingsNavIcon } from '@/lib/settings/metadata';
@@ -434,18 +435,15 @@ export const CommandPalette: React.FC = () => {
           page.slug,
           page.keywords ?? [],
         ).join(' ');
-        const title = productMode === 'work' && page.slug === 'sessions'
-          ? t('settings.page.work.ai.title')
-          : page.slug === 'advanced'
-            ? t('settings.view.nav.group.advanced')
-            : page.title;
+        const title = getSettingsPageTitle(page.slug, productMode, t);
         return {
           id: `settings:${page.slug}`,
           title,
           icon: page.slug === 'mcp'
             ? <McpIcon className="mr-2 h-4 w-4" />
             : <Icon name={iconName} className="mr-2 h-4 w-4" />,
-          searchText: `${title} ${page.group} ${keywords}`,
+          // The English title stays searchable in every language.
+          searchText: `${title} ${page.title} ${page.group} ${keywords}`,
           onSelect: run(() => {
             setSettingsPage(page.slug);
             setSettingsDialogOpen(true);

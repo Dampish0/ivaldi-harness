@@ -618,6 +618,7 @@ export const MultiRunLauncher: React.FC<MultiRunLauncherProps> = ({
                       {file.filename}
                     </span>
                     <button
+                      aria-label={t('common.actions.remove')}
                       type="button"
                       onClick={() => handleRemoveFile(file.id)}
                       className="text-muted-foreground hover:text-destructive"

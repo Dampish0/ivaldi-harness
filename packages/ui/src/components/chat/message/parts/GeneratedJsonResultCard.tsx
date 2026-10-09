@@ -55,7 +55,7 @@ export const GeneratedJsonResultCard: React.FC<{ result: GeneratedResult }> = ({
           onClick={() => { void handleCopy(); }}
           title={copied ? t('chat.generatedResult.actions.copied') : t('chat.generatedResult.actions.copy')}
           aria-label={copied ? t('chat.generatedResult.actions.copied') : t('chat.generatedResult.actions.copy')}
-          className="text-muted-foreground hover:text-foreground md:opacity-0 md:group-hover:opacity-100"
+          className="text-muted-foreground hover:text-foreground md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
         >
           {copied ? <Icon name="check" className="size-3.5" /> : <Icon name="file-copy" className="size-3.5" />}
         </Button>

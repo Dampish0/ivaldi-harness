@@ -971,28 +971,40 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
     if (!open || !isDeveloperMode || projects.length === 0) return;
     let cancelled = false;
     const run = async () => {
+      // A failed check or listing is unknown, not empty. `null` keeps that
+      // project's last-known git status and worktrees, like the desktop
+      // sidebar, instead of erasing them until the next successful refresh.
       const entries = await Promise.all(
         projects.map(async (project) => {
           const path = normalizePath(project.path);
           if (!path) return null;
-          const isGitRepo = await git.checkIsGitRepository(path).catch(() => false);
-          const worktrees = isGitRepo
-            ? await listProjectWorktrees({ id: project.id, path }).catch(() => [])
-            : [];
-          return [path, worktrees, isGitRepo] as const;
+          let isGitRepo: boolean | null = null;
+          let worktrees: WorktreeMetadata[] | null = null;
+          try {
+            isGitRepo = await git.checkIsGitRepository(path);
+            worktrees = isGitRepo ? await listProjectWorktrees({ id: project.id, path }) : [];
+          } catch {
+            // Keep whatever was resolved before the failure.
+          }
+          return { path, isGitRepo, worktrees };
         }),
       );
       if (cancelled) return;
-      const discoveredWorktreesByProject = new Map<string, WorktreeMetadata[]>();
-      const nextGitProjectPaths = new Set<string>();
-      for (const entry of entries) {
-        if (entry) {
-          discoveredWorktreesByProject.set(entry[0], entry[1]);
-          if (entry[2]) nextGitProjectPaths.add(entry[0]);
+      setWorktreesByProject((previous) => {
+        const merged = new Map(previous);
+        for (const entry of entries) {
+          if (entry?.worktrees) merged.set(entry.path, entry.worktrees);
         }
-      }
-      setWorktreesByProject(partitionWorktreesByRegisteredProject(projects, discoveredWorktreesByProject));
-      setGitProjectPaths(nextGitProjectPaths);
+        return partitionWorktreesByRegisteredProject(projects, merged);
+      });
+      setGitProjectPaths((previous) => {
+        const next = new Set<string>();
+        for (const entry of entries) {
+          if (!entry) continue;
+          if (entry.isGitRepo ?? previous.has(entry.path)) next.add(entry.path);
+        }
+        return next;
+      });
     };
     void run();
     return () => {

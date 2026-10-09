@@ -150,7 +150,8 @@ const SHORTCUT_GROUPS = {
     { id: 'cycle_thinking_variant', defaultBinding: 'mod+shift+t', customizable: false },
     {
       id: 'cycle_agent',
-      defaultBinding: 'tab',
+      // A modified chord, so plain Tab keeps moving keyboard focus out of the composer.
+      defaultBinding: 'mod+period',
       customizable: true,
       settingsLabelKey: 'settings.openchamber.keyboardShortcuts.action.cycle_agent.label',
     },

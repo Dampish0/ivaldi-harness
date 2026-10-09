@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Icon } from "@/components/icon/Icon";
 import type { IconName } from "@/components/icon/icons";
+import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 
 interface SettingsSidebarItemAction {
@@ -64,6 +65,7 @@ export const SettingsSidebarItem: React.FC<SettingsSidebarItemProps> = ({
   actions,
   className,
 }) => {
+  const { t } = useI18n();
   const hasActions = actions && actions.length > 0;
 
   return (
@@ -100,9 +102,10 @@ export const SettingsSidebarItem: React.FC<SettingsSidebarItemProps> = ({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
-                size="icon"
+                aria-label={t('common.actions.moreActions')}
+                size="icon-xs"
                 variant="ghost"
-                className="h-6 w-6 flex-shrink-0 -mr-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100"
+                className="flex-shrink-0 -mr-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:data-[state=open]:opacity-100"
               >
                 <Icon name="more-2" className="h-3.5 w-3.5" />
               </Button>

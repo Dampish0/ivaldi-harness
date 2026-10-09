@@ -28,7 +28,7 @@ const trimHistory = (history) => {
 
 export function createTerminalRuntime({
   app, server, fs, path, uiAuthController, buildAugmentedPath, searchPathFor, isExecutable,
-  isRequestOriginAllowed, rejectWebSocketUpgrade, TERMINAL_INPUT_WS_HEARTBEAT_INTERVAL_MS,
+  isRequestOriginAllowed, getUntrustedUnauthenticatedUpgradeReason, rejectWebSocketUpgrade, TERMINAL_INPUT_WS_HEARTBEAT_INTERVAL_MS,
   loadPtyProvider, terminalTerminationGraceMs = TERMINATION_GRACE_MS,
 }) {
   const sessions = new Map();
@@ -281,7 +281,7 @@ export function createTerminalRuntime({
         if (uiAuthController?.enabled) {
           if (!await uiAuthController.ensureSessionToken(req, null)) { rejectWebSocketUpgrade(socket, 401, 'UI authentication required'); return; }
           if (!await isRequestOriginAllowed(req)) { rejectWebSocketUpgrade(socket, 403, 'Invalid origin'); return; }
-        }
+        } else if (await getUntrustedUnauthenticatedUpgradeReason(req)) { rejectWebSocketUpgrade(socket, 403, 'Untrusted origin'); return; }
         if (!wsServer) { rejectWebSocketUpgrade(socket, 500, 'Terminal WebSocket unavailable'); return; }
         wsServer.handleUpgrade(req, socket, head, (ws) => wsServer.emit('connection', ws, req));
       } catch { rejectWebSocketUpgrade(socket, 500, 'Upgrade failed'); }

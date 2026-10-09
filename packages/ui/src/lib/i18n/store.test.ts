@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { DEFAULT_LOCALE, type Locale } from './runtime';
-import { resetI18nDictionaryCacheForTests, useI18nStore } from './store';
+import { formatMessage, resetI18nDictionaryCacheForTests, setWorkWording, useI18nStore } from './store';
 
 const defaultDictionary = useI18nStore.getState().dictionary;
 
@@ -50,6 +50,31 @@ describe('i18n store', () => {
       expect(useI18nStore.getState().loadingLocale).toBe('fr');
       await waitForLocaleLoadToSettle('fr');
       expect(useI18nStore.getState().dictionary['common.language.french']).toBe('Français');
+    } finally {
+      resetStore();
+    }
+  });
+
+  test('Work mode swaps in everyday English wording and switches back', () => {
+    const label = () => formatMessage(useI18nStore.getState().dictionary, 'sessions.sidebar.header.actions.newSession');
+    try {
+      expect(label()).toBe('New session');
+      setWorkWording(true);
+      expect(label()).toBe('New chat');
+      setWorkWording(false);
+      expect(label()).toBe('New session');
+    } finally {
+      resetStore();
+    }
+  });
+
+  test('Work mode keeps the usual text in languages without Work wording', async () => {
+    try {
+      setWorkWording(true);
+      useI18nStore.getState().setLocale('fr');
+      await waitForLocaleLoadToSettle('fr');
+      expect(useI18nStore.getState().dictionary['sessions.sidebar.header.actions.newSession'])
+        .not.toBe('New chat');
     } finally {
       resetStore();
     }

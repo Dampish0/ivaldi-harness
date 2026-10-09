@@ -20,7 +20,12 @@ const buildWindowTitle = (projectLabel: string | null, instanceLabel: string | n
   return parts.join(' | ');
 };
 
-export const useWindowTitle = () => {
+type UseWindowTitleOptions = {
+  /** Show only the app name, for example before onboarding has a profile name. */
+  appNameOnly?: boolean;
+};
+
+export const useWindowTitle = ({ appNameOnly = false }: UseWindowTitleOptions = {}) => {
   const activeProject = useProjectsStore((state) => {
     if (!state.activeProjectId) {
       return null;
@@ -101,7 +106,10 @@ export const useWindowTitle = () => {
     };
   }, []);
 
-  const title = React.useMemo(() => buildWindowTitle(projectLabel, instanceLabel), [projectLabel, instanceLabel]);
+  const title = React.useMemo(
+    () => (appNameOnly ? APP_TITLE : buildWindowTitle(projectLabel, instanceLabel)),
+    [appNameOnly, projectLabel, instanceLabel],
+  );
 
   React.useEffect(() => {
     if (typeof document !== 'undefined') {

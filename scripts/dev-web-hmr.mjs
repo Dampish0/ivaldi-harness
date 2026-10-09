@@ -73,6 +73,13 @@ function signalChild(child, signal) {
     return;
   }
 
+  if (process.platform === 'win32') {
+    // child.kill only ends the direct child on Windows. The server, nodemon and
+    // OpenCode below it would keep running and hold their ports.
+    const result = spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], { stdio: 'ignore', windowsHide: true });
+    if (!result.error && result.status === 0) return;
+  }
+
   try {
     if (useDetachedChildren && process.platform !== 'win32') {
       process.kill(-child.pid, signal);

@@ -559,6 +559,9 @@ const sidebarBaseRgb = hexToRgb(theme.colors.surface.muted);
      vars.push('  --h4-letter-spacing: -0.01em;');
      vars.push('  --h5-letter-spacing: 0;');
      vars.push('  --h6-letter-spacing: 0.01em;');
+     vars.push('  --h1-font-weight: 600;');
+     vars.push('  --h2-font-weight: 600;');
+     vars.push('  --h3-font-weight: 600;');
 
     vars.push('  /* UI element line height and letter spacing */');
     vars.push('  --ui-button-line-height: 1.375rem;');

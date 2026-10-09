@@ -156,7 +156,7 @@ export const AgentGroupDetail: React.FC<AgentGroupDetailProps> = ({
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h1 className="typography-heading-lg text-foreground truncate">{group.name}</h1>
+              <h1 className="typography-ui-header font-semibold text-foreground truncate">{group.name}</h1>
               {groupBusy && <Icon name="loader-4" className="h-4 w-4 animate-spin text-amber-500 flex-shrink-0" />}
             </div>
             <div className="flex items-center gap-2 mt-1 typography-meta text-muted-foreground">
@@ -191,7 +191,7 @@ export const AgentGroupDetail: React.FC<AgentGroupDetailProps> = ({
                           providerId={selectedSession.providerId}
                           className="h-5 w-5 flex-shrink-0"
                         />
-                        <span className="truncate typography-body">
+                        <span className="truncate typography-ui-label">
                           {selectedSession.modelId}
                         </span>
                         {selectedSession.instanceNumber > 1 && (
@@ -219,7 +219,7 @@ export const AgentGroupDetail: React.FC<AgentGroupDetailProps> = ({
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="truncate typography-body">
+                        <span className="truncate typography-ui-label">
                           {session.modelId}
                         </span>
                         {session.instanceNumber > 1 && (
@@ -340,7 +340,7 @@ export const AgentGroupDetail: React.FC<AgentGroupDetailProps> = ({
               </div>
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center p-8">
-                  <p className="typography-body text-muted-foreground mb-2">
+                  <p className="typography-ui-label text-muted-foreground mb-2">
                     {t('agentManager.detail.state.loadingSessionFor', { label: selectedSession.displayLabel })}
                   </p>
                   <p className="typography-micro text-muted-foreground/60">
@@ -352,7 +352,7 @@ export const AgentGroupDetail: React.FC<AgentGroupDetailProps> = ({
           )
         ) : (
           <div className="h-full flex items-center justify-center">
-            <p className="typography-body text-muted-foreground">
+            <p className="typography-ui-label text-muted-foreground">
               {t('agentManager.detail.state.noSessionsInGroup')}
             </p>
           </div>

@@ -585,9 +585,10 @@ const FileRow: React.FC<FileRowProps> = ({
           >
             <DropdownMenuTrigger asChild>
               <Button
+                aria-label={t('common.actions.moreActions')}
                 variant="ghost"
-                size="icon"
-                className="size-6"
+                size="icon-xs"
+               
                 onClick={handleMenuButtonClick}
               >
                 <Icon name="more-2-fill" className="size-4" />
@@ -3591,7 +3592,7 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
               variant="outline"
               onClick={() => void saveAndContinue()}
               disabled={isSaving}
-              className="border-[var(--status-success-border)] bg-[var(--status-success-background)] text-[var(--status-success)] hover:bg-[rgb(var(--status-success)/0.2)]"
+              className="border-[var(--status-success-border)] bg-[var(--status-success-background)] text-[var(--status-success)] hover:bg-[color-mix(in_srgb,var(--status-success)_20%,transparent)]"
             >
               {t('filesView.unsaved.saveChanges')}
             </Button>
@@ -3725,7 +3726,7 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
                           }}
                           className={cn(
                             'rounded-sm p-0.5 text-[var(--surface-muted-foreground)] hover:text-[var(--surface-foreground)]',
-                            !isActive && !alwaysShowActions && 'opacity-0 group-hover:opacity-100'
+                            !isActive && !alwaysShowActions && 'opacity-0 group-hover:opacity-100 focus-within:opacity-100'
                           )}
                           aria-label={t('filesView.editor.closeFileAria', { name: file.name })}
                         >
@@ -3767,18 +3768,18 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
       <div className="flex-1 min-h-0 min-w-0 relative">
         <ScrollableOverlay ref={mainViewVirtualizer.setScroller} outerClassName="h-full min-w-0" className={cn('h-full min-w-0', isLargeFile && '[overflow-anchor:none]')}>
           {!selectedFile ? (
-            <div className="p-3 typography-ui text-muted-foreground">{t('filesView.editor.pickFileFromTree')}</div>
+            <div className="p-3 typography-ui-label text-muted-foreground">{t('filesView.editor.pickFileFromTree')}</div>
           ) : (fileLoading || isPdfAssetAuthLoading) ? (
             suppressFileLoadingIndicator
               ? <div className="p-3" />
               : (
-                <div className="p-3 flex items-center gap-2 typography-ui text-muted-foreground">
+                <div className="p-3 flex items-center gap-2 typography-ui-label text-muted-foreground">
                   <Icon name="loader-4" className="size-4 animate-spin" />
                   {t('filesView.state.loading')}
                 </div>
               )
           ) : fileError ? (
-            <div className="p-3 typography-ui text-[color:var(--status-error)]">{fileError}</div>
+            <div className="p-3 typography-ui-label text-[color:var(--status-error)]">{fileError}</div>
           ) : isSelectedImage ? (
             <div className="flex h-full items-center justify-center p-3">
               <img
@@ -3793,7 +3794,7 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
           ) : isUnsupportedBinary ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
               <div className="typography-ui-header text-foreground">{t('filesView.editor.cannotPreviewBinary')}</div>
-              <div className="max-w-md typography-ui text-muted-foreground">{t('filesView.editor.binaryFileDescription')}</div>
+              <div className="max-w-md typography-ui-label text-muted-foreground">{t('filesView.editor.binaryFileDescription')}</div>
               {files.downloadFile ? (
                 <Button
                   type="button"
@@ -3890,7 +3891,10 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
                   return fileContent.replace(/<head([^>]*)>/i, `<head$1><base href="${basePath}">`);
                 })() : undefined}
                 className="w-full h-full border-none"
-                sandbox="allow-scripts allow-same-origin allow-forms"
+                // No allow-same-origin: the preview is the user's file served from
+                // the app's own origin, and with it the file's scripts could call
+                // every API the app can. The server sends the same sandbox as CSP.
+                sandbox="allow-scripts allow-forms"
                 title={t('filesView.editor.htmlPreviewTitle')}
               />
             </div>
@@ -4015,7 +4019,7 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
               </div>
               {shouldMaskEditorForPendingNavigation && (
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-background">
-                  <div className="flex items-center gap-2 typography-ui text-muted-foreground">
+                  <div className="flex items-center gap-2 typography-ui-label text-muted-foreground">
                     <Icon name="loader-4" className="size-4 animate-spin" />
                     {t('filesView.state.openingFileAtChange')}
                   </div>
@@ -4156,13 +4160,13 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
             suppressFileLoadingIndicator
               ? <div className="p-4" />
               : (
-                <div className="p-4 flex items-center gap-2 typography-ui text-muted-foreground">
+                <div className="p-4 flex items-center gap-2 typography-ui-label text-muted-foreground">
                   <Icon name="loader-4" className="size-4 animate-spin" />
                   Loading…
                 </div>
               )
           ) : fileError ? (
-            <div className="p-4 typography-ui text-[color:var(--status-error)]">{fileError}</div>
+            <div className="p-4 typography-ui-label text-[color:var(--status-error)]">{fileError}</div>
           ) : isSelectedImage ? (
             <div className="flex h-full items-center justify-center p-4">
               <img
@@ -4177,7 +4181,7 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
           ) : isUnsupportedBinary ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
               <div className="typography-ui-header text-foreground">{t('filesView.editor.cannotPreviewBinary')}</div>
-              <div className="max-w-md typography-ui text-muted-foreground">{t('filesView.editor.binaryFileDescription')}</div>
+              <div className="max-w-md typography-ui-label text-muted-foreground">{t('filesView.editor.binaryFileDescription')}</div>
               {files.downloadFile ? (
                 <Button
                   type="button"
@@ -4256,7 +4260,7 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
               </div>
               {shouldMaskEditorForPendingNavigation && (
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-background">
-                  <div className="flex items-center gap-2 typography-ui text-muted-foreground">
+                  <div className="flex items-center gap-2 typography-ui-label text-muted-foreground">
                     <Icon name="loader-4" className="size-4 animate-spin" />
                     {t('filesView.state.openingFileAtChange')}
                   </div>

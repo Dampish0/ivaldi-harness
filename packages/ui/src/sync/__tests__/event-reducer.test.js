@@ -152,6 +152,55 @@ describe('applyDirectoryEvent', () => {
     expect(state.part[messageID]?.[0]?.text).toBe('haha')
   })
 
+  it('keeps a repeated delta after a part snapshot that did not grow the text', () => {
+    const state = structuredClone(INITIAL_STATE)
+    const messageID = 'msg-repeat'
+    const partID = 'part-repeat'
+    const textPart = (text) => ({
+      type: 'message.part.updated',
+      properties: { part: { id: partID, type: 'text', messageID, text } },
+    })
+    const textDelta = (delta) => ({
+      type: 'message.part.delta',
+      properties: { messageID, partID, field: 'text', delta },
+    })
+
+    applyDirectoryEvent(state, textPart('line\n'))
+    // An unchanged snapshot (for example a metadata-only update) carries no
+    // text the next delta could duplicate.
+    applyDirectoryEvent(state, textPart('line\n'))
+    applyDirectoryEvent(state, textDelta('\n'))
+    expect(state.part[messageID]?.[0]?.text).toBe('line\n\n')
+
+    applyDirectoryEvent(state, textPart('line\n\nha'))
+    applyDirectoryEvent(state, textPart('line\n\nha'))
+    applyDirectoryEvent(state, textDelta('ha'))
+    expect(state.part[messageID]?.[0]?.text).toBe('line\n\nhaha')
+  })
+
+  it('appends a delta in full when it does not start with the text the snapshot added', () => {
+    const state = structuredClone(INITIAL_STATE)
+    const messageID = 'msg-partial'
+    const partID = 'part-partial'
+
+    applyDirectoryEvent(state, {
+      type: 'message.part.updated',
+      properties: { part: { id: partID, type: 'text', messageID, text: 'abc' } },
+    })
+    applyDirectoryEvent(state, {
+      type: 'message.part.updated',
+      properties: { part: { id: partID, type: 'text', messageID, text: 'abcde' } },
+    })
+    // A delta that repeats the snapshot's tail would start with "de". "efg"
+    // only shares one character with it, so it is new text.
+    applyDirectoryEvent(state, {
+      type: 'message.part.delta',
+      properties: { messageID, partID, field: 'text', delta: 'efg' },
+    })
+
+    expect(state.part[messageID]?.[0]?.text).toBe('abcdeefg')
+  })
+
   it('does not let a stale running tool update overwrite a completed tool part', () => {
     const state = structuredClone(INITIAL_STATE)
     const messageID = 'msg-5'

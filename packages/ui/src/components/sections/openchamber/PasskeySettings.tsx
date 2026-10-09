@@ -33,15 +33,19 @@ const formatTimestamp = (timestamp: number | null, neverUsedText: string, timeFo
 export const PasskeySettings: React.FC = () => {
   const { t } = useI18n();
   const timeFormatPreference = useUIStore((state) => state.timeFormatPreference);
-  const [supportsPasskeys, setSupportsPasskeys] = React.useState(false);
+  const passwordRequiredId = React.useId();
   const [isLoading, setIsLoading] = React.useState(true);
   const [isRegistering, setIsRegistering] = React.useState(false);
   const [revokingId, setRevokingId] = React.useState<string | null>(null);
   const [isResetting, setIsResetting] = React.useState(false);
   const [passkeys, setPasskeys] = React.useState<StoredPasskey[]>([]);
   const [status, setStatus] = React.useState<PasskeyStatus>(defaultPasskeyStatus);
+  const [statusLoaded, setStatusLoaded] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState('');
   const supportState = React.useMemo(() => getPasskeySupportState(), []);
+  const supportsPasskeys = supportState.supported;
+  // Passkeys and sign-out need the UI password lock. Without it the controls do nothing.
+  const passwordRequired = statusLoaded && !status.enabled;
 
   const loadPasskeys = React.useCallback(async () => {
     setIsLoading(true);
@@ -62,40 +66,34 @@ export const PasskeySettings: React.FC = () => {
     let cancelled = false;
 
     void (async () => {
+      // Read the lock state even when this browser cannot create passkeys,
+      // so the page explains the real reason the controls are unavailable.
+      let nextStatus: PasskeyStatus;
       try {
-        if (!supportState.supported) {
-          if (!cancelled) {
-            setSupportsPasskeys(false);
-            setIsLoading(false);
-          }
-          return;
-        }
-        if (!cancelled) {
-          setSupportsPasskeys(true);
-        }
+        nextStatus = await fetchPasskeyStatus();
       } catch {
         if (!cancelled) {
-          setSupportsPasskeys(false);
-        }
-      }
-
-      if (!cancelled) {
-        const nextStatus = await fetchPasskeyStatus();
-        setStatus(nextStatus);
-        if (!nextStatus.enabled) {
-          setPasskeys([]);
+          setErrorMessage(t('settings.openchamber.passkeys.toast.loadFailed'));
           setIsLoading(false);
-          return;
         }
-        await loadPasskeys();
+        return;
       }
+      if (cancelled) return;
+      setStatus(nextStatus);
+      setStatusLoaded(true);
+      if (!nextStatus.enabled) {
+        setPasskeys([]);
+        setIsLoading(false);
+        return;
+      }
+      await loadPasskeys();
     })();
 
     return () => {
       cancelled = true;
       cancelPasskeyCeremony();
     };
-  }, [loadPasskeys, supportState.supported]);
+  }, [loadPasskeys, t]);
 
   const handleRegisterPasskey = React.useCallback(async () => {
     if (!status.enabled) {
@@ -181,7 +179,8 @@ export const PasskeySettings: React.FC = () => {
             variant={isRegistering ? 'secondary' : 'outline'}
             size="xs"
             onClick={() => void handleRegisterPasskey()}
-            disabled={isLoading || isResetting}
+            disabled={isLoading || isResetting || passwordRequired}
+            aria-describedby={passwordRequired ? passwordRequiredId : undefined}
             className="!font-normal"
           >
             {isRegistering ? t('settings.openchamber.passkeys.actions.cancelSetup') : t('settings.openchamber.passkeys.actions.add')}
@@ -191,15 +190,16 @@ export const PasskeySettings: React.FC = () => {
             variant="ghost"
             size="xs"
             onClick={() => void handleResetAllAuth()}
-            disabled={isLoading || isRegistering || isResetting}
+            disabled={isLoading || isRegistering || isResetting || passwordRequired}
+            aria-describedby={passwordRequired ? passwordRequiredId : undefined}
             className="!font-normal text-muted-foreground hover:text-foreground"
           >
             {isResetting ? t('settings.openchamber.passkeys.actions.signingOut') : t('settings.openchamber.passkeys.actions.signOutEverywhere')}
           </Button>
         </SettingsFieldRow>
 
-        {!status.enabled && (
-          <p className="typography-meta text-muted-foreground">
+        {passwordRequired && (
+          <p id={passwordRequiredId} className="typography-meta text-muted-foreground">
             {t('settings.openchamber.passkeys.state.uiPasswordRequired')}
           </p>
         )}
@@ -210,7 +210,7 @@ export const PasskeySettings: React.FC = () => {
           </p>
         )}
 
-        {isLoading ? (
+        {passwordRequired ? null : isLoading ? (
           <p className="typography-meta text-muted-foreground">{t('settings.openchamber.passkeys.state.loading')}</p>
         ) : passkeys.length === 0 ? (
           <p className="typography-meta text-muted-foreground">{t('settings.openchamber.passkeys.state.noneSaved')}</p>

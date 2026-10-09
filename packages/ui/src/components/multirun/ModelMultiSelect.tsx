@@ -37,6 +37,7 @@ const ModelChip: React.FC<{
   totalSameModel: number;
   onRemove: () => void;
 }> = ({ model, instanceIndex, totalSameModel, onRemove }) => {
+  const { t } = useI18n();
   const displayName = model.displayName || `${model.providerID}/${model.modelID}`;
   const label = totalSameModel > 1 ? `${displayName} (${instanceIndex})` : displayName;
 
@@ -47,6 +48,7 @@ const ModelChip: React.FC<{
         {label}
       </span>
       <button
+        aria-label={t('common.actions.remove')}
         type="button"
         onClick={onRemove}
         className="text-muted-foreground hover:text-foreground ml-0.5"

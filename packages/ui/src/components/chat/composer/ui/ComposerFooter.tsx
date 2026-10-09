@@ -191,6 +191,7 @@ export function ComposerFooter(props: ComposerFooterProps) {
                             openIssuePicker={onOpenIssuePicker}
                             openPrPicker={onOpenPrPicker}
                             onOpenSettings={isDeveloperMode ? onOpenSettings : undefined}
+                            withTooltip
                         />
                         {isDeveloperMode ? (
                             <>
@@ -202,6 +203,7 @@ export function ComposerFooter(props: ComposerFooterProps) {
                                     capabilities={permissionModeCapabilities}
                                     onModeChange={onPermissionModeChange}
                                     contextualVisibility
+                                    withTooltip
                                 />
                                 <SessionGoalButton
                                     sessionId={currentSessionId}
@@ -223,6 +225,7 @@ export function ComposerFooter(props: ComposerFooterProps) {
                                 capabilities={permissionModeCapabilities}
                                 onModeChange={onPermissionModeChange}
                                 contextualVisibility
+                                withTooltip
                             />
                         )}
                     </div>

@@ -178,17 +178,10 @@ const isLocalHost = (host, req) => {
   return isLocalHostname && isPrivateOrLoopbackIp(getSocketRemoteIp(req));
 };
 
+// req.ip honours X-Forwarded-For only from the proxies `trust proxy` allows,
+// so a remote client cannot pick its own rate-limit bucket.
 const getClientIp = (req) => {
-  const forwarded = req.headers['x-forwarded-for'];
-  if (typeof forwarded === 'string') {
-    const ip = forwarded.split(',')[0].trim();
-    if (ip.startsWith('::ffff:')) {
-      return ip.substring(7);
-    }
-    return ip;
-  }
-
-  const ip = req.ip || req.connection?.remoteAddress;
+  const ip = req.ip || req.socket?.remoteAddress || req.connection?.remoteAddress;
   if (ip) {
     if (ip.startsWith('::ffff:')) {
       return ip.substring(7);
@@ -246,15 +239,20 @@ export const createTunnelAuth = () => {
     res.setHeader('Set-Cookie', header);
   };
 
+  // Uses the raw Host header, not req.hostname. Tunnel connectors run on
+  // loopback, so Express trusts their X-Forwarded-Host, and a remote client
+  // could send `X-Forwarded-Host: localhost` through the tunnel to be
+  // classified as local. Every host the request claims must be local.
   const classifyRequestScope = (req) => {
     const hostHeader = normalizeHost(typeof req.headers.host === 'string' ? req.headers.host : '');
-    const reqHost = normalizeHost(typeof req.hostname === 'string' ? req.hostname : '') || hostHeader;
+    const forwardedHosts = String(req.headers['x-forwarded-host'] ?? '')
+      .split(',').map(normalizeHost).filter(Boolean);
 
-    if (activeTunnelHost && reqHost === activeTunnelHost) {
+    if (activeTunnelHost && (hostHeader === activeTunnelHost || forwardedHosts.includes(activeTunnelHost))) {
       return 'tunnel';
     }
 
-    if (isLocalHost(reqHost, req)) {
+    if (isLocalHost(hostHeader, req) && forwardedHosts.every((host) => isLocalHost(host, req))) {
       return 'local';
     }
 

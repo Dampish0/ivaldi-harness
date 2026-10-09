@@ -15,6 +15,57 @@ Supported modes:
 Auto is an approval policy, not a sandbox. A command that Auto approves still
 runs with the normal host authority of the Ivaldi/OpenCode process.
 
+Modes only decide how Ivaldi answers the requests OpenCode raises. OpenCode
+raises one only when a permission rule says `ask`, and its default agents allow
+edits and shell commands. The permission guard below makes those raise a
+request, so the mode decides them too.
+
+## Permission guard
+
+`opencode-guard.js` writes an OpenCode plugin under
+`<dataDir>/permission-guard/` and adds it to `OPENCODE_CONFIG_CONTENT` every
+time Ivaldi starts its managed OpenCode. The guard does not depend on the
+mode. Before each prompt, its `chat.message` hook reads the agents and the
+session and appends a guard block to the session's permission rules:
+
+- a catch-all `ask` for `edit` and for `bash`;
+- then every agent and session rule that applies to them, in order, with
+  `allow` turned into `ask`.
+
+OpenCode takes the last matching rule, and session rules come after agent
+rules. So every edit and shell command now raises a request, while every
+`deny` the agent or the session had still denies. Plan mode still cannot edit
+outside its plan files, for example. The responder then answers by mode: Full
+access approves, Auto runs the classifier, and Manual leaves it to the user.
+
+The block is wrapped in two marker rules, `ivaldi.guard.start` and
+`ivaldi.guard.end`. They are `deny` rules on names no tool uses, so they
+change nothing on their own. A subagent inherits only its parent's `deny`
+rules, so it inherits both markers and drops the parent's block before
+building its own from its own agent.
+
+The hook writes only when the newest block differs from the one it computes,
+so a block is added once per agent change. It never throws, because a throw
+would fail the prompt. When it cannot read the agents or the session, it
+writes nothing and the prompt runs with the rules the session already has. A
+block built without those rules could turn a `deny` into a prompt.
+
+Limits:
+
+- Only Ivaldi's managed OpenCode gets the plugin. An external OpenCode
+  server and VS Code keep OpenCode's own rules, where Manual does not stop
+  an edit the agent allows.
+- A rule set to `allow` in the user's OpenCode config now asks too. The
+  user can still answer "always".
+- Only `edit` and `bash` are guarded. Reads, searches and web fetches
+  follow the agent's rules as before.
+- The guard applies from the first prompt after OpenCode starts with it. A
+  run already in progress keeps its rules.
+- Scheduled tasks that do not set `permissionAutoAccept` now wait for the
+  user on edits and shell commands, as their mode says.
+
+New sessions default to Full access in both Work and Developer product modes. Manual and Auto are a choice in the composer.
+
 ## Policy persistence and inheritance
 
 `permissionAutoAccept.modes` is the authoritative mode map. The legacy
@@ -92,7 +143,11 @@ added to browser URL-token allowlists.
 
 Web, desktop, and mobile use the server as the sole permission responder. The
 UI projects the authoritative policy and renders risky pending requests until
-OpenCode emits `permission.replied`.
+OpenCode emits `permission.replied`. It skips the card and toast for a request
+the server will approve, using the same classifier. If no reply arrives within
+four seconds, it shows the request anyway, so a stopped responder never leaves
+a session waiting on a hidden prompt. See
+`packages/ui/src/sync/permission-server-answer.ts`.
 
 VS Code does not run this server runtime. Its extension host persists and
 broadcasts the same mode contract, while the foreground webview performs the

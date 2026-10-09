@@ -332,7 +332,7 @@ export function ComposerContextChips({ draftTarget, colors, isMobile = false }: 
                 <div
                     className={cn(
                         'oc-glass-popover absolute bottom-full left-0 z-30 mb-1.5 w-full max-w-[480px] overflow-hidden border border-[var(--interactive-border)]',
-                        isMobile ? 'rounded-md shadow-none' : 'rounded-xl shadow-[0_4px_16px_-4px_rgb(0_0_0_/_0.12)]',
+                        isMobile ? 'rounded-md shadow-none' : 'rounded-xl shadow-float',
                     )}
                     onMouseEnter={cancelClose}
                     onMouseLeave={scheduleClose}

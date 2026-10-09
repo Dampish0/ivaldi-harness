@@ -162,7 +162,7 @@ export const StashesDialog: React.FC<StashesDialogProps> = ({
           ) : filtered.map((stash, index) => (
             <div key={stash.ref} className="group flex items-center gap-2 rounded py-1.5 transition-colors hover:bg-interactive-hover/30">
               <div className="min-w-0 flex-1 pl-2">
-                <p className="typography-small truncate text-foreground">{stash.message || t('gitView.stashes.untitled')}</p>
+                <p className="typography-meta truncate text-foreground">{stash.message || t('gitView.stashes.untitled')}</p>
                 <p className="typography-meta truncate text-muted-foreground">
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -173,7 +173,7 @@ export const StashesDialog: React.FC<StashesDialogProps> = ({
                   {' · '}{stash.relativeTime} · {typeof fileCounts[stash.ref] === 'number' ? t('gitView.stashes.fileCount', { count: fileCounts[stash.ref] }) : t('gitView.stashes.fileCountLoading')}
                 </p>
               </div>
-              <div className="mr-2 flex shrink-0 items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
+              <div className="mr-2 flex shrink-0 items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100">
                 <StashIconButton label={t('gitView.stashes.actions.apply')} loading={operation === `apply:${stash.ref}`} onClick={() => runStashAction(stash, 'apply')} disabled={isOperating}><Icon name="inbox-unarchive" className="size-4" /></StashIconButton>
                 <StashIconButton label={t('gitView.stashes.actions.pop')} loading={operation === `pop:${stash.ref}`} onClick={() => runStashAction(stash, 'pop')} disabled={isOperating}><Icon name="inbox-unarchive-fill" className="size-4" /></StashIconButton>
                 <StashIconButton label={t('gitView.stashes.actions.drop')} loading={operation === `drop:${stash.ref}`} onClick={() => runStashAction(stash, 'drop')} disabled={isOperating} destructive><Icon name="delete-bin" className="size-4" /></StashIconButton>

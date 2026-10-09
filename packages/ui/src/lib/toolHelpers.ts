@@ -1,4 +1,4 @@
-export interface ToolMetadata {
+interface ToolMetadata {
   displayName: string;
   icon?: string;
   outputLanguage?: string;
@@ -245,13 +245,45 @@ function formatUnknownToolDisplayName(toolName: string): string {
     .replace(/^./, (char) => char.toUpperCase());
 }
 
-export function getToolMetadata(toolName: string): ToolMetadata {
+function getToolMetadata(toolName: string): ToolMetadata {
   return TOOL_METADATA[toolName] || {
     displayName: formatUnknownToolDisplayName(toolName),
     category: 'system',
     outputLanguage: 'text',
     inputFields: []
   };
+}
+
+// Work mode is for people who never use a terminal, so tool rows read as plain
+// actions. Tools missing here keep their usual name.
+const WORK_TOOL_DISPLAY_NAMES = new Map(Object.entries({
+  read: 'Read file',
+  write: 'Save file',
+  edit: 'Edit file',
+  multiedit: 'Edit file',
+  apply_patch: 'Edit files',
+  bash: 'Run command',
+  grep: 'Search in files',
+  glob: 'Find files',
+  list: 'Open folder',
+  task: 'Helper',
+  webfetch: 'Open web page',
+  websearch: 'Search the web',
+  codesearch: 'Look up examples',
+  todowrite: 'Update to-do list',
+  todoread: 'Read to-do list',
+  skill: 'Use skill',
+  lsp: 'Check code',
+  openchamber_web: 'Browser',
+  openchamber_memory: 'Memory',
+  plan_enter: 'Start planning',
+  plan_exit: 'Start working',
+  StructuredOutput: 'Answer',
+  structuredoutput: 'Answer',
+}));
+
+export function getToolDisplayName(toolName: string, workMode = false): string {
+  return (workMode ? WORK_TOOL_DISPLAY_NAMES.get(toolName) : undefined) ?? getToolMetadata(toolName).displayName;
 }
 
 export function detectToolOutputLanguage(

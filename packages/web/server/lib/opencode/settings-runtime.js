@@ -1,3 +1,5 @@
+import os from 'os';
+
 import { createProjectIdFromPath } from '../projects/project-id.js';
 import { z } from 'zod';
 
@@ -48,6 +50,7 @@ export const createSettingsRuntime = (deps) => {
     syncManagedRemoteTunnelConfigWithPresets,
     upsertManagedRemoteTunnelToken,
     onSettingsChanged,
+    homeDirectory = os.homedir(),
   } = deps;
 
   let settingsWriteQueue = Promise.resolve();
@@ -509,9 +512,8 @@ export const createSettingsRuntime = (deps) => {
   };
 
   // Mutations, migrations and identity creation require a readable JSON object.
-  // The lenient reader above maps every
-  // failure — corrupt JSON, EACCES, transient I/O — to `{}`, which such callers
-  // cannot distinguish from "first run": they would mint a NEW identity, orphan
+  // The lenient reader above maps corrupt JSON and I/O failures to `{}`. Callers
+  // cannot distinguish that from first run. They would mint a new identity, orphan
   // every paired device and push binding, and overwrite the settings file with
   // the empty spread. Here only a genuinely missing file means "no settings";
   // any other failure (including a non-object payload) throws.
@@ -645,11 +647,19 @@ export const createSettingsRuntime = (deps) => {
 
     let changed = false;
 
-    if (nextProjects.length === 0) {
+    // Only files written before projects existed lack the key. An empty list
+    // is the user's choice, and the UI records the home folder as
+    // lastDirectory on first run, so neither may turn into a project.
+    if (nextProjects.length === 0 && !Object.hasOwn(settings, 'projects')) {
       const legacy = typeof settings.lastDirectory === 'string' ? settings.lastDirectory.trim() : '';
       const candidate = legacy ? resolveDirectoryCandidate(legacy) : null;
+      const comparable = (value) => {
+        const resolved = path.resolve(value);
+        return process.platform === 'win32' ? resolved.toLowerCase() : resolved;
+      };
+      const isHome = Boolean(candidate && homeDirectory) && comparable(candidate) === comparable(homeDirectory);
 
-      if (candidate) {
+      if (candidate && !isHome) {
         try {
           const stats = await fsPromises.stat(candidate);
           if (stats.isDirectory()) {
@@ -909,6 +919,19 @@ export const createSettingsRuntime = (deps) => {
     return migration8.settings;
   });
 
+  // Modules that own a field, such as the relay keys, VAPID keys or the push
+  // origin, change it here. A separate read and write would let a UI save land
+  // in between and be overwritten. `mutate` returns the next settings, or null
+  // to leave the file alone. The strict read throws on a corrupt file, so
+  // nothing is created or written over it.
+  const updateSettings = (mutate) => enqueueSettingsWrite(async () => {
+    const current = await readSettingsFromDiskStrict();
+    const next = await mutate(current);
+    if (!next) return current;
+    await writeSettingsToDisk(next);
+    return next;
+  });
+
   const persistSettings = (changes) => enqueueSettingsWrite(async () => {
     // Log field names only — changes can carry credentials (UI password,
     // client tokens, tunnel tokens) that must never reach the log file.
@@ -987,6 +1010,7 @@ export const createSettingsRuntime = (deps) => {
     readSettingsFromDiskStrict,
     readSettingsFromDiskMigrated,
     writeSettingsToDisk,
+    updateSettings,
     persistSettings,
   };
 };

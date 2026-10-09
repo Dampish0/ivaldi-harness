@@ -60,7 +60,7 @@ import { isVSCodeRuntime } from '@/lib/desktop';
 import { useTabletLayout } from '@/lib/device';
 import { useHardwareKeyboard } from '@/lib/hardwareKeyboard';
 import { isIMECompositionEvent } from '@/lib/ime';
-import { getCycledPrimaryAgentName, type MobileControlsPanel } from './mobileControlsUtils';
+import { getAgentDisplayName, getCycledPrimaryAgentName, type MobileControlsPanel } from './mobileControlsUtils';
 import { MobileOverlayPanel } from '@/components/ui/MobileOverlayPanel';
 import { useThemeSystem } from '@/contexts/useThemeSystem';
 import { GitHubIssuePickerDialog } from '@/components/session/GitHubIssuePickerDialog';
@@ -372,8 +372,8 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
     const newSessionDraftOpen = Boolean(newSessionDraft?.open);
     const draftPermissionMode = useSessionUIStore((s) => (
         s.newSessionDraft?.open
-            ? (s.newSessionDraft.permissionMode ?? getDefaultPermissionMode(productMode))
-            : getDefaultPermissionMode(productMode)
+            ? (s.newSessionDraft.permissionMode ?? getDefaultPermissionMode())
+            : getDefaultPermissionMode()
     ));
     const setNewSessionDraftTarget = useSessionUIStore((s) => s.setNewSessionDraftTarget);
     const setDraftPermissionMode = useSessionUIStore((s) => s.setDraftPermissionMode);
@@ -1762,16 +1762,22 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
         void abortCurrentOperation(abortTarget || undefined);
     }, [abortCurrentOperation, btwSessionId, clearAbortPrompt, currentSessionId, isBtwActive]);
 
+    // Polite live-region text so a keyboard agent switch is announced to screen readers.
+    const [agentChangeAnnouncement, setAgentChangeAnnouncement] = React.useState('');
+
     const handleCycleAgent = React.useCallback((direction: 1 | -1 = 1) => {
         const nextAgentName = getCycledPrimaryAgentName(agents, currentAgentName, direction);
         if (!nextAgentName) return;
 
         setAgent(nextAgentName);
+        setAgentChangeAnnouncement(t('chat.chatInput.agentChangedAnnouncement', {
+            agent: getAgentDisplayName(agents, nextAgentName),
+        }));
 
         if (currentSessionId) {
             saveSessionAgentSelection(currentSessionId, nextAgentName);
         }
-    }, [agents, currentAgentName, currentSessionId, setAgent, saveSessionAgentSelection]);
+    }, [agents, currentAgentName, currentSessionId, setAgent, saveSessionAgentSelection, t]);
 
     // Height the dictation transcript needs (null when idle). Its overlay sits
     // absolutely over the composer, so the composer must be able to grow for
@@ -2691,6 +2697,9 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
             )}
             style={isMobile && inputBarOffset > 0 ? { marginBottom: `${inputBarOffset}px` } : undefined}
         >
+            <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+                {agentChangeAnnouncement}
+            </span>
             {showDesktopDraftPresentation ? (
                 <div className={cn('chat-input-column mb-5 text-center', draftPresentationClassName)}>
                     <h1 className="text-balance text-[28px] font-medium leading-tight tracking-[-0.025em] text-foreground">
@@ -2706,7 +2715,7 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
                         )}
                     </h1>
                     {!isDeveloperMode ? (
-                        <p className="mx-auto mt-2 max-w-xl text-balance typography-body text-muted-foreground">
+                        <p className="mx-auto mt-2 max-w-xl text-balance typography-markdown text-muted-foreground">
                             {t('chat.emptyState.workDraftSubtitle')}
                         </p>
                     ) : null}
@@ -2832,7 +2841,7 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
                         "group/composer flex flex-col relative overflow-visible",
                         isComposerExpanded && 'flex-1 min-h-0',
                         isMobile ? 'border border-border/70' : 'border border-border/80',
-                        !isMobile && 'shadow-[0_4px_16px_-4px_rgb(0_0_0_/_0.12)]',
+                        !isMobile && 'shadow-float',
                         'focus-within:ring-1 focus-within:ring-[var(--interactive-focus-ring)]',
                         isDragging && 'ring-2 ring-[var(--interactive-focus-ring)] ring-offset-2'
                     )}
@@ -2954,6 +2963,7 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
                                 ref={composerRef}
                                 viewStore={composerViewStore}
                                 data-testid="chat-input"
+                                aria-label={t('mobile.composer.prompt')}
                                 value={message}
                                 languageContext={languageContext}
                                 onChange={handleComposerChange}

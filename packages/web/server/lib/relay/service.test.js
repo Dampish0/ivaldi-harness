@@ -25,8 +25,11 @@ const makeService = (options = {}) => {
   const service = createRelayService({
     crypto,
     readSettingsFromDiskMigrated: async () => settings,
-    writeSettingsToDisk: async (next) => { settings = next; },
-    readSettingsStrict: async () => settings,
+    updateSettings: async (mutate) => {
+      const next = await mutate(settings);
+      if (next) settings = next;
+      return settings;
+    },
     getLocalPort: () => 0,
     hasRelayDemand: options.hasRelayDemand ?? (async () => true),
     hostLock,

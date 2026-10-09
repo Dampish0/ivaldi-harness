@@ -158,8 +158,8 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           outerClassName={outerClassName}
           scrollbarClassName={scrollbarClassName}
           className={cn(
-            "block w-full appearance-none resize-none bg-transparent text-foreground typography-markdown outline-none",
-            "px-3 py-2 md:typography-ui-label",
+            "block w-full appearance-none resize-none bg-transparent text-foreground typography-field outline-none",
+            "px-3 py-2",
             "placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
             fillContainer ? "[field-sizing:fixed]" : "field-sizing-content",
             className,
@@ -185,7 +185,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           ? { height: `${effectiveResizedHeight}px`, minHeight: 'fit-content' }
           : undefined}
         className={cn(
-          "group/textarea relative flex w-full flex-col rounded-[var(--radius-xl)] bg-[var(--surface-elevated)] pb-2.5",
+          "group/textarea relative flex w-full flex-col rounded-xl bg-[var(--surface-elevated)] pb-2.5",
           "ring-1 ring-inset ring-border/60 transition duration-200 ease-out",
           "hover:[&:not(:focus-within)]:bg-[var(--surface-subtle)]",
           // Scoped to the textarea, not any disabled descendant: an endSlot
@@ -208,8 +208,8 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           <textarea
               ref={ref}
               className={cn(
-                "block w-full flex-1 min-h-0 appearance-none resize-none bg-transparent text-foreground typography-markdown outline-none",
-                "min-h-[82px] pl-3 pr-2.5 pt-2.5 md:typography-ui-label",
+                "block w-full flex-1 min-h-0 appearance-none resize-none bg-transparent text-foreground typography-field outline-none",
+                "min-h-[82px] pl-3 pr-2.5 pt-2.5",
                 "focus-visible:outline-none disabled:cursor-not-allowed",
                 !disabled && [
                   "placeholder:select-none placeholder:text-muted-foreground placeholder:transition placeholder:duration-200 placeholder:ease-out",

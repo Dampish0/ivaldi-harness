@@ -630,7 +630,7 @@ ${desktopReturn ? `<a class="return" href="openchamber://focus/mcp-auth">Return 
 
       return res.json({
         ...buildDeferredRestartResponse(
-          `Provider ${providerID} saved. Restart OpenCode to apply.`,
+          `Provider ${providerID} saved. Restart Ivaldi to apply.`,
         ),
         providerId: upsertResult.providerId,
         path: upsertResult.path,
@@ -692,7 +692,7 @@ ${desktopReturn ? `<a class="return" href="openchamber://focus/mcp-auth">Return 
         return res.json({
           success: true,
           removed,
-          ...buildDeferredRestartResponse('Provider disconnected successfully. Restart OpenCode to apply.'),
+          ...buildDeferredRestartResponse('Provider disconnected successfully. Restart Ivaldi to apply.'),
         });
       }
 
@@ -799,7 +799,7 @@ ${desktopReturn ? `<a class="return" href="openchamber://focus/mcp-auth">Return 
       await fs.promises.writeFile(AGENTS_MD_PATH, content, 'utf8');
 
       return res.json(buildDeferredRestartResponse(
-        'AGENTS.md saved. Restart OpenCode to apply.',
+        'AGENTS.md saved. Restart Ivaldi to apply.',
       ));
     } catch (error) {
       console.error('Failed to write AGENTS.md:', error);

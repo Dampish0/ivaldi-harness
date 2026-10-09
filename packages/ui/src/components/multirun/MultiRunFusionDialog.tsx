@@ -241,7 +241,7 @@ export function MultiRunFusionDialog({
               <div key={source.session.id} className="flex items-center gap-2 rounded-md px-2 py-1.5 typography-meta">
                 <ProviderLogo providerId={parseMultiRunSessionTitle(source.session.title)?.providerID ?? ''} className="h-4 w-4" />
                 <span className="min-w-0 flex-1 truncate">{source.session.title || source.session.id}</span>
-                <button type="button" onClick={() => setSources((prev) => prev.filter((item) => item.session.id !== source.session.id))} className="text-muted-foreground hover:text-foreground">
+                <button aria-label={t('common.actions.remove')} type="button" onClick={() => setSources((prev) => prev.filter((item) => item.session.id !== source.session.id))} className="text-muted-foreground hover:text-foreground">
                   <Icon name="close" className="h-4 w-4" />
                 </button>
               </div>

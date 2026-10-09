@@ -97,6 +97,22 @@ export const dict: Partial<Record<I18nKey, string>> = {
   "profile.error.storage": "No se pudo guardar tu nombre. Inténtalo de nuevo.",
   "common.loading": "Cargando...",
   "common.unavailable": "No disponible",
+
+  "common.actions.close": "Cerrar",
+
+  "common.actions.remove": "Quitar",
+
+  "common.actions.moreActions": "Más acciones",
+
+  "common.actions.back": "Atrás",
+
+  "common.actions.cancel": "Cancelar",
+
+  "common.actions.delete": "Eliminar",
+
+  "common.actions.copy": "Copiar",
+
+  "common.actions.reset": "Restablecer",
   "common.language.english": "Inglés",
   "common.language.german": "Alemán",
   "common.language.french": "Francés",
@@ -501,6 +517,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   "sessions.sidebar.header.actions.sortProjects": "Ordenar proyectos",
   "sessions.sidebar.header.actions.sessionDisplayMode": "Modo de visualización de sesión",
   "sessions.sidebar.header.displayMode.label": "Modo de visualización",
+  "sessions.sidebar.header.actions.moreLabel": "Más acciones",
   "sessions.sidebar.header.productMode.label": "Modo",
   "sessions.sidebar.header.productMode.work": "Trabajo",
   "sessions.sidebar.header.productMode.developer": "Desarrollador",
@@ -738,6 +755,8 @@ export const dict: Partial<Record<I18nKey, string>> = {
   "sessions.sidebar.folderItem.newSubfolderAria": "Nueva subcarpeta en {folderName}",
   "sessions.sidebar.folderItem.newSubfolder": "Nueva subcarpeta",
   "sessions.sidebar.folderItem.renameAria": "Cambiar nombre carpeta {folderName}",
+  "sessions.sidebar.folderItem.renameSave": "Guardar nombre de carpeta",
+  "sessions.sidebar.folderItem.renameCancel": "Cancelar cambio de nombre de carpeta",
   "sessions.sidebar.folderItem.deleteArchivedInFolderAria": "Eliminar sesiones archivadas en carpeta {folderName}",
   "sessions.sidebar.folderItem.deleteFolderAria": "Eliminar carpeta {folderName}",
   "sessions.sidebar.folderItem.emptyFolder": "Vaciar carpeta",
@@ -1278,7 +1297,6 @@ export const dict: Partial<Record<I18nKey, string>> = {
   "walkthrough.importance.criticalHint": "Este paso impulsa el resto del cambio, así que léelo con atención. No es un problema detectado en tu código.",
   "walkthrough.importance.context": "Contexto",
   "walkthrough.importance.contextHint": "Un cambio de apoyo, incluido para que el resto tenga sentido.",
-  "walkthrough.help.guide": "Cómo funcionan los walkthroughs",
   "walkthrough.blocked.noModel.title": "No hay ningún modelo pequeño disponible",
   "walkthrough.blocked.noModel.description": "Inicia sesión en un proveedor de modelos para generar una revisión.",
   "walkthrough.blocked.emptyDiff.title": "Nada que revisar",
@@ -2385,6 +2403,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   "chat.chatInput.placeholder.chat": "@ para archivos/agentes; / para comandos y habilidades; ! para shell; # para snippets",
   "chat.chatInput.placeholder.chatCompact": "Usa @ / ! # para ayudas",
   "chat.chatInput.placeholder.chatCompactWork": "Usa @ / # para ayudas",
+  "chat.chatInput.agentChangedAnnouncement": "Agente cambiado a {agent}",
   "chat.chatInput.placeholder.selectSession": "Selecciona o crea una sesión para comenzar a chatear",
   "chat.snippetAutocomplete.action.addNew": "+ Agregar nuevo snippet",
   "chat.snippetAutocomplete.empty": "No se encontraron snippets",
@@ -2434,6 +2453,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   "chat.toolOutputDialog.image.previousAria": "Imagen anterior",
   "chat.toolOutputDialog.image.nextAria": "Imagen siguiente",
   "chat.toolOutputDialog.image.closeAria": "Cerrar vista previa de imagen",
+  "chat.toolOutputDialog.image.previewAria": "Vista previa de la imagen",
   "chat.toolOutputDialog.mermaid.missingSource": "Falta la URL de origen de Mermaid.",
   "chat.toolOutputDialog.mermaid.loadFailed": "No se pudo cargar el diagrama de Mermaid.",
   "chat.toolOutputDialog.mermaid.dataUrlMalformed": "La URL de datos de Mermaid no tiene un formato válido.",
@@ -2442,6 +2462,9 @@ export const dict: Partial<Record<I18nKey, string>> = {
   "chat.toolOutputDialog.mermaid.unsupportedUrlProtocol": "El protocolo de la URL de Mermaid no es compatible.",
   "chat.toolOutputDialog.mermaid.loadFailedWithStatus": "No se pudo cargar el diagrama de Mermaid. Estado: {status}.",
   "chat.toolOutputDialog.mermaid.closeAria": "Cerrar vista previa del diagrama",
+  "chat.toolOutputDialog.mermaid.previewAria": "Vista previa del diagrama",
+
+  "chat.toolOutputDialog.mermaid.diagramTitle": "Diagrama {number}",
   "chat.toolOutputDialog.mermaid.loading": "Cargando diagrama...",
   "chat.toolOutputDialog.mermaid.renderFailed": "No se pudo renderizar el diagrama de Mermaid.",
   "chat.toolOutputDialog.mermaid.retry": "Volver a intentar",
@@ -3097,7 +3120,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   "updateDialog.actions.openMobileUpdate": "Abrir actualización",
   "updateDialog.status.updating": "Actualizando...",
   "updateDialog.error.updateFailed": "No se pudo actualizar",
-  "updateDialog.error.takingLonger": "La actualización está tardando más de lo esperado. Espera un poco y refresca, o ejecuta: openchamber update",
+  "updateDialog.error.takingLonger": "La actualización está tardando más de lo esperado. Espera un poco y refresca, o ejecuta: ivaldi update",
   "mobileUpdate.toast.available.title": "Actualización de Ivaldi disponible",
   "mobileUpdate.toast.available.description": "La versión {version} está lista para Android.",
   "mobileUpdate.toast.actions.download": "Descargar",

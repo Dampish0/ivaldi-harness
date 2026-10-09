@@ -78,7 +78,6 @@ export const WorkStatusSubagentsSection: React.FC<Props> = ({ sessionId, directo
     <WorkStatusCollapsibleSection
       id={SECTION_ID}
       title={t('chat.workStatus.section.subagents')}
-      icon="ai-agent"
       defaultExpanded
       summary={busyChildren > 0 ? `${busyChildren}/${children.length}` : children.length}
     >

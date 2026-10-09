@@ -97,6 +97,22 @@ export const dict: Partial<Record<I18nKey, string>> = {
   "profile.error.storage": "이름을 저장하지 못했습니다. 다시 시도해 주세요.",
   'common.loading': '로딩 중...',
   'common.unavailable': '사용할 수 없음',
+
+  'common.actions.close': '닫기',
+
+  'common.actions.remove': '제거',
+
+  'common.actions.moreActions': '추가 작업',
+
+  'common.actions.back': '뒤로',
+
+  'common.actions.cancel': '취소',
+
+  'common.actions.delete': '삭제',
+
+  'common.actions.copy': '복사',
+
+  'common.actions.reset': '초기화',
   'common.language.english': '영어',
   'common.language.german': '독일어',
   'common.language.french': '프랑스어',
@@ -501,6 +517,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'sessions.sidebar.header.actions.sortProjects': '프로젝트 정렬',
   'sessions.sidebar.header.actions.sessionDisplayMode': '세션 표시 모드',
   'sessions.sidebar.header.displayMode.label': '표시 모드',
+  'sessions.sidebar.header.actions.moreLabel': '추가 작업',
   'sessions.sidebar.header.productMode.label': '모드',
   'sessions.sidebar.header.productMode.work': '업무',
   'sessions.sidebar.header.productMode.developer': '개발자',
@@ -738,6 +755,8 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'sessions.sidebar.folderItem.newSubfolderAria': '{folderName}에 새 하위 폴더 만들기',
   'sessions.sidebar.folderItem.newSubfolder': '새 하위 폴더',
   'sessions.sidebar.folderItem.renameAria': '폴더 이름 변경: {folderName}',
+  'sessions.sidebar.folderItem.renameSave': '폴더 이름 저장',
+  'sessions.sidebar.folderItem.renameCancel': '폴더 이름 변경 취소',
   'sessions.sidebar.folderItem.deleteArchivedInFolderAria': '폴더 {folderName}의 보관된 세션 삭제',
   'sessions.sidebar.folderItem.deleteFolderAria': '폴더 {folderName} 삭제',
   'sessions.sidebar.folderItem.emptyFolder': '비어 있음 폴더',
@@ -1278,7 +1297,6 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'walkthrough.importance.criticalHint': '이 단계가 변경 전체를 이끌고 있으니 꼼꼼히 읽어 보세요. 코드에서 발견된 문제가 아닙니다.',
   'walkthrough.importance.context': '참고',
   'walkthrough.importance.contextHint': '나머지를 이해하는 데 도움이 되도록 함께 실은 보조 변경입니다.',
-  'walkthrough.help.guide': '워크스루 작동 방식',
   'walkthrough.blocked.noModel.title': '사용할 수 있는 스몰 모델이 없습니다',
   'walkthrough.blocked.noModel.description': '리뷰를 생성하려면 모델 제공자에 로그인하세요.',
   'walkthrough.blocked.emptyDiff.title': '리뷰할 내용이 없습니다',
@@ -2407,6 +2425,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'chat.chatInput.placeholder.chat': '@ 파일/에이전트; / 명령 및 스킬; ! shell; # 스니펫',
   'chat.chatInput.placeholder.chatCompact': '@ / ! # 도우미 사용',
   'chat.chatInput.placeholder.chatCompactWork': '@ / # 도우미 사용',
+  'chat.chatInput.agentChangedAnnouncement': '에이전트를 {agent}(으)로 전환했습니다',
   'chat.chatInput.placeholder.selectSession': '채팅을 시작할 세션을 선택하거나 새로 만드세요',
   'chat.dictation.start': '받아쓰기 시작',
   'chat.dictation.overlayAria': '받아쓰기',
@@ -2468,6 +2487,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'chat.toolOutputDialog.image.previousAria': '이전 이미지',
   'chat.toolOutputDialog.image.nextAria': '다음 이미지',
   'chat.toolOutputDialog.image.closeAria': '이미지 미리보기 닫기',
+  'chat.toolOutputDialog.image.previewAria': '이미지 미리 보기',
   'chat.toolOutputDialog.mermaid.missingSource': 'Mermaid 소스 URL이 없습니다.',
   'chat.toolOutputDialog.mermaid.loadFailed': 'Mermaid 다이어그램을 불러올 수 없습니다',
   'chat.toolOutputDialog.mermaid.dataUrlMalformed': 'Mermaid 데이터 URL 형식이 올바르지 않습니다.',
@@ -2476,6 +2496,9 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'chat.toolOutputDialog.mermaid.unsupportedUrlProtocol': 'Mermaid URL 프로토콜은 지원되지 않습니다.',
   'chat.toolOutputDialog.mermaid.loadFailedWithStatus': 'Mermaid 다이어그램을 불러올 수 없습니다. 상태: {status}.',
   'chat.toolOutputDialog.mermaid.closeAria': '다이어그램 미리보기 닫기',
+  'chat.toolOutputDialog.mermaid.previewAria': '다이어그램 미리 보기',
+
+  'chat.toolOutputDialog.mermaid.diagramTitle': '다이어그램 {number}',
   'chat.toolOutputDialog.mermaid.loading': '다이어그램 로드 중…',
   'chat.toolOutputDialog.mermaid.renderFailed': 'Mermaid 다이어그램을 렌더링할 수 없습니다.',
   'chat.toolOutputDialog.mermaid.retry': '다시 시도',
@@ -3131,7 +3154,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'updateDialog.actions.openMobileUpdate': '업데이트 열기',
   'updateDialog.status.updating': '업데이트 중…',
   'updateDialog.error.updateFailed': '업데이트 실패',
-  'updateDialog.error.takingLonger': '업데이트가 예상보다 오래 걸립니다. 잠시 기다린 뒤 새로고침하거나 `openchamber update`를 실행하세요.',
+  'updateDialog.error.takingLonger': '업데이트가 예상보다 오래 걸립니다. 잠시 기다린 뒤 새로고침하거나 `ivaldi update`를 실행하세요.',
   'mobileUpdate.toast.available.title': 'Ivaldi 업데이트 사용 가능',
   'mobileUpdate.toast.available.description': 'Android용 버전 {version}이 준비되었습니다.',
   'mobileUpdate.toast.actions.download': '다운로드',

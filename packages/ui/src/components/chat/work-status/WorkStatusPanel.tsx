@@ -68,6 +68,7 @@ export const WorkStatusPanel: React.FC<Props> = ({ sessionId, directory, visible
   const { t } = useI18n();
   const setScrollTop = useUIStore((state) => state.setWorkStatusScrollTop);
   const setOverlayOpen = useUIStore((state) => state.setWorkStatusOverlayOpen);
+  const setPanelEnabled = useUIStore((state) => state.setWorkStatusPanelEnabled);
   const hiddenSections = useUIStore((state) => state.workStatusHiddenSections);
   const [sectionsDialogOpen, setSectionsDialogOpen] = React.useState(false);
   // Starts optimistic: sections report after their first commit, and rendering
@@ -164,6 +165,13 @@ export const WorkStatusPanel: React.FC<Props> = ({ sessionId, directory, visible
     };
   }, [overlay, setOverlayOpen, visible]);
 
+  // Same effect as the header button: the overlay just closes, while the
+  // docked panel is switched off until the user turns it back on.
+  const close = React.useCallback(() => {
+    if (overlay) setOverlayOpen(false);
+    else setPanelEnabled(false);
+  }, [overlay, setOverlayOpen, setPanelEnabled]);
+
   return (
     <aside
       ref={overlayRef}
@@ -219,16 +227,33 @@ export const WorkStatusPanel: React.FC<Props> = ({ sessionId, directory, visible
         pointerEvents: interactive ? undefined : 'none',
       }}
     >
-      {/* Overlaid rather than placed in flow: the panel has no header of its
-          own, and giving it one would cost a row of height on every session. */}
-      <button
-        type="button"
-        aria-label={t('chat.workStatus.sections.open')}
-        onClick={() => setSectionsDialogOpen(true)}
-        className="absolute right-2 top-1.5 z-10 rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <Icon name="equalizer-2" className="size-4" />
-      </button>
+      {/* Named, with its own close button: without them people could not tell
+          what the pane was or how to get rid of it. */}
+      <div className="flex h-10 shrink-0 items-center gap-0.5 pl-3 pr-1.5">
+        <h2 className="typography-ui-label min-w-0 flex-1 truncate font-medium text-foreground">
+          {t('chat.workStatus.ariaLabel')}
+        </h2>
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          aria-label={t('chat.workStatus.sections.open')}
+          title={t('chat.workStatus.sections.open')}
+          onClick={() => setSectionsDialogOpen(true)}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          <Icon name="equalizer-2" className="size-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          aria-label={t('header.workStatusPanel.hide')}
+          title={t('header.workStatusPanel.hide')}
+          onClick={close}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          <Icon name="close" className="size-4" />
+        </Button>
+      </div>
 
       {contentMounted ? (
       <WorkStatusPresenceProvider onChange={setRenderedSections}>
@@ -236,7 +261,7 @@ export const WorkStatusPanel: React.FC<Props> = ({ sessionId, directory, visible
         ref={restore}
         onScroll={handleScroll}
         size={24}
-        className="oc-hide-scrollbar min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-2"
+        className="oc-hide-scrollbar min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-2 pb-2"
       >
         <WorkStatusPrimaryGroup
           sessionId={sessionId}
@@ -257,7 +282,7 @@ export const WorkStatusPanel: React.FC<Props> = ({ sessionId, directory, visible
 
       {showEmptyState ? (
         <div className="flex flex-col items-center justify-center px-4 py-8 text-center">
-          <span className="text-sm text-muted-foreground">{t('chat.workStatus.sections.allHidden')}</span>
+          <span className="typography-meta text-muted-foreground">{t('chat.workStatus.sections.allHidden')}</span>
           <Button
             variant="link"
             size="xs"

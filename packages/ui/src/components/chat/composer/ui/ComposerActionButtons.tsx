@@ -11,6 +11,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/icon/Icon';
 import { StopIcon } from '@/components/icons/StopIcon';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 
@@ -79,7 +80,8 @@ export const ComposerActionButtons = React.memo(function ComposerActionButtons(p
 
     if (!canAbort) {
         if (!hasContent && canStartDictation && hasDestination) {
-            return (
+            const dictationLabel = t('chat.dictation.start');
+            const dictationButton = (
                 <Button
                     type="button"
                     size="icon"
@@ -95,11 +97,17 @@ export const ComposerActionButtons = React.memo(function ComposerActionButtons(p
                         onStartDictation();
                     }}
                     className="mr-0.5 size-8 -translate-y-px rounded-full bg-foreground text-background hover:bg-foreground/90 active:bg-foreground/80 supports-[corner-shape:squircle]:rounded-full"
-                    title={t('chat.dictation.start')}
-                    aria-label={t('chat.dictation.start')}
+                    aria-label={dictationLabel}
                 >
                     <Icon key="dictate" name="mic" className={cn(sendIconSizeClass)} />
                 </Button>
+            );
+            if (isMobile) return dictationButton;
+            return (
+                <Tooltip>
+                    <TooltipTrigger asChild>{dictationButton}</TooltipTrigger>
+                    <TooltipContent side="top" sideOffset={6}>{dictationLabel}</TooltipContent>
+                </Tooltip>
             );
         }
         return sendButton;
@@ -129,11 +137,11 @@ export const ComposerActionButtons = React.memo(function ComposerActionButtons(p
             ) : null}
             <Button
                 type="button"
-                size="icon"
+                size="icon-sm"
                 variant="destructive"
                 onClick={onAbort}
                 data-mobile-composer-action={isMobile ? 'stop' : undefined}
-                className="size-8 rounded-full supports-[corner-shape:squircle]:rounded-full"
+                className="rounded-full supports-[corner-shape:squircle]:rounded-full"
                 aria-label={t('chat.chatInput.actions.stopGeneratingAria')}
             >
                 <StopIcon className={cn(stopIconSizeClass)} />

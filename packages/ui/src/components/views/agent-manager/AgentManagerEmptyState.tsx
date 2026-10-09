@@ -413,7 +413,7 @@ export const AgentManagerEmptyState: React.FC<AgentManagerEmptyStateProps> = ({
             value={groupName}
             onChange={(e) => setGroupName(e.target.value)}
             placeholder={t('agentManager.empty.groupName.placeholder')}
-            className="typography-body"
+            className="typography-ui-label"
           />
           <p className="typography-micro text-muted-foreground">
             {t('agentManager.empty.groupName.description')}
@@ -576,6 +576,7 @@ export const AgentManagerEmptyState: React.FC<AgentManagerEmptyStateProps> = ({
                       {file.filename}
                     </span>
                     <button
+                      aria-label={t('common.actions.remove')}
                       type="button"
                       onClick={() => handleRemoveFile(file.id)}
                       className="text-muted-foreground hover:text-destructive ml-0.5"

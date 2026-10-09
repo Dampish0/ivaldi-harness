@@ -97,6 +97,22 @@ export const dict: Partial<Record<I18nKey, string>> = {
   "profile.error.storage": "Не вдалося зберегти ім’я. Спробуйте ще раз.",
   "common.loading": "Завантаження...",
   "common.unavailable": "Недоступно",
+
+  "common.actions.close": "Закрити",
+
+  "common.actions.remove": "Прибрати",
+
+  "common.actions.moreActions": "Більше дій",
+
+  "common.actions.back": "Назад",
+
+  "common.actions.cancel": "Скасувати",
+
+  "common.actions.delete": "Видалити",
+
+  "common.actions.copy": "Копіювати",
+
+  "common.actions.reset": "Скинути",
   "common.language.english": "англійська",
   "common.language.german": "Німецька",
   "common.language.french": "Французька",
@@ -501,6 +517,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   "sessions.sidebar.header.actions.sortProjects": "Сортувати проєкти",
   "sessions.sidebar.header.actions.sessionDisplayMode": "Режим відображення сесії",
   "sessions.sidebar.header.displayMode.label": "Режим відображення",
+  "sessions.sidebar.header.actions.moreLabel": "Більше дій",
   "sessions.sidebar.header.productMode.label": "Режим",
   "sessions.sidebar.header.productMode.work": "Робота",
   "sessions.sidebar.header.productMode.developer": "Розробник",
@@ -738,6 +755,8 @@ export const dict: Partial<Record<I18nKey, string>> = {
   "sessions.sidebar.folderItem.newSubfolderAria": "Нова підпапка в {folderName}",
   "sessions.sidebar.folderItem.newSubfolder": "Нова підпапка",
   "sessions.sidebar.folderItem.renameAria": "Перейменувати папку {folderName}",
+  "sessions.sidebar.folderItem.renameSave": "Зберегти назву папки",
+  "sessions.sidebar.folderItem.renameCancel": "Скасувати перейменування папки",
   "sessions.sidebar.folderItem.deleteArchivedInFolderAria": "Видалити заархівовані сесії в папці {folderName}",
   "sessions.sidebar.folderItem.deleteFolderAria": "Видалити папку {folderName}",
   "sessions.sidebar.folderItem.emptyFolder": "Порожня папка",
@@ -1278,7 +1297,6 @@ export const dict: Partial<Record<I18nKey, string>> = {
   "walkthrough.importance.criticalHint": "Цей крок веде за собою решту зміни, тож прочитайте його уважно. Це не знайдена у вашому коді проблема.",
   "walkthrough.importance.context": "Контекст",
   "walkthrough.importance.contextHint": "Допоміжна зміна, додана, щоб решта мала сенс.",
-  "walkthrough.help.guide": "Як працюють walkthrough",
   "walkthrough.blocked.noModel.title": "Немає доступної small model",
   "walkthrough.blocked.noModel.description": "Увійдіть до провайдера моделей, щоб створити розбір.",
   "walkthrough.blocked.emptyDiff.title": "Немає що оглядати",
@@ -2385,6 +2403,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   "chat.chatInput.placeholder.chat": "@ для файлів/агентів; / для команд і навичок; ! для shell; # для сніпетів",
   "chat.chatInput.placeholder.chatCompact": "Використовуйте @ / ! # для помічників",
   "chat.chatInput.placeholder.chatCompactWork": "Використовуйте @ / # для помічників",
+  "chat.chatInput.agentChangedAnnouncement": "Агента змінено на {agent}",
   "chat.chatInput.placeholder.selectSession": "Виберіть або створіть сесію, щоб розпочати спілкування",
   "chat.snippetAutocomplete.action.addNew": "+ Додати новий сніпет",
   "chat.snippetAutocomplete.empty": "Сніпети не знайдено",
@@ -2434,6 +2453,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   "chat.toolOutputDialog.image.previousAria": "Попереднє зображення",
   "chat.toolOutputDialog.image.nextAria": "Наступне зображення",
   "chat.toolOutputDialog.image.closeAria": "Закрити попередній перегляд зображення",
+  "chat.toolOutputDialog.image.previewAria": "Попередній перегляд зображення",
   "chat.toolOutputDialog.mermaid.missingSource": "Відсутнє джерело Mermaid URL.",
   "chat.toolOutputDialog.mermaid.loadFailed": "Не вдалося завантажити діаграму Mermaid.",
   "chat.toolOutputDialog.mermaid.dataUrlMalformed": "URL даних Mermaid має неправильний формат.",
@@ -2442,6 +2462,9 @@ export const dict: Partial<Record<I18nKey, string>> = {
   "chat.toolOutputDialog.mermaid.unsupportedUrlProtocol": "Протокол URL Mermaid не підтримується.",
   "chat.toolOutputDialog.mermaid.loadFailedWithStatus": "Не вдалося завантажити діаграму Mermaid. Статус: {status}.",
   "chat.toolOutputDialog.mermaid.closeAria": "Закрити попередній перегляд діаграми",
+  "chat.toolOutputDialog.mermaid.previewAria": "Попередній перегляд діаграми",
+
+  "chat.toolOutputDialog.mermaid.diagramTitle": "Діаграма {number}",
   "chat.toolOutputDialog.mermaid.loading": "Завантаження діаграми...",
   "chat.toolOutputDialog.mermaid.renderFailed": "Неможливо відобразити діаграму Mermaid.",
   "chat.toolOutputDialog.mermaid.retry": "Повторити спробу",
@@ -3097,7 +3120,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   "updateDialog.actions.openMobileUpdate": "Відкрити оновлення",
   "updateDialog.status.updating": "Оновлення...",
   "updateDialog.error.updateFailed": "Помилка оновлення",
-  "updateDialog.error.takingLonger": "Оновлення триває довше, ніж очікувалося. Зачекайте трохи та оновіть або запустіть: openchamber update",
+  "updateDialog.error.takingLonger": "Оновлення триває довше, ніж очікувалося. Зачекайте трохи та оновіть або запустіть: ivaldi update",
   "mobileUpdate.toast.available.title": "Доступне оновлення Ivaldi",
   "mobileUpdate.toast.available.description": "Версія {version} готова для Android.",
   "mobileUpdate.toast.actions.download": "Завантажити",

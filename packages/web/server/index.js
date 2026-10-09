@@ -117,6 +117,7 @@ import { createDevServerScanner } from './lib/dev-servers/routes.js';
 import { createDevTunnelRuntime } from './lib/dev-tunnel/runtime.js';
 import { registerBrowserControlRoutes } from './lib/browser-control/routes.js';
 import { createSystemPromptRuntime } from './lib/system-prompt/runtime.js';
+import { createOpenCodePermissionGuard } from './lib/permission-auto-accept/opencode-guard.js';
 import { createOpenChamberSessionService } from './lib/openchamber-sessions/routes.js';
 import { createScheduledTaskService } from './lib/scheduled-tasks/service.js';
 import { createOpenChamberControlService } from './lib/openchamber-control/service.js';
@@ -292,6 +293,7 @@ let notificationTemplateRuntime = null;
 let agentToolRuntime = null;
 let lifecycleHookRuntime = null;
 let systemPromptRuntime = null;
+let permissionGuard = null;
 let desktopComputerUse = null;
 
 const createTimeoutSignal = (...args) => notificationTemplateRuntime.createTimeoutSignal(...args);
@@ -396,8 +398,7 @@ const settingsRuntime = createSettingsRuntime({
 
 const readSettingsFromDiskMigrated = (...args) => settingsRuntime.readSettingsFromDiskMigrated(...args);
 const readSettingsFromDisk = (...args) => settingsRuntime.readSettingsFromDisk(...args);
-const readSettingsFromDiskStrict = (...args) => settingsRuntime.readSettingsFromDiskStrict(...args);
-const writeSettingsToDisk = (...args) => settingsRuntime.writeSettingsToDisk(...args);
+const updateSettings = (...args) => settingsRuntime.updateSettings(...args);
 const persistSettings = (...args) => settingsRuntime.persistSettings(...args);
 const lifecycleHookManagementService = createLifecycleHookManagementService({
   getLifecycleHookRuntime: () => lifecycleHookRuntime,
@@ -406,6 +407,10 @@ const lifecycleHookManagementService = createLifecycleHookManagementService({
 
 const requestSecurityRuntime = createRequestSecurityRuntime({
   readSettingsFromDiskMigrated,
+  // Read lazily: both controllers are assigned during server startup.
+  isUiAuthEnabled: () => Boolean(uiAuthController?.enabled),
+  getActiveTunnelHost: () => tunnelAuthController.getActiveTunnelHost(),
+  isUnauthenticatedLanAllowed: () => isUnsafeUnauthenticatedLanAllowed(process.env),
 });
 
 const getUiSessionTokenFromRequest = (...args) => requestSecurityRuntime.getUiSessionTokenFromRequest(...args);
@@ -416,7 +421,7 @@ const pushRuntime = createPushRuntime({
   webPush,
   PUSH_SUBSCRIPTIONS_FILE_PATH,
   readSettingsFromDiskMigrated,
-  writeSettingsToDisk,
+  updateSettings,
 });
 
 const getOrCreateVapidKeys = (...args) => pushRuntime.getOrCreateVapidKeys(...args);
@@ -444,8 +449,7 @@ const apnsRuntime = createApnsRuntime({
   http2,
   APNS_TOKENS_FILE_PATH,
   readSettingsFromDiskMigrated,
-  writeSettingsToDisk,
-  readSettingsStrict: readSettingsFromDiskStrict,
+  updateSettings,
 });
 
 const addOrUpdateApnsToken = (...args) => apnsRuntime.addOrUpdateApnsToken(...args);
@@ -460,6 +464,7 @@ const rejectWebSocketUpgrade = (...args) => requestSecurityRuntime.rejectWebSock
 
 
 const isRequestOriginAllowed = (...args) => requestSecurityRuntime.isRequestOriginAllowed(...args);
+const getUntrustedUnauthenticatedUpgradeReason = (...args) => requestSecurityRuntime.getUntrustedUnauthenticatedUpgradeReason(...args);
 
 const notificationEmitterRuntime = createNotificationEmitterRuntime({
   process,
@@ -1235,8 +1240,8 @@ const openCodeLifecycleRuntime = createOpenCodeLifecycleRuntime({
         broadcastUiNotification({
           title: multiple ? 'Chats interrupted' : 'Chat interrupted',
           body: multiple
-            ? 'OpenCode restarted during running responses. Send a message in each chat to continue.'
-            : 'OpenCode restarted during a running response. Send a message to continue.',
+            ? 'Ivaldi restarted during running responses. Send a message in each chat to continue.'
+            : 'Ivaldi restarted during a running response. Send a message to continue.',
           tag: 'opencode-restart-interrupted',
           kind: 'opencode-restart-interrupted',
           sessionId: sessionIds[0],
@@ -1257,11 +1262,17 @@ const openCodeLifecycleRuntime = createOpenCodeLifecycleRuntime({
     const managedEnv = includeControl || includeWeb || includeMemory || includeComputer
       ? await (agentToolRuntime?.prepareManagedOpenCodeEnv({ includeControl, includeWeb, includeMemory, includeComputer }) || {})
       : {};
-    if (settings?.optimizeSystemPrompt !== true) return managedEnv;
+    const promptEnv = settings?.optimizeSystemPrompt === true
+      ? {
+        ...managedEnv,
+        ...await systemPromptRuntime.prepareManagedOpenCodeEnv(managedEnv.OPENCODE_CONFIG_CONTENT ?? process.env.OPENCODE_CONFIG_CONTENT),
+      }
+      : managedEnv;
 
-    const configContent = managedEnv.OPENCODE_CONFIG_CONTENT ?? process.env.OPENCODE_CONFIG_CONTENT;
-    const systemPromptEnv = await systemPromptRuntime.prepareManagedOpenCodeEnv(configContent);
-    return { ...managedEnv, ...systemPromptEnv };
+    // Always injected. Without it OpenCode allows edits and shell commands on
+    // its own, and the permission mode never gets a say.
+    const guardEnv = await permissionGuard.prepareManagedOpenCodeEnv(promptEnv.OPENCODE_CONFIG_CONTENT ?? process.env.OPENCODE_CONFIG_CONTENT);
+    return { ...promptEnv, ...guardEnv };
   },
 });
 
@@ -1563,6 +1574,11 @@ async function main(options = {}) {
     path,
     dataDir: OPENCHAMBER_DATA_DIR,
   });
+  permissionGuard = createOpenCodePermissionGuard({
+    fsPromises,
+    path,
+    dataDir: OPENCHAMBER_DATA_DIR,
+  });
 
   // Pairing transports advertised to the create-device dialog. LAN reachability is
   // derived from the SERVER's actual bind (a wildcard bind → the machine's LAN IP;
@@ -1712,7 +1728,10 @@ async function main(options = {}) {
     'https://localhost',
   ]);
   const isLocalDevClientOrigin = (origin) => /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin);
-  app.set('trust proxy', true);
+  // Only a proxy on this machine (the tunnel connectors, a local reverse
+  // proxy) may set X-Forwarded-*. Trusting every hop let any client spoof
+  // req.hostname and req.ip through those headers.
+  app.set('trust proxy', 'loopback');
   // Keep self-hosted instances out of search engines. The app shell is served
   // publicly (it loads before prompting for the UI password), so without this
   // even a password-protected instance gets crawled and indexed. Applies to
@@ -1739,6 +1758,19 @@ async function main(options = {}) {
       }
     }
     next();
+  });
+  app.use((req, res, next) => {
+    requestSecurityRuntime.getUntrustedHttpRequestReason(req).then((reason) => {
+      if (reason === 'untrusted-host') {
+        res.status(403).json({ error: 'Untrusted host. Open Ivaldi through localhost, set a UI password, or configure publicOrigin.' });
+        return;
+      }
+      if (reason === 'cross-site') {
+        res.status(403).json({ error: 'Cross-site request refused' });
+        return;
+      }
+      next();
+    }, next);
   });
   app.use(compression({
     filter: (req, res) => {
@@ -1847,7 +1879,7 @@ async function main(options = {}) {
     ensureGlobalWatcherStarted,
     getOrCreateVapidKeys,
     getUiSessionTokenFromRequest,
-    writeSettingsToDisk,
+    updateSettings,
     addOrUpdatePushSubscription,
     removePushSubscription,
     addOrUpdateApnsToken,
@@ -1892,8 +1924,7 @@ async function main(options = {}) {
     crypto,
     os,
     readSettingsFromDiskMigrated,
-    writeSettingsToDisk,
-    readSettingsStrict: readSettingsFromDiskStrict,
+    updateSettings,
     remoteClientAuthRuntime,
     getLocalPort: () => tunnelRuntimeContext.getActivePort(),
     // One relay host per machine: every instance sharing this data dir shares
@@ -1947,6 +1978,7 @@ async function main(options = {}) {
     discoverDevServers: listDevServers,
     uiAuthController,
     isRequestOriginAllowed,
+    getUntrustedUnauthenticatedUpgradeReason,
     rejectWebSocketUpgrade,
     logger: console,
   });
@@ -2015,6 +2047,7 @@ async function main(options = {}) {
     searchPathFor,
     isExecutable,
     isRequestOriginAllowed,
+    getUntrustedUnauthenticatedUpgradeReason,
     rejectWebSocketUpgrade,
     buildOpenCodeUrl,
     getOpenCodeAuthHeaders,

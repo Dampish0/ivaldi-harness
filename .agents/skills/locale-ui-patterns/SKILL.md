@@ -9,16 +9,24 @@ description: Use when creating or modifying OpenChamber UI text, labels, buttons
 
 User-facing UI text must go through `@/lib/i18n`; do not hardcode English strings in components.
 
-## Translate everything immediately (no English placeholders)
+## Supported languages
 
-Every key you add to a non-English dictionary MUST contain a real translation in that language — never the English source string as a stand-in. There is NO "leave it in English for now" convention in this project; if an agent told you there was, it was wrong. Copying the English value into `es.ts`/`fr.ts`/`ko.ts`/`pl.ts`/`pt-BR.ts`/`uk.ts`/`zh-CN.ts`/`zh-TW.ts` is a defect, not a deferral. The app ships every locale at once, so an untranslated key is a visible bug for those users.
+Only English and Swedish are maintained. Add new keys in English, and in Swedish once a Swedish catalog exists. Do not add new keys to the other locale files. Those languages show the English text for keys they lack, and the parity test only rejects keys that English no longer has.
 
-If you genuinely cannot translate a language, say so explicitly to the user instead of silently pasting English. Do not invent a fallback policy.
+Never copy English text into another locale file as a stand-in. A key there must hold a real translation or be left out.
+
+When you remove or rename a key, remove or rename it in every locale file.
+
+## Work mode wording
+
+Work mode is for people who do not write code. `packages/ui/src/lib/i18n/messages/en.work.ts` holds everyday wording that replaces the English text while Work mode is on, for example chat instead of session and assistant instead of agent. Its header lists the word choices. When you add English text that Work mode shows and it uses developer words, add a Work version there too.
+
+Tool names in chat rows are not message keys. They live in `packages/ui/src/lib/toolHelpers.ts`, and `getToolDisplayName(tool, workMode)` returns the plain Work name from `WORK_TOOL_DISPLAY_NAMES`. Never show raw commands or code in a collapsed Work mode row. A command step shows the assistant's description of it instead.
 
 ## Required Flow
 
 1. Add or reuse a key in `packages/ui/src/lib/i18n/messages/en.ts`.
-2. Add the same key — fully translated, not the English text — to every non-English dictionary in `packages/ui/src/lib/i18n/messages/`.
+2. If Work mode shows the text and it uses developer words, add a Work version to `en.work.ts`.
 3. In components, call `const { t } = useI18n()` from `@/lib/i18n` and render `t('key')`.
 4. For locale names or language picker labels, use `label(locale)` from `useI18n()`.
 5. Keep locale state in `packages/ui/src/lib/i18n/*`; do not add locale fields to broad stores like `useUIStore`.
@@ -117,7 +125,7 @@ Keep these literal:
 ## Completion Criteria
 
 - No new hardcoded user-facing English in changed UI files.
-- Every new key exists in all dictionaries with a real translation.
+- Every new key exists in English, and in Swedish once that catalog exists.
 - All translated values are resolved inside a reactive render/hook boundary.
 - No locale state added to broad/shared stores.
 - No full app remount for locale changes.

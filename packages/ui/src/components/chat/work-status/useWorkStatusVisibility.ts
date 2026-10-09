@@ -24,6 +24,14 @@ export const WORK_STATUS_REQUIRED_ROW_WIDTH =
 type Options = {
   isMobile: boolean;
   isVSCode: boolean;
+  /**
+   * Work mode: the panel never takes a column of its own. It reports no fit,
+   * so it is only ever offered as the overlay, which stays closed until the
+   * user opens it. Otherwise it slid in beside the chat the moment the first
+   * message created the session, which people who do not write code read as
+   * something going wrong.
+   */
+  overlayOnly?: boolean;
 };
 
 type Result = {
@@ -50,7 +58,7 @@ type Result = {
  * panel, oscillating forever. The row width is independent of the panel, so it
  * is the only stable input.
  */
-export const useWorkStatusVisibility = ({ isMobile, isVSCode }: Options): Result => {
+export const useWorkStatusVisibility = ({ isMobile, isVSCode, overlayOnly = false }: Options): Result => {
   const [rowNode, setRowNode] = React.useState<HTMLDivElement | null>(null);
   const [rowWidth, setRowWidth] = React.useState<number | null>(null);
   const rowRef = React.useCallback((node: HTMLDivElement | null) => { setRowNode(node); }, []);
@@ -116,7 +124,7 @@ export const useWorkStatusVisibility = ({ isMobile, isVSCode }: Options): Result
     return () => observer.disconnect();
   }, [canMeasure, rowNode]);
 
-  const fits = layoutAllows && rowWidth !== null && rowWidth >= WORK_STATUS_REQUIRED_ROW_WIDTH;
+  const fits = !overlayOnly && layoutAllows && rowWidth !== null && rowWidth >= WORK_STATUS_REQUIRED_ROW_WIDTH;
   const visible = panelEnabled && fits;
 
   return { rowRef, visible, fits };

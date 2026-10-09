@@ -165,8 +165,8 @@ export const AgentSelector: React.FC<AgentSelectorProps> = ({
                     'w-fit opacity-60',
                     className
                 )}>
-                    <Icon name="loader-4" className="h-3 w-3 animate-spin text-muted-foreground flex-shrink-0" />
-                    <span className="typography-micro font-medium whitespace-nowrap text-muted-foreground">
+                    <Icon name="loader-4" className="h-3.5 w-3.5 animate-spin text-muted-foreground flex-shrink-0" />
+                    <span className="typography-ui-label font-normal whitespace-nowrap text-muted-foreground">
                         {isUnavailable ? t('common.unavailable') : t('common.loading')}
                     </span>
                 </div>
@@ -178,11 +178,11 @@ export const AgentSelector: React.FC<AgentSelectorProps> = ({
                             'w-fit cursor-pointer',
                             className
                         )}>
-                            <Icon name="robot-2" className="h-3 w-3 flex-shrink-0 text-muted-foreground" />
-                            <span className="typography-micro min-w-0 flex-1 truncate text-left font-medium">
+                            <Icon name="robot-2" className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
+                            <span className="typography-ui-label min-w-0 flex-1 truncate text-left font-normal text-foreground">
                                 {agentName || t('settings.commands.agentSelector.notSelected')}
                             </span>
-                            <Icon name="arrow-down-s" className="h-3 w-3 flex-shrink-0 text-muted-foreground" />
+                            <Icon name="arrow-down-s" className="h-4 w-4 flex-shrink-0 text-muted-foreground/50" />
                         </div>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="max-w-[300px]" portalToBody={dropdownPortalToBody}>

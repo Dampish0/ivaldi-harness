@@ -644,8 +644,8 @@ const UserMessageBody = React.memo(({ messageId, parts, messageCreatedAt, isMobi
                         <Button
                                 type="button"
                                 variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 text-muted-foreground bg-transparent hover:text-foreground hover:!bg-transparent active:!bg-transparent focus-visible:!bg-transparent focus-visible:ring-2 focus-visible:ring-primary/50"
+                                size="icon-xs"
+                                className="text-muted-foreground bg-transparent hover:text-foreground hover:!bg-transparent active:!bg-transparent focus-visible:!bg-transparent focus-visible:ring-2 focus-visible:ring-primary/50"
                                 aria-label={t('chat.messageBody.actions.revertAria')}
                                 onPointerDown={(event) => event.stopPropagation()}
                                 onClick={(event) => {
@@ -665,8 +665,8 @@ const UserMessageBody = React.memo(({ messageId, parts, messageCreatedAt, isMobi
                             <Button
                                 type="button"
                                 variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 text-muted-foreground bg-transparent hover:text-foreground hover:!bg-transparent active:!bg-transparent focus-visible:!bg-transparent focus-visible:ring-2 focus-visible:ring-primary/50"
+                                size="icon-xs"
+                                className="text-muted-foreground bg-transparent hover:text-foreground hover:!bg-transparent active:!bg-transparent focus-visible:!bg-transparent focus-visible:ring-2 focus-visible:ring-primary/50"
                                 aria-label={t('chat.messageBody.actions.forkAria')}
                                 onPointerDown={(event) => event.stopPropagation()}
                                 onClick={(event) => {
@@ -709,9 +709,9 @@ const UserMessageBody = React.memo(({ messageId, parts, messageCreatedAt, isMobi
                             <Button
                                 type="button"
                                 variant="ghost"
-                                size="icon"
+                                size="icon-xs"
                                 data-visible={copyHintVisible || isMessageCopied ? 'true' : undefined}
-                                className="h-6 w-6 text-muted-foreground bg-transparent hover:text-foreground hover:!bg-transparent active:!bg-transparent focus-visible:!bg-transparent focus-visible:ring-2 focus-visible:ring-primary/50"
+                                className="text-muted-foreground bg-transparent hover:text-foreground hover:!bg-transparent active:!bg-transparent focus-visible:!bg-transparent focus-visible:ring-2 focus-visible:ring-primary/50"
                                 aria-label={t('chat.messageBody.actions.copyMessageAria')}
                                 onPointerDown={(event) => event.stopPropagation()}
                                 onClick={handleCopyButtonClick}
@@ -1146,6 +1146,8 @@ const AssistantMessageBody = React.memo(({
 }: Omit<MessageBodyProps, 'isUser'>) => {
     const { t, locale } = useI18n();
     const chatSurfaceMode = useChatSurfaceMode();
+    // Agent names like "Build" mean nothing to Work mode users.
+    const isWorkMode = useProductModeStore((state) => state.mode === 'work');
     const streamPhase = _streamPhase;
     void _allowAnimation;
     const messageContentRef = React.useRef<HTMLDivElement>(null);
@@ -2024,8 +2026,8 @@ const AssistantMessageBody = React.memo(({
                         <Button
                             type="button"
                             variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-muted-foreground bg-transparent hover:text-foreground hover:!bg-transparent active:!bg-transparent focus-visible:!bg-transparent focus-visible:ring-2 focus-visible:ring-primary/50"
+                            size="icon-sm"
+                            className="text-muted-foreground bg-transparent hover:text-foreground hover:!bg-transparent active:!bg-transparent focus-visible:!bg-transparent focus-visible:ring-2 focus-visible:ring-primary/50"
                             aria-label={t('chat.messageBody.actions.openPreviewAria')}
                             onPointerDown={(event) => event.stopPropagation()}
                             onClick={() => {
@@ -2047,6 +2049,7 @@ const AssistantMessageBody = React.memo(({
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <Button
+                            aria-label={t('chat.messageBody.actions.saveAsPlan')}
                             type="button"
                             size="icon"
                             variant="ghost"
@@ -2090,10 +2093,11 @@ const AssistantMessageBody = React.memo(({
             {!isMiniChatSurface && !isReviewSessionView ? <Tooltip>
                 <TooltipTrigger asChild>
                     <Button
+                        aria-label={t('chat.messageBody.actions.startNewSession')}
                         type="button"
-                        size="icon"
+                        size="icon-sm"
                         variant="ghost"
-                        className="h-8 w-8 text-muted-foreground bg-transparent hover:text-foreground hover:!bg-transparent active:!bg-transparent focus-visible:!bg-transparent focus-visible:ring-2 focus-visible:ring-primary/50"
+                        className="text-muted-foreground bg-transparent hover:text-foreground hover:!bg-transparent active:!bg-transparent focus-visible:!bg-transparent focus-visible:ring-2 focus-visible:ring-primary/50"
                         onPointerDown={(event) => event.stopPropagation()}
                         onClick={handleForkClick}
                     >
@@ -2107,9 +2111,9 @@ const AssistantMessageBody = React.memo(({
                     <TooltipTrigger asChild>
                         <Button
                             type="button"
-                            size="icon"
+                            size="icon-sm"
                             variant="ghost"
-                            className="h-8 w-8 text-muted-foreground bg-transparent hover:text-foreground hover:!bg-transparent active:!bg-transparent focus-visible:!bg-transparent focus-visible:ring-2 focus-visible:ring-primary/50"
+                            className="text-muted-foreground bg-transparent hover:text-foreground hover:!bg-transparent active:!bg-transparent focus-visible:!bg-transparent focus-visible:ring-2 focus-visible:ring-primary/50"
                             onPointerDown={(event) => event.stopPropagation()}
                             onClick={handleForkMultiRunClick}
                         >
@@ -2225,7 +2229,7 @@ const AssistantMessageBody = React.memo(({
                                 </span>
                             </span>
                         ) : null}
-                        {footerAgentName ? (
+                        {footerAgentName && !isWorkMode ? (
                             <span className="flex items-center gap-1">
                                 <Icon name="ai-agent" className="h-3.5 w-3.5 flex-shrink-0" />
                                 <span className="message-footer__label">{footerAgentName}</span>

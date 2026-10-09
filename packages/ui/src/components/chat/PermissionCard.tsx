@@ -10,14 +10,17 @@ import { Icon } from "@/components/icon/Icon";
 import { DiffPreview, WritePreview } from './DiffPreview';
 import { useI18n } from '@/lib/i18n';
 import { getVisiblePermissionPatterns } from './permissionCardPatterns';
+import { ChatRequestCard } from './ChatRequestCard';
+import { getToolDisplayName as getToolRowName } from '@/lib/toolHelpers';
+import { useProductModeStore } from '@/stores/useProductModeStore';
 
 const PERMISSION_BASH_CUSTOM_STYLE: React.CSSProperties = {
   margin: 0,
   padding: '0.5rem',
   fontSize: 'var(--text-meta)',
   lineHeight: '1.25rem',
-  background: 'rgb(var(--muted) / 0.3)',
-  borderRadius: '0.25rem',
+  background: 'color-mix(in srgb, var(--surface-muted) 60%, transparent)',
+  borderRadius: 'var(--radius-md)',
   whiteSpace: 'pre-wrap',
   wordBreak: 'break-word',
   overflowWrap: 'break-word',
@@ -37,8 +40,8 @@ const PERMISSION_JSON_CUSTOM_STYLE: React.CSSProperties = {
   padding: '0.5rem',
   fontSize: 'var(--text-meta)',
   lineHeight: '1.25rem',
-  background: 'rgb(var(--muted) / 0.3)',
-  borderRadius: '0.25rem',
+  background: 'color-mix(in srgb, var(--surface-muted) 60%, transparent)',
+  borderRadius: 'var(--radius-md)',
 };
 
 interface PermissionCardProps {
@@ -77,7 +80,7 @@ const getToolIcon = (toolName: string) => {
   return <Icon name="tools" className={iconClass} />;
 };
 
-const getToolDisplayName = (toolName: string): string => {
+const getCanonicalToolName = (toolName: string): string => {
   const tool = toolName.toLowerCase();
 
   if (tool === 'edit' || tool === 'multiedit' || tool === 'str_replace' || tool === 'str_replace_based_edit_tool') {
@@ -96,6 +99,10 @@ const getToolDisplayName = (toolName: string): string => {
   return toolName;
 };
 
+// Same names as the tool row above the card, so "bash" reads as "Shell Command",
+// or the plain work-mode name.
+const getToolDisplayName = (toolName: string, workMode: boolean): string => getToolRowName(getCanonicalToolName(toolName), workMode);
+
 export const PermissionCard: React.FC<PermissionCardProps> = ({
   permission,
   onResponse
@@ -106,6 +113,7 @@ export const PermissionCard: React.FC<PermissionCardProps> = ({
   const respondToPermission = sessionActions.respondToPermission;
   const sessions = useSessions();
   const currentSessionId = useSessionUIStore((state) => state.currentSessionId);
+  const isWorkMode = useProductModeStore((state) => state.mode === 'work');
   const isFromSubagent = React.useMemo(() => {
     if (!currentSessionId || permission.sessionID === currentSessionId) return false;
     const sourceSession = sessions.find((session) => session.id === permission.sessionID);
@@ -146,7 +154,7 @@ export const PermissionCard: React.FC<PermissionCardProps> = ({
     const val = permission.metadata[key];
     return Boolean(val);
   };
-  const displayToolName = getToolDisplayName(toolName);
+  const displayToolName = getToolDisplayName(toolName, isWorkMode);
   const bashCommand = isBashTool
     ? getMeta('command') || getMeta('cmd') || getMeta('script')
     : '';
@@ -244,7 +252,7 @@ export const PermissionCard: React.FC<PermissionCardProps> = ({
                 <span className="rounded bg-[var(--surface-muted)] px-1.5 py-0.5 typography-meta font-semibold text-foreground">
                   {method}
                 </span>
-                <code className="typography-meta px-2 py-1 bg-muted/30 rounded flex-1 break-all">
+                <code className="typography-meta px-2 py-1 bg-muted/30 rounded-md flex-1 break-all">
                   {url}
                 </code>
               </div>
@@ -298,7 +306,7 @@ export const PermissionCard: React.FC<PermissionCardProps> = ({
           <div className="mb-2">
             <div className="typography-meta text-muted-foreground mb-1">{t('chat.permissionCard.action')}</div>
             <ScrollableOverlay outerClassName="max-h-32" className="p-0">
-              <pre className="typography-meta font-mono px-2 py-1 bg-muted/30 rounded whitespace-pre-wrap break-all">
+              <pre className="typography-meta font-mono px-2 py-1 bg-muted/30 rounded-md whitespace-pre-wrap break-all">
                 {String(genericContent)}
               </pre>
             </ScrollableOverlay>
@@ -309,7 +317,7 @@ export const PermissionCard: React.FC<PermissionCardProps> = ({
           <div>
             <div className="typography-meta text-muted-foreground mb-1">{t('chat.permissionCard.details')}</div>
             <ScrollableOverlay outerClassName="max-h-32" className="p-0">
-              <pre className="typography-meta font-mono px-2 py-1 bg-muted/30 rounded whitespace-pre-wrap break-all">
+              <pre className="typography-meta font-mono px-2 py-1 bg-muted/30 rounded-md whitespace-pre-wrap break-all">
                 {JSON.stringify(permission.metadata, null, 2)}
               </pre>
             </ScrollableOverlay>
@@ -320,86 +328,78 @@ export const PermissionCard: React.FC<PermissionCardProps> = ({
   };
 
   return (
-    <div className="group w-full pt-0 pb-2">
-      <div className="chat-column">
-        <div className="-mt-1 border-l-2 border-[var(--status-warning-border)] py-1 pl-3">
-          <div className="mb-2 flex min-w-0 items-center gap-2">
-            <Icon name="question" className="size-3.5 shrink-0 text-[var(--status-warning)]" />
-            <span className="typography-meta font-medium text-foreground">
-              {t('sessions.sidebar.session.status.permissionRequired')}
+    <ChatRequestCard
+      icon="shield-keyhole"
+      tone="warning"
+      title={t('sessions.sidebar.session.status.permissionRequired')}
+      meta={(
+        <>
+          {getToolIcon(toolName)}
+          <span className="truncate">{displayToolName}</span>
+        </>
+      )}
+      aside={isFromSubagent ? (
+        <span className="typography-micro text-muted-foreground">{t('chat.questionCard.fromSubagent')}</span>
+      ) : null}
+      footer={(
+        <>
+          <Button
+            type="button"
+            variant="default"
+            size="sm"
+            onClick={() => handleResponse('once')}
+            disabled={isResponding}
+            className="w-full sm:w-auto"
+          >
+            <Icon name="check" className="size-3.5" />
+            {t('chat.permissionRequest.actions.once')}
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => handleResponse('always')}
+            disabled={isResponding}
+            className="w-full sm:w-auto"
+          >
+            <Icon name="time" className="size-3.5" />
+            <span className="max-w-[220px] truncate">
+              {t('chat.permissionRequest.actions.always')}
+              {permission.always.length > 0 ? ` · ${permission.always.slice(0, 2).join(', ')}` : ''}
             </span>
-            <span className="inline-flex min-w-0 items-center gap-1.5 text-muted-foreground">
-              {getToolIcon(toolName)}
-              <span className="typography-meta truncate">{displayToolName}</span>
-            </span>
-            {isFromSubagent ? (
-              <span className="typography-micro ml-auto shrink-0 text-muted-foreground">
-                {t('chat.questionCard.fromSubagent')}
-              </span>
-            ) : null}
-          </div>
+          </Button>
 
-          <div className="pr-1">
-            {visiblePatterns.length > 0 && (
-              <div className="mb-2">
-                <div className="typography-meta text-muted-foreground mb-1">{t('chat.permissionCard.patterns')}</div>
-                <code className="typography-meta px-2 py-1 bg-muted/30 rounded block break-all">
-                  {visiblePatterns.join(", ")}
-                </code>
-              </div>
-            )}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => handleResponse('reject')}
+            disabled={isResponding}
+            className="w-full text-muted-foreground hover:text-[var(--status-error)] sm:w-auto"
+          >
+            <Icon name="close" className="size-3.5" />
+            {t('chat.permissionRequest.actions.reject')}
+          </Button>
 
-            {renderToolContent()}
-          </div>
-
-          <div className="mt-3 flex flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:items-center">
-            <Button
-              type="button"
-              variant="default"
-              size="sm"
-              onClick={() => handleResponse('once')}
-              disabled={isResponding}
-              className="w-full sm:w-auto"
-            >
-              <Icon name="check" className="size-3.5" />
-              {t('chat.permissionRequest.actions.once')}
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => handleResponse('always')}
-              disabled={isResponding}
-              className="w-full sm:w-auto"
-            >
-              <Icon name="time" className="size-3.5" />
-              <span className="max-w-[220px] truncate">
-                {t('chat.permissionRequest.actions.always')}
-                {permission.always.length > 0 ? ` · ${permission.always.slice(0, 2).join(', ')}` : ''}
-              </span>
-            </Button>
-
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => handleResponse('reject')}
-              disabled={isResponding}
-              className="w-full text-muted-foreground hover:text-[var(--status-error)] sm:w-auto"
-            >
-              <Icon name="close" className="size-3.5" />
-              {t('chat.permissionRequest.actions.reject')}
-            </Button>
-
-            {isResponding && (
-              <div className="flex w-full justify-center py-1 text-muted-foreground sm:ml-auto sm:w-auto sm:py-0">
-                <Icon name="loader-4" className="size-3.5 animate-spin" />
-              </div>
-            )}
-          </div>
+          {isResponding && (
+            <div className="flex w-full justify-center py-1 text-muted-foreground sm:ml-auto sm:w-auto sm:py-0">
+              <Icon name="loader-4" className="size-3.5 animate-spin" />
+            </div>
+          )}
+        </>
+      )}
+    >
+      {visiblePatterns.length > 0 && (
+        <div className="mb-2">
+          <div className="typography-meta text-muted-foreground mb-1">{t('chat.permissionCard.patterns')}</div>
+          <code className="typography-meta px-2 py-1 bg-muted/30 rounded-md block break-all">
+            {visiblePatterns.join(", ")}
+          </code>
         </div>
-      </div>
-    </div>
+      )}
+
+      {renderToolContent()}
+    </ChatRequestCard>
   );
 };

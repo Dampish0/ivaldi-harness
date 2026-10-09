@@ -89,15 +89,15 @@ const Toaster = ({ ...props }: ToasterProps) => {
       toastOptions={{
         classNames: {
           toast:
-            "group/toast toast !rounded-[var(--radius-xl)] !border-0 !px-3.5 !py-3 !gap-2.5 !text-foreground [&_[data-cancel]+[data-button]]:!ml-2",
+            "group/toast toast !rounded-xl !border-0 !px-3.5 !py-3 !gap-2.5 !text-foreground [&_[data-cancel]+[data-button]]:!ml-2",
           title: "typography-ui-label !font-medium !text-foreground",
           description: "typography-meta !text-muted-foreground !mt-0.5",
           actionButton:
-            "!rounded-[var(--radius-md)] !bg-[var(--primary-base)] !text-[var(--primary-foreground)] hover:!opacity-85 !px-2 !py-1 typography-meta !font-medium transition-opacity",
+            "!rounded-md !bg-[var(--primary-base)] !text-[var(--primary-foreground)] hover:!opacity-85 !px-2 !py-1 typography-meta !font-medium transition-opacity",
           cancelButton:
-            "!rounded-[var(--radius-md)] !bg-[var(--interactive-hover)] !text-foreground hover:!bg-[var(--interactive-active)] !px-2 !py-1 typography-meta !font-medium transition-colors",
+            "!rounded-md !bg-[var(--interactive-hover)] !text-foreground hover:!bg-[var(--interactive-active)] !px-2 !py-1 typography-meta !font-medium transition-colors",
           closeButton:
-            "!rounded-[var(--radius-md)] !bg-[var(--interactive-hover)] !text-foreground hover:!bg-[var(--interactive-active)]",
+            "!rounded-md !bg-[var(--interactive-hover)] !text-foreground hover:!bg-[var(--interactive-active)]",
           icon: "!text-muted-foreground",
           success: "[&_[data-icon]]:!text-[var(--status-success)]",
           error: "[&_[data-icon]]:!text-[var(--status-error)]",

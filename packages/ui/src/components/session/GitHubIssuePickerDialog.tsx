@@ -553,10 +553,13 @@ export function GitHubIssuePickerDialog({
               )}
               onClick={() => void startSession(directNumber)}
             >
-              <span className="typography-meta text-muted-foreground w-5 text-right flex-shrink-0">#</span>
-              <p className="flex-1 min-w-0 typography-small text-foreground truncate ml-0.5">
-                {t('session.githubIssuePicker.actions.useIssue', { number: directNumber })}
-              </p>
+              {/* Keyboard activation clicks this button, and the row handles the click. */}
+              <button type="button" className="flex flex-1 min-w-0 items-center gap-2 text-left">
+                <span className="typography-meta text-muted-foreground w-5 text-right flex-shrink-0">#</span>
+                <span className="block flex-1 min-w-0 typography-meta text-foreground truncate ml-0.5">
+                  {t('session.githubIssuePicker.actions.useIssue', { number: directNumber })}
+                </span>
+              </button>
               <div className="flex-shrink-0 h-5 flex items-center mr-2">
                 {startingIssueNumber === directNumber ? (
                   <Icon name="loader-4" className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -578,19 +581,22 @@ export function GitHubIssuePickerDialog({
               )}
               onClick={() => void startSession(issue.number, issue.sourceRepo)}
             >
-              <span className="typography-meta text-muted-foreground w-12 text-right flex-shrink-0">
-                #{issue.number}
-              </span>
-              <div className="flex-1 min-w-0 ml-0.5">
-                <p className="typography-small text-foreground truncate">
-                  {issue.title}
-                </p>
-                {issue.sourceRepo?.source === 'upstream' ? (
-                  <span className="typography-micro px-1 py-0.5 rounded bg-status-info/10 text-status-info mt-0.5 inline-block">
-                    {issue.sourceRepo.owner}/{issue.sourceRepo.repo}
+              {/* Keyboard activation clicks this button, and the row handles the click. */}
+              <button type="button" className="flex flex-1 min-w-0 items-center gap-2 text-left">
+                <span className="typography-meta text-muted-foreground w-12 text-right flex-shrink-0">
+                  #{issue.number}
+                </span>
+                <span className="block flex-1 min-w-0 ml-0.5">
+                  <span className="block typography-meta text-foreground truncate">
+                    {issue.title}
                   </span>
-                ) : null}
-              </div>
+                  {issue.sourceRepo?.source === 'upstream' ? (
+                    <span className="typography-micro px-1 py-0.5 rounded bg-status-info/10 text-status-info mt-0.5 inline-block">
+                      {issue.sourceRepo.owner}/{issue.sourceRepo.repo}
+                    </span>
+                  ) : null}
+                </span>
+              </button>
 
               <div className="flex-shrink-0 h-5 flex items-center mr-2">
                 {startingIssueNumber === issue.number ? (
@@ -706,7 +712,7 @@ export function GitHubIssuePickerDialog({
               <h2 className="typography-ui-label font-semibold text-foreground">{title}</h2>
               {closeButton}
             </div>
-            <p className="typography-small text-muted-foreground">{description}</p>
+            <p className="typography-meta text-muted-foreground">{description}</p>
           </div>
         )}
       >

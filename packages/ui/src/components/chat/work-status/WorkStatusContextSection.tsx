@@ -194,7 +194,6 @@ export const WorkStatusContextSection: React.FC<Props> = ({ sessionId, directory
     <WorkStatusCollapsibleSection
       id="context-sources"
       title={t('chat.workStatus.section.contextBreakdown')}
-      icon="stack"
       summary={summaryParts.join(' · ')}
     >
       {/* Attached threads first: they are specific to this session, while the

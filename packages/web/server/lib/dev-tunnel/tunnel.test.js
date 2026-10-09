@@ -56,6 +56,7 @@ const startHost = async ({ allowedPorts, auth = null, discoveryOk = true }) => {
       : { ok: false, reason: 'no-listener-source' }),
     uiAuthController: auth ?? { enabled: false },
     isRequestOriginAllowed: async (req) => req.headers.origin === 'http://allowed.example',
+    getUntrustedUnauthenticatedUpgradeReason: async (req) => (req.headers.origin === 'http://evil.example' ? 'cross-site' : null),
     rejectWebSocketUpgrade: (socket, status, message) => {
       socket.write(`HTTP/1.1 ${status} ${message}\r\n\r\n`);
       socket.destroy();
@@ -113,7 +114,10 @@ describe('dev tunnel end to end', () => {
     expect(response.headers['x-dev-header']).toBe('kept');
   });
 
-  test('drops a connection that floods a handshake that never completes', async () => {
+  // The tunnel client only runs in Electron's main process, which is Node. Bun
+  // does not close a paused socket on destroy(), so under `bun test` the drop
+  // happens but the far end never sees it. The suite runs under vitest on Node.
+  test.skipIf(Boolean(process.versions.bun))('drops a connection that floods a handshake that never completes', async () => {
     // A host that accepts the TCP connection and then says nothing: the
     // WebSocket handshake hangs, which is when buffering could run away.
     const stalled = net.createServer(() => {});
@@ -275,6 +279,20 @@ describe('dev tunnel authentication', () => {
       baseUrl: host.baseUrl,
       port: devPort,
       headers: { Authorization: 'Bearer good', Origin: 'http://evil.example' },
+    });
+    await expect(httpGet(localPort, '/')).rejects.toThrow();
+  });
+
+  test('without a UI password, refuses an upgrade the request guard calls cross-site', async () => {
+    const devPort = await startDevServer((_req, res) => res.end('ok'));
+    const host = await startHost({ allowedPorts: [devPort] });
+    const client = createDevTunnelClient({ logger: { warn: () => {} } });
+    started.push(() => client.closeAll());
+
+    const { localPort } = await client.open({
+      baseUrl: host.baseUrl,
+      port: devPort,
+      headers: { Origin: 'http://evil.example' },
     });
     await expect(httpGet(localPort, '/')).rejects.toThrow();
   });

@@ -553,9 +553,9 @@ const SkillListItem: React.FC<SkillListItemProps> = ({
 
         {!isBuiltIn ? <DropdownMenu open={isMenuOpen} onOpenChange={(open) => { if (open) setIsContextMenuOpen(false); onMenuOpenChange(open); }}>
           <DropdownMenuTrigger asChild>
-            <Button size="sm"
+            <Button aria-label={t('common.actions.moreActions')} size="sm"
               variant="ghost"
-              className="h-6 w-6 px-0 flex-shrink-0 -mr-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100"
+              className="h-6 w-6 px-0 flex-shrink-0 -mr-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:data-[state=open]:opacity-100"
             >
               <Icon name="more-2" className="h-3.5 w-3.5" />
             </Button>

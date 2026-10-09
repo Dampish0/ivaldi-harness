@@ -137,7 +137,7 @@ export const McpOAuthCallbackPage: React.FC = () => {
           </h1>
           <p
             className={cn(
-              'typography-body',
+              'typography-markdown',
               status === 'error'
                 ? 'text-[var(--status-error)]'
                 : status === 'success'

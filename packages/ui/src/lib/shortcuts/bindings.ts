@@ -114,7 +114,9 @@ export function keyToShortcutToken(key: string): string {
   if (lowered === 'arrowleft') return 'arrowleft';
   if (lowered === 'arrowright') return 'arrowright';
 
-  return SHIFTED_KEY_BASE_MAP[lowered] ?? lowered;
+  // Re-tokenize the unshifted base so "<" and ">" reach "comma" and "period".
+  const shiftedBase = SHIFTED_KEY_BASE_MAP[lowered];
+  return shiftedBase ? keyToShortcutToken(shiftedBase) : lowered;
 }
 
 export function normalizeCombo(combo: ShortcutCombo): ShortcutCombo {
@@ -324,7 +326,18 @@ export function eventMatchesShortcut(
     if (event.ctrlKey && !ctrlUsedAsMod) return false;
   }
 
-  return keyToShortcutToken(resolveShortcutEventKey(event)) === keyToShortcutToken(chord.key);
+  const expectedKey = keyToShortcutToken(chord.key);
+  if (keyToShortcutToken(resolveShortcutEventKey(event)) === expectedKey) return true;
+  // Shift changes the character a punctuation key produces, and that character
+  // depends on the layout ("." gives ">" on US and ":" on Nordic layouts). For a
+  // shifted chord, a symbol press also matches through its physical key.
+  if (!expectedShift || !isSingleSymbolKey(event.key)) return false;
+  const physicalKey = keyFromEventCode(event.code);
+  return physicalKey !== null && keyToShortcutToken(physicalKey) === expectedKey;
+}
+
+function isSingleSymbolKey(key: string): boolean {
+  return key.length === 1 && !/[\p{L}\p{N}\s]/u.test(key);
 }
 
 export function isShortcutPrefixHeld(prefixCombo: ShortcutCombo, heldKeys: ReadonlySet<string>): boolean {

@@ -229,8 +229,13 @@ test('reduced motion skips sheet travel and the closing delay', async () => {
   testWindow.happyDOM.settings.device.prefersReducedMotion = 'reduce';
   const panel = (open: boolean) => <MobileOverlayPanel open={open} title="Models" onClose={() => {}}><button>Choice</button></MobileOverlayPanel>;
   await render(panel(true));
-  expect(document.querySelector<HTMLElement>('.pwa-overlay-panel')?.style.transition).toBe('none');
+  // The sheet travel is driven by motion, so the panel has no CSS transition
+  // to disable. Reduced motion pins it in place; the scrim's CSS fade is off
+  // and it is fully shown without waiting for the entrance frames.
   expect(document.querySelector<HTMLElement>('.pwa-overlay-panel')?.style.transform).toBe('none');
+  const scrim = document.querySelector<HTMLElement>('[role="dialog"] > [aria-hidden="true"]');
+  expect(scrim?.style.transition).toBe('none');
+  expect(scrim?.style.opacity).toBe('1');
   await act(async () => root.render(<I18nProvider>{panel(false)}</I18nProvider>));
   expect(document.querySelectorAll('[role="dialog"]').length).toBe(0);
   expect(document.activeElement).toBe(trigger);

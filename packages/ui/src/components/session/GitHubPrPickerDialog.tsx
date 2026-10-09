@@ -314,7 +314,7 @@ export function GitHubPrPickerDialog({
               ariaLabel={t('session.githubPrPicker.includeDiffAria')}
             />
           </span>
-          <span className="typography-small text-muted-foreground whitespace-nowrap">{t('session.githubPrPicker.includeDiff')}</span>
+          <span className="typography-meta text-muted-foreground whitespace-nowrap">{t('session.githubPrPicker.includeDiff')}</span>
         </button>
       </div>
 
@@ -357,10 +357,13 @@ export function GitHubPrPickerDialog({
               )}
               onClick={() => void attachPr(directNumber)}
             >
-              <span className="typography-meta text-muted-foreground w-5 text-right flex-shrink-0">#</span>
-              <p className="flex-1 min-w-0 typography-small text-foreground truncate ml-0.5">
-                {t('session.githubPrPicker.actions.usePullRequest', { number: directNumber })}
-              </p>
+              {/* Keyboard activation clicks this button, and the row handles the click. */}
+              <button type="button" className="flex flex-1 min-w-0 items-center gap-2 text-left">
+                <span className="typography-meta text-muted-foreground w-5 text-right flex-shrink-0">#</span>
+                <span className="block flex-1 min-w-0 typography-meta text-foreground truncate ml-0.5">
+                  {t('session.githubPrPicker.actions.usePullRequest', { number: directNumber })}
+                </span>
+              </button>
               <div className="flex-shrink-0 h-5 flex items-center mr-2">
                 {loadingPrNumber === directNumber ? (
                   <Icon name="loader-4" className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -382,18 +385,19 @@ export function GitHubPrPickerDialog({
               )}
               onClick={() => void attachPr(pr.number, pr.sourceRepo)}
             >
-              <div className="flex-1 min-w-0 ml-0.5">
-                <p className="typography-small text-foreground truncate">
+              {/* Keyboard activation clicks this button, and the row handles the click. */}
+              <button type="button" className="block flex-1 min-w-0 ml-0.5 text-left">
+                <span className="block typography-meta text-foreground truncate">
                   <span className="text-muted-foreground mr-1">#{pr.number}</span>
                   {pr.title}
-                </p>
+                </span>
                 {pr.sourceRepo?.source === 'upstream' ? (
                   <span className="typography-micro px-1 py-0.5 rounded bg-status-info/10 text-status-info">
                     {pr.sourceRepo.owner}/{pr.sourceRepo.repo}
                   </span>
                 ) : null}
-                <p className="typography-meta text-muted-foreground truncate">{pr.head} → {pr.base}</p>
-              </div>
+                <span className="block typography-meta text-muted-foreground truncate">{pr.head} → {pr.base}</span>
+              </button>
 
               <div className="flex-shrink-0 h-5 flex items-center mr-2">
                 {loadingPrNumber === pr.number ? (
@@ -455,7 +459,7 @@ export function GitHubPrPickerDialog({
               <h2 className="typography-ui-label font-semibold text-foreground">{title}</h2>
               {closeButton}
             </div>
-            <p className="typography-small text-muted-foreground">{description}</p>
+            <p className="typography-meta text-muted-foreground">{description}</p>
           </div>
         )}
       >

@@ -54,6 +54,7 @@ import {
 import { Icon } from "@/components/icon/Icon";
 import { SortableTabsStrip, type SortableTabsStripItem } from '@/components/ui/sortable-tabs-strip';
 import { useI18n } from '@/lib/i18n';
+import { useProductModeStore } from '@/stores/useProductModeStore';
 
 // ─────────────────────────────────────────────────────────────
 // CommandTextarea  — one arg per line, paste-friendly
@@ -551,6 +552,7 @@ const buildMcpRuntimeActionKey = (name: string | null, directory?: string | null
 // ─────────────────────────────────────────────────────────────
 export const McpPage: React.FC = () => {
   const { t } = useI18n();
+  const isWorkMode = useProductModeStore((state) => state.mode === 'work');
   const tUnsafe = React.useCallback(
     (key: string, params?: Record<string, unknown>) => t(key as never, params as never),
     [t]
@@ -916,18 +918,25 @@ export const McpPage: React.FC = () => {
         resetTransientAuthState();
         if (isNewServer) { setMcpDraft(null); setSelectedMcp(name); }
         await refreshStatus({ directory: currentDirectory, silent: true });
+        // Server messages name OpenCode, so Work mode shows its own wording.
+        // A manual restart message for an external server is kept as is.
+        const useWorkWording = isWorkMode && !result.requiresManualRestart;
         if (result.reloadFailed) {
-          toast.warning(result.message || (isNewServer
-            ? t('settings.mcp.page.toast.serverCreatedReloadFailed')
-            : t('settings.mcp.page.toast.savedReloadFailed')), {
+          toast.warning(useWorkWording
+            ? t('settings.mcp.page.toast.savedReloadFailedWork')
+            : result.message || (isNewServer
+              ? t('settings.mcp.page.toast.serverCreatedReloadFailed')
+              : t('settings.mcp.page.toast.savedReloadFailed')), {
             description: result.warning || t('settings.mcp.page.toast.retryRefreshHint'),
           });
         } else if (result.restartDeferred) {
-          toast.success(t('settings.view.pendingRestart.saved'));
+          toast.success(t(useWorkWording ? 'settings.mcp.page.toast.savedRestartWork' : 'settings.view.pendingRestart.saved'));
         } else {
-          toast.success(result.message || (isNewServer
-            ? t('settings.mcp.page.toast.serverCreatedReloading')
-            : t('settings.mcp.page.toast.savedReloading')));
+          toast.success(useWorkWording
+            ? t('settings.mcp.page.toast.savedReloadingWork')
+            : result.message || (isNewServer
+              ? t('settings.mcp.page.toast.serverCreatedReloading')
+              : t('settings.mcp.page.toast.savedReloading')));
         }
       } else {
         toast.error(t('settings.mcp.page.toast.saveFailed'));
@@ -946,10 +955,17 @@ export const McpPage: React.FC = () => {
     if (result.ok) {
       await clearPendingMcpAuthContext(authStateKey);
       resetTransientAuthState();
+      const useWorkWording = isWorkMode && !result.requiresManualRestart;
       if (result.reloadFailed) {
-        toast.warning(result.message || t('settings.mcp.page.toast.serverDeletedReloadFailed', { name: selectedMcpName }), {
+        toast.warning(useWorkWording
+          ? t('settings.mcp.page.toast.deletedReloadFailedWork', { name: selectedMcpName })
+          : result.message || t('settings.mcp.page.toast.serverDeletedReloadFailed', { name: selectedMcpName }), {
           description: result.warning || t('settings.mcp.page.toast.refreshListIfStale'),
         });
+      } else if (useWorkWording) {
+        toast.success(result.restartDeferred
+          ? t('settings.mcp.page.toast.deletedRestartWork', { name: selectedMcpName })
+          : t('settings.mcp.page.toast.serverDeleted', { name: selectedMcpName }));
       } else {
         toast.success(result.message || t('settings.mcp.page.toast.serverDeleted', { name: selectedMcpName }));
       }

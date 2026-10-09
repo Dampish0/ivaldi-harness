@@ -10,6 +10,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useI18n } from '@/lib/i18n';
 import {
     PERMISSION_MODES,
@@ -28,6 +29,8 @@ type PermissionModeButtonProps = {
     capabilities: PermissionModeCapabilities;
     onModeChange: (mode: PermissionMode) => void;
     contextualVisibility?: boolean;
+    /** Desktop: show the shared tooltip instead of the native title. */
+    withTooltip?: boolean;
 };
 
 const iconForMode = (mode: PermissionMode): 'shield-user' | 'shield-check' => {
@@ -46,9 +49,11 @@ export const PermissionModeButton = React.memo(function PermissionModeButton(pro
         capabilities,
         onModeChange,
         contextualVisibility = false,
+        withTooltip = false,
     } = props;
 
     const label = t(`chat.permissionMode.${mode}.label`);
+    const ariaLabel = t('chat.permissionMode.aria', { mode: label });
     const trigger = (
         <button
             type="button"
@@ -65,8 +70,8 @@ export const PermissionModeButton = React.memo(function PermissionModeButton(pro
                 }
             }}
             disabled={!isInteractive}
-            aria-label={t('chat.permissionMode.aria', { mode: label })}
-            title={label}
+            aria-label={ariaLabel}
+            {...(withTooltip ? {} : { title: label })}
         >
             <Icon
                 name={iconForMode(mode)}
@@ -82,9 +87,20 @@ export const PermissionModeButton = React.memo(function PermissionModeButton(pro
                 : 'hidden group-hover/composer:inline-flex group-focus-within/composer:inline-flex',
         )}>
             <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-                <DropdownMenuTrigger asChild>
-                    {trigger}
-                </DropdownMenuTrigger>
+                {withTooltip ? (
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <DropdownMenuTrigger asChild>
+                                {trigger}
+                            </DropdownMenuTrigger>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" sideOffset={6}>{ariaLabel}</TooltipContent>
+                    </Tooltip>
+                ) : (
+                    <DropdownMenuTrigger asChild>
+                        {trigger}
+                    </DropdownMenuTrigger>
+                )}
                 <DropdownMenuContent side="top" align="start" className="w-72">
                     <DropdownMenuLabel>{t('chat.permissionMode.title')}</DropdownMenuLabel>
                     <DropdownMenuSeparator />

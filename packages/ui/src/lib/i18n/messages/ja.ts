@@ -97,6 +97,22 @@ export const dict: Partial<Record<I18nKey, string>> = {
   "profile.error.storage": "名前を保存できませんでした。もう一度お試しください。",
   'common.loading': '読み込み中...',
   'common.unavailable': '利用できません',
+
+  'common.actions.close': '閉じる',
+
+  'common.actions.remove': '削除',
+
+  'common.actions.moreActions': 'その他の操作',
+
+  'common.actions.back': '戻る',
+
+  'common.actions.cancel': 'キャンセル',
+
+  'common.actions.delete': '削除',
+
+  'common.actions.copy': 'コピー',
+
+  'common.actions.reset': 'リセット',
   'common.language.english': '英語',
   'common.language.german': 'ドイツ語',
   'common.language.french': 'フランス語',
@@ -501,6 +517,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'sessions.sidebar.header.actions.sortProjects': 'プロジェクトを並べ替え',
   'sessions.sidebar.header.actions.sessionDisplayMode': 'セッション表示モード',
   'sessions.sidebar.header.displayMode.label': '表示モード',
+  'sessions.sidebar.header.actions.moreLabel': 'その他の操作',
   'sessions.sidebar.header.productMode.label': 'モード',
   'sessions.sidebar.header.productMode.work': 'ワーク',
   'sessions.sidebar.header.productMode.developer': '開発者',
@@ -738,6 +755,8 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'sessions.sidebar.folderItem.newSubfolderAria': '{folderName}に新しいサブフォルダ',
   'sessions.sidebar.folderItem.newSubfolder': '新しいサブフォルダ',
   'sessions.sidebar.folderItem.renameAria': 'フォルダ{folderName}の名前を変更',
+  'sessions.sidebar.folderItem.renameSave': 'フォルダ名を保存',
+  'sessions.sidebar.folderItem.renameCancel': 'フォルダ名の変更をキャンセル',
   'sessions.sidebar.folderItem.deleteArchivedInFolderAria': 'フォルダ{folderName}のアーカイブ済みセッションを削除',
   'sessions.sidebar.folderItem.deleteFolderAria': 'フォルダ{folderName}を削除',
   'sessions.sidebar.folderItem.emptyFolder': '空のフォルダ',
@@ -1274,7 +1293,6 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'walkthrough.importance.criticalHint': 'このステップが変更全体を動かしているため、じっくり読んでください。コードで見つかった問題ではありません。',
   'walkthrough.importance.context': '補足',
   'walkthrough.importance.contextHint': '全体を理解するために添えられた補助的な変更です。',
-  'walkthrough.help.guide': 'ウォークスルーの仕組み',
   'walkthrough.blocked.noModel.title': '利用できるスモールモデルがありません',
   'walkthrough.blocked.noModel.description': 'レビューを生成するにはモデルプロバイダーにサインインしてください。',
   'walkthrough.blocked.emptyDiff.title': 'レビュー対象がありません',
@@ -2403,6 +2421,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'chat.chatInput.placeholder.chat': '@でファイル/エージェント、/でコマンド/スキル、!でシェル、#でスニペット',
   'chat.chatInput.placeholder.chatCompact': '@ / ! # でヘルパーを使用',
   'chat.chatInput.placeholder.chatCompactWork': '@ / # でヘルパーを使用',
+  'chat.chatInput.agentChangedAnnouncement': 'エージェントを {agent} に切り替えました',
   'chat.chatInput.placeholder.selectSession': 'セッションを選択または作成してチャットを開始',
   'chat.dictation.start': '音声入力を開始',
   'chat.dictation.overlayAria': '音声入力',
@@ -2467,6 +2486,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'chat.toolOutputDialog.image.previousAria': '前の画像',
   'chat.toolOutputDialog.image.nextAria': '次の画像',
   'chat.toolOutputDialog.image.closeAria': '画像プレビューを閉じる',
+  'chat.toolOutputDialog.image.previewAria': '画像のプレビュー',
   'chat.toolOutputDialog.mermaid.missingSource': 'MermaidソースURLがありません。',
   'chat.toolOutputDialog.mermaid.loadFailed': 'Mermaidダイアグラムを読み込めません。',
   'chat.toolOutputDialog.mermaid.dataUrlMalformed': 'MermaidのデータURLの形式が正しくありません。',
@@ -2475,6 +2495,9 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'chat.toolOutputDialog.mermaid.unsupportedUrlProtocol': 'Mermaid URLのプロトコルはサポートされていません。',
   'chat.toolOutputDialog.mermaid.loadFailedWithStatus': 'Mermaidダイアグラムを読み込めません。ステータス: {status}。',
   'chat.toolOutputDialog.mermaid.closeAria': 'ダイアグラムプレビューを閉じる',
+  'chat.toolOutputDialog.mermaid.previewAria': '図のプレビュー',
+
+  'chat.toolOutputDialog.mermaid.diagramTitle': '図 {number}',
   'chat.toolOutputDialog.mermaid.loading': 'ダイアグラムを読み込み中...',
   'chat.toolOutputDialog.mermaid.renderFailed': 'Mermaidダイアグラムをレンダリングできません。',
   'chat.toolOutputDialog.mermaid.retry': '再試行',
@@ -3127,7 +3150,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'updateDialog.actions.openMobileUpdate': '更新を開く',
   'updateDialog.status.updating': '更新中...',
   'updateDialog.error.updateFailed': '更新に失敗しました',
-  'updateDialog.error.takingLonger': '更新に予想以上に時間がかかっています。しばらく待ってから更新するか、次を実行: openchamber update',
+  'updateDialog.error.takingLonger': '更新に予想以上に時間がかかっています。しばらく待ってから更新するか、次を実行: ivaldi update',
   'mobileUpdate.toast.available.title': 'Ivaldiの更新があります',
   'mobileUpdate.toast.available.description': 'バージョン{version}をAndroidで利用できます。',
   'mobileUpdate.toast.actions.download': 'ダウンロード',

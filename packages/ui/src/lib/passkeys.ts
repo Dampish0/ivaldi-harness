@@ -155,8 +155,10 @@ export const fetchPasskeyStatus = async (): Promise<PasskeyStatus> => {
     },
   });
 
+  // The server answers 200 whenever it knows the status, including when
+  // passkeys are off, so a failure here must not read as "off".
   if (!response.ok) {
-    return defaultPasskeyStatus;
+    throw new Error(await getPasskeyErrorMessage(response, 'Could not load passkey status.'));
   }
 
   const payload = await response.json().catch(() => null);

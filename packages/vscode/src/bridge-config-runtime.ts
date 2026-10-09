@@ -88,7 +88,7 @@ const resolveWorkingDirectory = (ctx: BridgeContext | undefined, directory?: str
 );
 
 const pluginMutationPayload = (label: string) => buildDeferredRestartResponse(
-  `${label}. Restart OpenCode to apply.`,
+  `${label}. Restart Ivaldi to apply.`,
 );
 
 const parseSkillsCatalogSources = (settings: Record<string, unknown>): SkillsCatalogSourceConfig[] => {
@@ -207,7 +207,7 @@ export async function handleConfigBridgeMessage(
         id,
         type,
         success: true,
-        data: buildDeferredRestartResponse('AGENTS.md saved. Restart OpenCode to apply.'),
+        data: buildDeferredRestartResponse('AGENTS.md saved. Restart Ivaldi to apply.'),
       };
     }
 
@@ -284,7 +284,7 @@ export async function handleConfigBridgeMessage(
           id,
           type,
           success: true,
-          data: buildDeferredRestartResponse(`Agent ${agentName} created successfully. Restart OpenCode to apply.`),
+          data: buildDeferredRestartResponse(`Agent ${agentName} created successfully. Restart Ivaldi to apply.`),
         };
       }
 
@@ -294,7 +294,7 @@ export async function handleConfigBridgeMessage(
           id,
           type,
           success: true,
-          data: buildDeferredRestartResponse(`Agent ${agentName} updated successfully. Restart OpenCode to apply.`),
+          data: buildDeferredRestartResponse(`Agent ${agentName} updated successfully. Restart Ivaldi to apply.`),
         };
       }
 
@@ -306,7 +306,7 @@ export async function handleConfigBridgeMessage(
           id,
           type,
           success: true,
-          data: buildDeferredRestartResponse(`Agent ${agentName} deleted successfully. Restart OpenCode to apply.`),
+          data: buildDeferredRestartResponse(`Agent ${agentName} deleted successfully. Restart Ivaldi to apply.`),
         };
       }
 
@@ -349,7 +349,7 @@ export async function handleConfigBridgeMessage(
           id,
           type,
           success: true,
-          data: buildDeferredRestartResponse(`Command ${commandName} created successfully. Restart OpenCode to apply.`),
+          data: buildDeferredRestartResponse(`Command ${commandName} created successfully. Restart Ivaldi to apply.`),
         };
       }
 
@@ -359,7 +359,7 @@ export async function handleConfigBridgeMessage(
           id,
           type,
           success: true,
-          data: buildDeferredRestartResponse(`Command ${commandName} updated successfully. Restart OpenCode to apply.`),
+          data: buildDeferredRestartResponse(`Command ${commandName} updated successfully. Restart Ivaldi to apply.`),
         };
       }
 
@@ -369,7 +369,7 @@ export async function handleConfigBridgeMessage(
           id,
           type,
           success: true,
-          data: buildDeferredRestartResponse(`Command ${commandName} deleted successfully. Restart OpenCode to apply.`),
+          data: buildDeferredRestartResponse(`Command ${commandName} deleted successfully. Restart Ivaldi to apply.`),
         };
       }
 
@@ -411,7 +411,7 @@ export async function handleConfigBridgeMessage(
           id,
           type,
           success: true,
-          data: buildDeferredRestartResponse(`MCP server "${mcpName}" created. Restart OpenCode to apply.`),
+          data: buildDeferredRestartResponse(`MCP server "${mcpName}" created. Restart Ivaldi to apply.`),
         };
       }
 
@@ -421,7 +421,7 @@ export async function handleConfigBridgeMessage(
           id,
           type,
           success: true,
-          data: buildDeferredRestartResponse(`MCP server "${mcpName}" updated. Restart OpenCode to apply.`),
+          data: buildDeferredRestartResponse(`MCP server "${mcpName}" updated. Restart Ivaldi to apply.`),
         };
       }
 
@@ -431,7 +431,7 @@ export async function handleConfigBridgeMessage(
           id,
           type,
           success: true,
-          data: buildDeferredRestartResponse(`MCP server "${mcpName}" deleted. Restart OpenCode to apply.`),
+          data: buildDeferredRestartResponse(`MCP server "${mcpName}" deleted. Restart Ivaldi to apply.`),
         };
       }
 
@@ -627,7 +627,7 @@ export async function handleConfigBridgeMessage(
           id,
           type,
           success: true,
-          data: buildDeferredRestartResponse(`Skill ${skillName} created successfully. Restart OpenCode to apply.`),
+          data: buildDeferredRestartResponse(`Skill ${skillName} created successfully. Restart Ivaldi to apply.`),
         };
       }
 
@@ -655,7 +655,7 @@ export async function handleConfigBridgeMessage(
           id,
           type,
           success: true,
-          data: buildDeferredRestartResponse(`Skill ${skillName} updated successfully. Restart OpenCode to apply.`),
+          data: buildDeferredRestartResponse(`Skill ${skillName} updated successfully. Restart Ivaldi to apply.`),
         };
       }
 
@@ -665,7 +665,7 @@ export async function handleConfigBridgeMessage(
           id,
           type,
           success: true,
-          data: buildDeferredRestartResponse(`Skill ${skillName} deleted successfully. Restart OpenCode to apply.`),
+          data: buildDeferredRestartResponse(`Skill ${skillName} deleted successfully. Restart Ivaldi to apply.`),
         };
       }
 
@@ -729,7 +729,7 @@ export async function handleConfigBridgeMessage(
             installed,
             skipped,
             ...(requiresRestart
-              ? buildDeferredRestartResponse('Skills installed successfully. Restart OpenCode to apply.')
+              ? buildDeferredRestartResponse('Skills installed successfully. Restart Ivaldi to apply.')
               : {
                 requiresReload: false,
                 message: 'No skills were installed',

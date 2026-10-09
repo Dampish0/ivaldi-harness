@@ -398,7 +398,7 @@ export const SortableTabsStrip: React.FC<SortableTabsStripProps> = ({
           usesActivePillIndicator && 'pill-tabs__track',
           usesActivePillIndicator && (activePillInsetClassName ?? 'gap-0.5 py-0.5'),
           useUnderlineIndicator && 'items-center overflow-y-hidden',
-          showPillTrackBackground && 'rounded-[10px] [corner-shape:squircle] supports-[corner-shape:squircle]:rounded-[50px] bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)] p-0.5 gap-0.5',
+          showPillTrackBackground && 'rounded-lg [corner-shape:squircle] supports-[corner-shape:squircle]:rounded-full bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)] p-0.5 gap-0.5',
           isScrollable
             ? 'overflow-x-auto scrollbar-none'
             : 'overflow-x-hidden',
@@ -410,7 +410,7 @@ export const SortableTabsStrip: React.FC<SortableTabsStripProps> = ({
         {usesActivePillIndicator && pillRect ? (
           <div
             className={cn(
-              'pointer-events-none absolute left-0 top-0 z-0 rounded-[9px] [corner-shape:squircle] supports-[corner-shape:squircle]:rounded-[50px] bg-[var(--surface-elevated)]',
+              'pointer-events-none absolute left-0 top-0 z-0 rounded-lg [corner-shape:squircle] supports-[corner-shape:squircle]:rounded-full bg-[var(--surface-elevated)]',
               // Lifted card look: hairline edge plus a soft ambient shadow rather
               // than a hard border, so the pill reads as raised above the track.
               'border border-[color-mix(in_srgb,var(--foreground)_7%,transparent)]',
@@ -514,7 +514,7 @@ export const SortableTabsStrip: React.FC<SortableTabsStripProps> = ({
                   onPointerCancel={usesIndicator ? () => setPressedId(null) : undefined}
                   className={cn(
                     usesActivePillIndicator
-                      ? 'animated-tabs__button pill-tabs__button relative z-10 flex flex-1 min-w-0 flex-nowrap items-center justify-center rounded-[9px] [corner-shape:squircle] supports-[corner-shape:squircle]:rounded-[50px] text-sm font-medium transition-colors duration-150 !min-h-0'
+                      ? 'animated-tabs__button pill-tabs__button relative z-10 flex flex-1 min-w-0 flex-nowrap items-center justify-center rounded-lg [corner-shape:squircle] supports-[corner-shape:squircle]:rounded-full text-sm font-medium transition-colors duration-150 !min-h-0'
                       : 'flex h-full min-w-0 flex-nowrap items-center typography-micro',
                     usesActivePillIndicator && activePillLowercase ? 'lowercase' : null,
                     usesActivePillIndicator && (showInactiveIconOnly ? 'gap-0' : 'gap-1.5'),

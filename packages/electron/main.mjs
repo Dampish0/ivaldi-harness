@@ -34,6 +34,7 @@ import {
 } from './linux-autostart.mjs';
 import { unsupportedAppSpecificOpenError, validateLocalPath } from './path-open-utils.mjs';
 import { shouldAllowBrowserPanelCertificateError } from './browser-panel-security.mjs';
+import { isOpenableExternalUrl, isSafeExternalUrl } from './external-url.mjs';
 import { createWindowsComputerUse } from './computer-use.mjs';
 import { mintOutsideFileGrant } from '@ivaldi/web/server/lib/fs/routes.js';
 
@@ -50,7 +51,7 @@ const PACKAGED_APP_USER_MODEL_ID = 'dev.ivaldi.desktop';
 const DEV_APP_USER_MODEL_ID = 'dev.ivaldi.desktop.dev';
 const APP_USER_MODEL_ID = app.isPackaged ? PACKAGED_APP_USER_MODEL_ID : DEV_APP_USER_MODEL_ID;
 const BACKGROUND_START_ARG = '--background';
-const IVALDI_DESKTOP_UPDATES_ENABLED = false;
+const IVALDI_DESKTOP_UPDATES_ENABLED = true;
 
 const getLoginItemOptions = () => {
   if (process.platform === 'win32') {
@@ -237,10 +238,9 @@ const LOCAL_DESKTOP_CLIENT_DEDUPE_KEY = 'desktop-local';
 // connecting to someone else's server).
 const REMOTE_DESKTOP_CLIENT_KIND = 'desktop';
 const ENV_OVERRIDE_HOST_ID = '__env';
-const CHANGELOG_URL = 'https://raw.githubusercontent.com/openchamber/openchamber/main/CHANGELOG.md';
-const GITHUB_BUG_REPORT_URL = 'https://github.com/openchamber/openchamber/issues/new?template=bug_report.yml';
-const GITHUB_FEATURE_REQUEST_URL = 'https://github.com/openchamber/openchamber/issues/new?template=feature_request.yml';
-const DISCORD_INVITE_URL = 'https://discord.gg/ZYRSdnwwKA';
+const CHANGELOG_URL = 'https://raw.githubusercontent.com/Dampish0/ivaldi-harness/main/CHANGELOG.md';
+const GITHUB_BUG_REPORT_URL = 'https://github.com/Dampish0/ivaldi-harness/issues/new?template=bug_report.yml';
+const GITHUB_FEATURE_REQUEST_URL = 'https://github.com/Dampish0/ivaldi-harness/issues/new?template=feature_request.yml';
 const INSTALLED_APPS_CACHE_TTL_SECS = 60 * 60 * 24;
 const INSTALLED_APPS_CACHE_FILE = 'discovered-apps.json';
 const LINUX_DESKTOP_ENTRIES_CACHE_TTL_MS = 30_000;
@@ -2677,14 +2677,14 @@ const createBrowserWindow = ({ label, restoreGeometry, url, runtimeConfig = {} }
     if (isAllowedNavigationUrl(url)) {
       return { action: 'allow' };
     }
-    void shell.openExternal(url).catch(() => {});
+    if (isSafeExternalUrl(url)) void shell.openExternal(url).catch(() => {});
     return { action: 'deny' };
   });
 
   browserWindow.webContents.on('will-navigate', (event, url) => {
     if (isAllowedNavigationUrl(url)) return;
     event.preventDefault();
-    void shell.openExternal(url).catch(() => {});
+    if (isSafeExternalUrl(url)) void shell.openExternal(url).catch(() => {});
   });
 
   browserWindow.webContents.setZoomFactor(1);
@@ -2959,7 +2959,7 @@ const createMiniChatWindow = async ({ mode, sessionId = '', directory = '', proj
   });
 
   browserWindow.webContents.setWindowOpenHandler(({ url }) => {
-    void shell.openExternal(url).catch(() => {});
+    if (isSafeExternalUrl(url)) void shell.openExternal(url).catch(() => {});
     return { action: 'deny' };
   });
   browserWindow.webContents.on('will-navigate', (event, url) => {
@@ -2970,7 +2970,7 @@ const createMiniChatWindow = async ({ mode, sessionId = '', directory = '', proj
     } catch {
     }
     event.preventDefault();
-    void shell.openExternal(url).catch(() => {});
+    if (isSafeExternalUrl(url)) void shell.openExternal(url).catch(() => {});
   });
   browserWindow.webContents.on('dom-ready', () => {
     const initScript = browserWindow.__ocInitScript;
@@ -4218,12 +4218,13 @@ const handleInvoke = async (browserWindow, command, args = {}) => {
       const target = typeof args.url === 'string' ? args.url.trim() : '';
       if (!target) throw new Error('URL is required');
 
-      const parsed = new URL(target);
-      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-        throw new Error('Only HTTP URLs can be opened externally');
+      // The UI confirms app deep links with the user before calling this.
+      // Main still refuses schemes that launch local code.
+      if (!isOpenableExternalUrl(target)) {
+        throw new Error('This link type cannot be opened externally');
       }
 
-      await shell.openExternal(parsed.toString());
+      await shell.openExternal(new URL(target).toString());
       return null;
     }
 
@@ -4881,8 +4882,6 @@ const buildMacMenu = () => {
         { type: 'separator' },
         { label: 'Report a Bug', click: () => shell.openExternal(GITHUB_BUG_REPORT_URL) },
         { label: 'Request a Feature', click: () => shell.openExternal(GITHUB_FEATURE_REQUEST_URL) },
-        { type: 'separator' },
-        { label: 'Join Discord', click: () => shell.openExternal(DISCORD_INVITE_URL) },
       ],
     },
   ]);
@@ -4995,8 +4994,6 @@ const buildAutoHiddenMenu = () => {
         { type: 'separator' },
         { label: 'Report a Bug', click: () => shell.openExternal(GITHUB_BUG_REPORT_URL) },
         { label: 'Request a Feature', click: () => shell.openExternal(GITHUB_FEATURE_REQUEST_URL) },
-        { type: 'separator' },
-        { label: 'Join Discord', click: () => shell.openExternal(DISCORD_INVITE_URL) },
       ],
     },
   ]);

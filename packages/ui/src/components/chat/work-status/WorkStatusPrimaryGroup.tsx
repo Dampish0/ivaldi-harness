@@ -11,6 +11,7 @@ import { useProjectsStore } from '@/stores/useProjectsStore';
 import { useProductModeStore } from '@/stores/useProductModeStore';
 import { resolveProjectForSessionDirectory } from '@/lib/projectResolution';
 import { useSessionUIStore } from '@/sync/session-ui-store';
+import { useSessionGoal } from '@/hooks/useSessionGoal';
 import { resolveUsageTone } from '@/lib/quota';
 import { sessionEvents } from '@/lib/sessionEvents';
 import { normalizePath } from '@/lib/pathNormalization';
@@ -28,7 +29,7 @@ import { useReportWorkStatusPresence } from './presenceContext';
 type Props = {
   sessionId: string | null;
   directory: string | null;
-  /** Rendered first inside the Session section; owns its own dialog. */
+  /** Rendered inside the Session section; owns its own dialog. */
   goalRow: React.ReactNode;
   showSession: boolean;
   showRepository: boolean;
@@ -201,7 +202,12 @@ export const WorkStatusPrimaryGroup: React.FC<Props> = ({ sessionId, directory, 
       : 'var(--muted-foreground)';
 
   const cost = typeof session?.cost === 'number' && session.cost > 0 ? session.cost : null;
-  const hasSession = showSession && (usagePercent !== null || cost !== null || Boolean(goalRow));
+  // Same test the goal row makes before rendering anything. The element itself
+  // is always truthy, so counting it gave chats with no usage numbers and no
+  // goal a section heading with nothing under it.
+  const { goal, enabled: goalEnabled } = useSessionGoal(sessionId ?? '', directory ?? undefined);
+  const hasGoal = Boolean(sessionId && goalEnabled && goal?.objective?.trim());
+  const hasSession = showSession && (usagePercent !== null || cost !== null || hasGoal);
   const hasRepository = isDeveloperMode && showRepository && Boolean(branch || changed || prSummary || attentionLabel);
 
   useReportWorkStatusPresence('session-repository', hasSession || hasRepository);

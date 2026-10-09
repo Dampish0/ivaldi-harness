@@ -6,7 +6,8 @@ import { RuntimeAPIContext } from '@/contexts/runtimeAPIContext';
 import { cn } from '@/lib/utils';
 import { SimpleMarkdownRenderer } from '../../MarkdownRenderer';
 import { MessageFilesDisplay } from '../../FileAttachment';
-import { getToolMetadata } from '@/lib/toolHelpers';
+import { getToolDisplayName } from '@/lib/toolHelpers';
+import { useProductModeStore } from '@/stores/useProductModeStore';
 import type { ToolPart as ToolPartType, ToolState as ToolStateUnion, FilePart } from '@opencode-ai/sdk/v2';
 import { toolDisplayStyles } from '@/lib/typography';
 import { WorkerHighlightedCode } from '@/components/code/WorkerHighlightedCode';
@@ -383,6 +384,12 @@ const getToolDiagnosticSection = (
     };
 };
 
+// OpenCode reports a dismissed question as a tool error. Dismissing is the user's
+// choice, so the chat shows it as neutral instead of as a failure.
+const QUESTION_DISMISSED_ERROR = 'The user dismissed this question';
+const isDismissedQuestionState = (tool: string, state: ToolStateUnion | undefined): boolean =>
+    tool === 'question' && state?.status === 'error' && state.error.includes(QUESTION_DISMISSED_ERROR);
+
 // Parse question tool output: "User has answered your questions: "Q1"="A1", "Q2"="A2". You can now..."
 const parseQuestionOutput = (output: string): Array<{ question: string; answer: string }> | null => {
     const match = output.match(/^User has answered your questions:\s*(.+?)\.\s*You can now/s);
@@ -484,7 +491,7 @@ const getLspToolDescription = (input: Record<string, unknown> | undefined, curre
     return displayPath ? `${operation} ${displayPath}${position}` : operation;
 };
 
-const getToolDescription = (part: ToolPartType, state: ToolStateUnion, currentDirectory: string): string => {
+const getToolDescription = (part: ToolPartType, state: ToolStateUnion, currentDirectory: string, workMode = false): string => {
     const stateWithData = state as ToolStateWithMetadata;
     const metadata = stateWithData.metadata;
     const input = stateWithData.input;
@@ -506,6 +513,12 @@ const getToolDescription = (part: ToolPartType, state: ToolStateUnion, currentDi
     if (part.tool === 'question' && input?.questions && Array.isArray(input.questions)) {
         const count = input.questions.length;
         return `Asked ${count} question${count !== 1 ? 's' : ''}`;
+    }
+
+    // Work mode shows what the step is for, never the command: "echo" means
+    // nothing to the people it is for. Opening the row still shows the command.
+    if (part.tool === 'bash' && workMode) {
+        return getToolDescriptionFallback(part.tool, input?.description ?? metadata?.description, input);
     }
 
     if (part.tool === 'bash' && input?.command && typeof input.command === 'string') {
@@ -738,8 +751,8 @@ const ToolScrollableTextOutput: React.FC<{
                     </Button>
                     <Button
                         variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 rounded-md bg-[var(--surface-elevated)]/80 text-muted-foreground hover:text-foreground"
+                        size="icon-xs"
+                        className="rounded-md bg-[var(--surface-elevated)]/80 text-muted-foreground hover:text-foreground"
                         onClick={handleCopyOutput}
                         onPointerDown={(event) => event.stopPropagation()}
                         aria-label={copiedJson ? t('chat.toolPart.copiedOutput') : t('chat.toolPart.copyOutput')}
@@ -880,7 +893,8 @@ const TaskSummaryEntryRow = React.memo(({
     const label = getTaskSummaryLabel(entry);
     const hasLabel = label.trim().length > 0;
     const status = entry.state?.status;
-    const displayName = getToolMetadata(toolName).displayName;
+    const isWorkMode = useProductModeStore((state) => state.mode === 'work');
+    const displayName = getToolDisplayName(toolName, isWorkMode);
 
     return (
         <ToolRevealOnMount animate={animateTailText} wipe>
@@ -1419,6 +1433,10 @@ const ToolExpandedContent: React.FC<ToolExpandedContentProps> = React.memo(({
                 }
             }
 
+            if (isDismissedQuestionState('question', state)) {
+                return <div className="typography-meta text-muted-foreground">{t('chat.toolPart.questionDismissed')}</div>;
+            }
+
             if (state.status === 'error' && 'error' in state) {
                 return (
                     <div>
@@ -1485,8 +1503,8 @@ const ToolExpandedContent: React.FC<ToolExpandedContentProps> = React.memo(({
                                 </div>
                                 <Button
                                     variant="ghost"
-                                    size="icon"
-                                    className="h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground"
+                                    size="icon-xs"
+                                    className="shrink-0 text-muted-foreground hover:text-foreground"
                                     onClick={(event) => openEntryFile(entry, event)}
                                     aria-label={t('chat.toolPart.openFileAtFirstChange')}
                                     title={t('chat.toolPart.openFileAtFirstChange')}
@@ -1495,8 +1513,8 @@ const ToolExpandedContent: React.FC<ToolExpandedContentProps> = React.memo(({
                                 </Button>
                                 <Button
                                     variant="ghost"
-                                    size="icon"
-                                    className="h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground"
+                                    size="icon-xs"
+                                    className="shrink-0 text-muted-foreground hover:text-foreground"
                                     onClick={(event) => openEntryDiff(entry, event)}
                                     aria-label={t('chat.toolPart.openFileDiff')}
                                     title={t('chat.toolPart.openFileDiff')}
@@ -1693,6 +1711,7 @@ const ToolPartContent: React.FC<ToolPartProps> = ({
     const metadata = stateWithData.metadata;
     const input = stateWithData.input;
     const showToolFileIcons = useUIStore((s) => s.showToolFileIcons);
+    const isWorkMode = useProductModeStore((s) => s.mode === 'work');
     const currentDirectory = useEffectiveDirectory() ?? '';
 
     const normalizedPartTool = normalizeToolName(part.tool);
@@ -1701,7 +1720,7 @@ const ToolPartContent: React.FC<ToolPartProps> = ({
     const status = state?.status as string | undefined;
     const isFinalized = status === 'completed' || status === 'error' || status === 'aborted' || status === 'failed' || status === 'timeout' || status === 'cancelled';
     const isSuccessfullyFinalized = status === 'completed';
-    const isError = status === 'error' || status === 'failed';
+    const isError = (status === 'error' || status === 'failed') && !isDismissedQuestionState(normalizedPartTool, state);
 
     const [activeLatched, setActiveLatched] = React.useState<boolean>(!isFinalized);
     const previousPartIdRef = React.useRef<string | undefined>(part.id);
@@ -1936,8 +1955,8 @@ const ToolPartContent: React.FC<ToolPartProps> = ({
     const isMultiFileApplyPatch = normalizedPartTool === 'apply_patch' && Array.isArray(metadata?.files) && (metadata?.files as []).length > 1;
     const normalizedPart = normalizedPartTool !== part.tool ? ({ ...part, tool: normalizedPartTool } as ToolPartType) : part;
     const descriptionPath = getToolDescriptionPath(normalizedPart, state, currentDirectory);
-    const description = getToolDescription(normalizedPart, state, currentDirectory);
-    const displayName = getToolMetadata(normalizedPartTool || part.tool).displayName;
+    const description = getToolDescription(normalizedPart, state, currentDirectory, isWorkMode);
+    const displayName = getToolDisplayName(normalizedPartTool || part.tool, isWorkMode);
     
     // Tool title/description — shown inline as context
     const justificationText = React.useMemo(() => {
@@ -2291,7 +2310,8 @@ class ToolPartErrorBoundary extends React.Component<{
 const ToolPart: React.FC<ToolPartProps> = (props) => {
     const { t } = useI18n();
     const toolName = normalizeToolName(props.part.tool) || 'tool';
-    const displayName = getToolMetadata(toolName).displayName;
+    const isWorkMode = useProductModeStore((state) => state.mode === 'work');
+    const displayName = getToolDisplayName(toolName, isWorkMode);
 
     return (
         <ToolPartErrorBoundary

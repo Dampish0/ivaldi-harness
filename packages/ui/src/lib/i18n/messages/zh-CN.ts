@@ -97,6 +97,22 @@ export const dict: Partial<Record<I18nKey, string>> = {
   "profile.error.storage": "无法保存你的名字，请重试。",
   'common.loading': '加载中...',
   'common.unavailable': '不可用',
+
+  'common.actions.close': '关闭',
+
+  'common.actions.remove': '移除',
+
+  'common.actions.moreActions': '更多操作',
+
+  'common.actions.back': '返回',
+
+  'common.actions.cancel': '取消',
+
+  'common.actions.delete': '删除',
+
+  'common.actions.copy': '复制',
+
+  'common.actions.reset': '重置',
   'common.language.english': 'English',
   'common.language.german': '德语',
   'common.language.french': '法语',
@@ -501,6 +517,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'sessions.sidebar.header.actions.sortProjects': '排序项目',
   'sessions.sidebar.header.actions.sessionDisplayMode': '会话显示模式',
   'sessions.sidebar.header.displayMode.label': '显示模式',
+  'sessions.sidebar.header.actions.moreLabel': '更多操作',
   'sessions.sidebar.header.productMode.label': '模式',
   'sessions.sidebar.header.productMode.work': '工作',
   'sessions.sidebar.header.productMode.developer': '开发者',
@@ -738,6 +755,8 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'sessions.sidebar.folderItem.newSubfolderAria': '在 {folderName} 中新建子文件夹',
   'sessions.sidebar.folderItem.newSubfolder': '新建子文件夹',
   'sessions.sidebar.folderItem.renameAria': '重命名文件夹 {folderName}',
+  'sessions.sidebar.folderItem.renameSave': '保存文件夹名称',
+  'sessions.sidebar.folderItem.renameCancel': '取消重命名文件夹',
   'sessions.sidebar.folderItem.deleteArchivedInFolderAria': '删除文件夹 {folderName} 中已归档会话',
   'sessions.sidebar.folderItem.deleteFolderAria': '删除文件夹 {folderName}',
   'sessions.sidebar.folderItem.emptyFolder': '空文件夹',
@@ -1278,7 +1297,6 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'walkthrough.importance.criticalHint': '这一步带动了其余改动，值得仔细阅读。它不是在你的代码中发现的问题。',
   'walkthrough.importance.context': '背景',
   'walkthrough.importance.contextHint': '辅助性的改动，列在这里是为了让其余部分说得通。',
-  'walkthrough.help.guide': 'Walkthrough 的工作方式',
   'walkthrough.blocked.noModel.title': '没有可用的小模型',
   'walkthrough.blocked.noModel.description': '请登录模型提供方后再生成评审。',
   'walkthrough.blocked.emptyDiff.title': '没有可评审的内容',
@@ -2373,6 +2391,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'chat.chatInput.placeholder.chat': '@ 用于文件/智能体；/ 用于命令和技能；! 用于 shell；# 用于代码片段',
   'chat.chatInput.placeholder.chatCompact': '使用 @ / ! # 辅助',
   'chat.chatInput.placeholder.chatCompactWork': '使用 @ / # 辅助',
+  'chat.chatInput.agentChangedAnnouncement': '已切换到智能体 {agent}',
   'chat.chatInput.placeholder.selectSession': '选择或创建会话以开始聊天',
   'chat.dictation.start': '开始语音输入',
   'chat.dictation.overlayAria': '语音输入',
@@ -2434,6 +2453,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'chat.toolOutputDialog.image.previousAria': '上一张图片',
   'chat.toolOutputDialog.image.nextAria': '下一张图片',
   'chat.toolOutputDialog.image.closeAria': '关闭图片预览',
+  'chat.toolOutputDialog.image.previewAria': '图片预览',
   'chat.toolOutputDialog.mermaid.missingSource': '缺少 Mermaid 源 URL。',
   'chat.toolOutputDialog.mermaid.loadFailed': '无法加载 Mermaid 图表。',
   'chat.toolOutputDialog.mermaid.dataUrlMalformed': 'Mermaid 数据 URL 格式不正确。',
@@ -2442,6 +2462,9 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'chat.toolOutputDialog.mermaid.unsupportedUrlProtocol': '不支持该 Mermaid URL 协议。',
   'chat.toolOutputDialog.mermaid.loadFailedWithStatus': '无法加载 Mermaid 图表。状态：{status}。',
   'chat.toolOutputDialog.mermaid.closeAria': '关闭图表预览',
+  'chat.toolOutputDialog.mermaid.previewAria': '图表预览',
+
+  'chat.toolOutputDialog.mermaid.diagramTitle': '图表 {number}',
   'chat.toolOutputDialog.mermaid.loading': '正在加载图表...',
   'chat.toolOutputDialog.mermaid.renderFailed': '无法渲染 Mermaid 图表。',
   'chat.toolOutputDialog.mermaid.retry': '重试',
@@ -3097,7 +3120,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'updateDialog.actions.openMobileUpdate': '打开更新',
   'updateDialog.status.updating': '更新中...',
   'updateDialog.error.updateFailed': '更新失败',
-  'updateDialog.error.takingLonger': '更新耗时超出预期。请稍等后刷新，或运行：openchamber update',
+  'updateDialog.error.takingLonger': '更新耗时超出预期。请稍等后刷新，或运行：ivaldi update',
   'mobileUpdate.toast.available.title': 'Ivaldi 更新可用',
   'mobileUpdate.toast.available.description': '版本 {version} 已可用于 Android。',
   'mobileUpdate.toast.actions.download': '下载',

@@ -90,7 +90,7 @@ const installMinimalDom = () => {
   };
 };
 
-type Args = { isMobile: boolean; isVSCode: boolean };
+type Args = { isMobile: boolean; isVSCode: boolean; overlayOnly?: boolean };
 
 /**
  * Renders the hook with a stand-in row node, attached through the returned
@@ -317,6 +317,18 @@ describe('useWorkStatusVisibility', () => {
     const { result, teardown } = renderVisibility(
       { isMobile: false, isVSCode: false },
       REQUIRED - 1,
+    );
+    expect(result.fits).toBe(false);
+    expect(result.visible).toBe(false);
+    teardown();
+  });
+
+  test('never takes a column in overlay-only mode, however wide the row', () => {
+    // Work mode: reporting no fit is what routes the panel to the overlay,
+    // which stays closed until the user asks for it.
+    const { result, teardown } = renderVisibility(
+      { isMobile: false, isVSCode: false, overlayOnly: true },
+      REQUIRED * 2,
     );
     expect(result.fits).toBe(false);
     expect(result.visible).toBe(false);

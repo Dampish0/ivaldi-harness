@@ -340,7 +340,7 @@ const MobileFilesBrowser: React.FC<MobileFilesSurfaceProps & { root: string }> =
         ) : (
           <div className="flex flex-col gap-0.5">
             {entries.length === 0 && !isLoadingDirectory ? (
-              <div className="px-4 py-8 text-center typography-body text-muted-foreground">{t('mobile.files.empty.directory')}</div>
+              <div className="px-4 py-8 text-center typography-ui-label text-muted-foreground">{t('mobile.files.empty.directory')}</div>
             ) : null}
             {entries.map((entry) => (
               <MobileFileRow

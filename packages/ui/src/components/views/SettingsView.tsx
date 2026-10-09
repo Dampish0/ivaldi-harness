@@ -26,6 +26,7 @@ import { useConfigStore } from '@/stores/useConfigStore';
 import { Tooltip, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { ScrollShadow } from '@/components/ui/ScrollShadow';
 import { usePluginsStore } from '@/stores/usePluginsStore';
 import type { OpenChamberSection } from '@/components/sections/openchamber/types';
 import { SettingsPageLayout } from '@/components/sections/shared/SettingsPageLayout';
@@ -36,6 +37,7 @@ import { useDeviceInfo } from '@/lib/device';
 import { isDesktopLocalOriginActive, isDesktopShell, isVSCodeRuntime, isWebRuntime } from '@/lib/desktop';
 import { isWindowsArm64 as isWindowsArm64Platform } from '@/lib/platform';
 import { useI18n } from '@/lib/i18n';
+import { getSettingsPageTitle } from '@/lib/settings/page-titles';
 import { Icon } from "@/components/icon/Icon";
 import { McpIcon } from '@/components/icons/McpIcon';
 import { OpenCodeReloadFooterAction } from '@/components/views/OpenCodeReloadFooterAction';
@@ -432,69 +434,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onClose, forceMobile
     tunnel: 'tunnel',
   }), []);
 
-  const getPageTitle = React.useCallback((slug: SettingsPageSlug): string => {
-    switch (slug) {
-      case 'general':
-        return t('settings.page.general.title');
-      case 'projects':
-        return t('settings.page.projects.title');
-      case 'remote-instances':
-        return t('settings.page.remoteInstances.title');
-      case 'providers':
-        return t('settings.page.providers.title');
-      case 'usage':
-        return t('settings.page.usage.title');
-      case 'agents':
-        return t('settings.page.agents.title');
-      case 'behavior':
-        return t('settings.page.behavior.title');
-      case 'commands':
-        return t('settings.page.commands.title');
-      case 'lifecycle-hooks':
-        return productMode === 'work'
-          ? t('settings.page.lifecycleHooks.workTitle')
-          : t('settings.page.lifecycleHooks.title');
-      case 'mcp':
-        return t('settings.page.mcp.title');
-      case 'plugins':
-        return t('settings.page.plugins.title');
-      case 'skills.installed':
-        return t('settings.page.skills.title');
-      case 'skills.catalog':
-        return t('settings.page.skillsCatalog.title');
-      case 'git':
-        return t('settings.page.git.title');
-      case 'integrations':
-        return t('settings.page.integrations.title');
-      case 'appearance':
-        return t('settings.page.appearance.title');
-      case 'chat':
-        return t('settings.page.chat.title');
-      case 'shortcuts':
-        return t('settings.page.shortcuts.title');
-      case 'sessions':
-        return productMode === 'work'
-          ? t('settings.page.work.ai.title')
-          : t('settings.page.sessions.title');
-      case 'magic-prompts':
-        return t('settings.page.magicPrompts.title');
-      case 'snippets':
-        return t('settings.page.snippets.title');
-      case 'notifications':
-        return t('settings.page.notifications.title');
-      case 'voice':
-        return t('settings.page.voice.title');
-      case 'tunnel':
-        return t('settings.page.tunnel.title');
-      case 'about':
-        return t('settings.page.about.title');
-      case 'advanced':
-        return t('settings.view.nav.group.advanced');
-      case 'home':
-      default:
-        return t('settings.view.home.title');
-    }
-  }, [productMode, t]);
+  const getPageTitle = React.useCallback(
+    (slug: SettingsPageSlug): string => getSettingsPageTitle(slug, productMode, t),
+    [productMode, t],
+  );
 
   const settingsSearchResults = React.useMemo(() => {
     return buildSettingsSearchResults({
@@ -699,7 +642,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onClose, forceMobile
       <div className="flex h-full items-center justify-center px-6">
         <div className="max-w-md text-center">
           <div className={SETTINGS_SECTION_TITLE_CLASS}>{t('settings.view.unavailable.title')}</div>
-          <p className="typography-ui text-muted-foreground mt-1">{t('settings.view.unavailable.description')}</p>
+          <p className="typography-ui-label text-muted-foreground mt-1">{t('settings.view.unavailable.description')}</p>
         </div>
       </div>
     );
@@ -927,7 +870,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onClose, forceMobile
 
     return (
       <div className="flex h-full flex-col overflow-hidden">
-        <div className="px-4 pt-3">
+        <div className="px-4 pt-3 pb-2">
           <div className="flex h-10 items-center gap-1.5 rounded-md border border-border/60 bg-[var(--surface-elevated)] px-2 text-muted-foreground focus-within:ring-2 focus-within:ring-[var(--interactive-focus-ring)] sm:h-8">
             <Icon name="search" className="h-4 w-4 shrink-0" />
             <input
@@ -936,7 +879,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onClose, forceMobile
               onKeyDown={handleSettingsSearchKeyDown}
               placeholder={t('settings.view.search.placeholder')}
               aria-label={t('settings.view.search.aria')}
-              className="typography-ui min-w-0 flex-1 bg-transparent text-foreground outline-none placeholder:text-muted-foreground/70"
+              className="typography-ui-label min-w-0 flex-1 bg-transparent text-foreground outline-none placeholder:text-muted-foreground/70"
             />
             {hasSearchQuery && (
               <button
@@ -951,9 +894,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onClose, forceMobile
           </div>
         </div>
 
-        {/* Scrollable nav items */}
-        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
-          <div className="flex flex-col gap-0.5 px-4 pt-4 pb-2">
+        {/* Scrollable nav items. The gap under the search box and the top fade
+            keep group labels from being cut off hard at the search box edge. */}
+        <ScrollShadow size={16} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+          <div className="flex flex-col gap-0.5 px-4 pt-2 pb-2">
             {hasSearchQuery ? (
               settingsSearchResults.length > 0 ? (() => {
                 let resultIndex = 0;
@@ -995,7 +939,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onClose, forceMobile
                   </div>
                 ));
               })() : (
-                <div className="px-2 py-6 text-center typography-ui text-muted-foreground">
+                <div className="px-2 py-6 text-center typography-ui-label text-muted-foreground">
                   {t('settings.view.search.noResults')}
                 </div>
               )
@@ -1085,7 +1029,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onClose, forceMobile
               ));
             })()}
           </div>
-        </div>
+        </ScrollShadow>
 
         {/* Footer */}
         <div className="overflow-hidden transition-opacity duration-150 opacity-100">
@@ -1198,7 +1142,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onClose, forceMobile
               size="icon"
               onClick={handleBack}
               aria-label={mobileBackButtonLabel}
-              className="size-9 flex-shrink-0 rounded-md text-muted-foreground hover:text-foreground"
+              className="flex-shrink-0 rounded-md text-muted-foreground hover:text-foreground"
             >
               <Icon name="arrow-left-s" className="h-5 w-5" />
             </Button>
@@ -1217,7 +1161,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onClose, forceMobile
               size="icon"
               onClick={handleOpenPageSidebar}
               aria-label={t('settings.view.actions.openSectionList')}
-              className="size-9 flex-shrink-0 rounded-md text-muted-foreground hover:text-foreground"
+              className="flex-shrink-0 rounded-md text-muted-foreground hover:text-foreground"
             >
               <Icon name="list-unordered" className="h-5 w-5" />
             </Button>
@@ -1231,7 +1175,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onClose, forceMobile
               onClick={onClose}
               aria-label={t('settings.view.actions.closeSettings')}
               title={closeSettingsTitle}
-              className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg p-2 text-muted-foreground hover:text-foreground hover:bg-interactive-hover/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="inline-flex flex-shrink-0 items-center justify-center rounded-lg p-2 text-muted-foreground hover:text-foreground hover:bg-interactive-hover/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
               <Icon name="close" className="h-5 w-5" />
             </Button>
@@ -1247,7 +1191,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onClose, forceMobile
                 size="icon"
                 onClick={handleBack}
                 aria-label={t('settings.view.actions.back')}
-                className="size-9 rounded-md text-muted-foreground hover:text-foreground"
+                className="rounded-md text-muted-foreground hover:text-foreground"
               >
                 <Icon name="arrow-left-s" className="h-5 w-5" />
               </Button>

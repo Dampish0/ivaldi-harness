@@ -97,6 +97,22 @@ export const dict: Partial<Record<I18nKey, string>> = {
   "profile.error.storage": "無法儲存你的名字，請再試一次。",
   'common.loading': '載入中...',
   'common.unavailable': '無法使用',
+
+  'common.actions.close': '關閉',
+
+  'common.actions.remove': '移除',
+
+  'common.actions.moreActions': '更多操作',
+
+  'common.actions.back': '返回',
+
+  'common.actions.cancel': '取消',
+
+  'common.actions.delete': '刪除',
+
+  'common.actions.copy': '複製',
+
+  'common.actions.reset': '重設',
   'common.language.english': 'English',
   'common.language.german': '德語',
   'common.language.french': '法語',
@@ -514,6 +530,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'sessions.sidebar.header.actions.sortProjects': '排序專案',
   'sessions.sidebar.header.actions.sessionDisplayMode': '會話顯示模式',
   'sessions.sidebar.header.displayMode.label': '顯示模式',
+  'sessions.sidebar.header.actions.moreLabel': '更多操作',
   'sessions.sidebar.header.productMode.label': '模式',
   'sessions.sidebar.header.productMode.work': '工作',
   'sessions.sidebar.header.productMode.developer': '開發者',
@@ -751,6 +768,8 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'sessions.sidebar.folderItem.newSubfolderAria': '在 {folderName} 中新增子資料夾',
   'sessions.sidebar.folderItem.newSubfolder': '新增子資料夾',
   'sessions.sidebar.folderItem.renameAria': '重新命名資料夾 {folderName}',
+  'sessions.sidebar.folderItem.renameSave': '儲存資料夾名稱',
+  'sessions.sidebar.folderItem.renameCancel': '取消重新命名資料夾',
   'sessions.sidebar.folderItem.deleteArchivedInFolderAria': '刪除資料夾 {folderName} 中已封存會話',
   'sessions.sidebar.folderItem.deleteFolderAria': '刪除資料夾 {folderName}',
   'sessions.sidebar.folderItem.emptyFolder': '空資料夾',
@@ -1290,7 +1309,6 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'walkthrough.importance.criticalHint': '這一步帶動了其餘變更，值得仔細閱讀。它不是在你的程式碼中發現的問題。',
   'walkthrough.importance.context': '背景',
   'walkthrough.importance.contextHint': '輔助性的變更，列在這裡是為了讓其餘部分說得通。',
-  'walkthrough.help.guide': 'Walkthrough 的運作方式',
   'walkthrough.blocked.noModel.title': '沒有可用的小模型',
   'walkthrough.blocked.noModel.description': '請先登入模型供應商再產生審閱。',
   'walkthrough.blocked.emptyDiff.title': '沒有可審閱的內容',
@@ -2376,6 +2394,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'chat.chatInput.placeholder.chat': '@ 用於檔案/Agent；/ 用於命令；! 用於 shell；# 用於程式片段',
   'chat.chatInput.placeholder.chatCompact': '使用 @ / ! # 輔助',
   'chat.chatInput.placeholder.chatCompactWork': '使用 @ / # 輔助',
+  'chat.chatInput.agentChangedAnnouncement': '已切換至 Agent {agent}',
   'chat.chatInput.placeholder.selectSession': '選擇或建立會話以開始聊天',
   'chat.dictation.start': '開始語音輸入',
   'chat.dictation.overlayAria': '語音輸入',
@@ -2437,6 +2456,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'chat.toolOutputDialog.image.previousAria': '上一張圖片',
   'chat.toolOutputDialog.image.nextAria': '下一張圖片',
   'chat.toolOutputDialog.image.closeAria': '關閉圖片預覽',
+  'chat.toolOutputDialog.image.previewAria': '圖片預覽',
   'chat.toolOutputDialog.mermaid.missingSource': '缺少 Mermaid 來源 URL。',
   'chat.toolOutputDialog.mermaid.loadFailed': '無法載入 Mermaid 圖表。',
   'chat.toolOutputDialog.mermaid.dataUrlMalformed': 'Mermaid 資料 URL 格式不正確。',
@@ -2445,6 +2465,9 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'chat.toolOutputDialog.mermaid.unsupportedUrlProtocol': '不支援此 Mermaid URL 通訊協定。',
   'chat.toolOutputDialog.mermaid.loadFailedWithStatus': '無法載入 Mermaid 圖表。狀態：{status}。',
   'chat.toolOutputDialog.mermaid.closeAria': '關閉圖表預覽',
+  'chat.toolOutputDialog.mermaid.previewAria': '圖表預覽',
+
+  'chat.toolOutputDialog.mermaid.diagramTitle': '圖表 {number}',
   'chat.toolOutputDialog.mermaid.loading': '正在載入圖表...',
   'chat.toolOutputDialog.mermaid.renderFailed': '無法渲染 Mermaid 圖表。',
   'chat.toolOutputDialog.mermaid.retry': '重試',
@@ -3093,7 +3116,7 @@ export const dict: Partial<Record<I18nKey, string>> = {
   'updateDialog.actions.openMobileUpdate': '開啟更新',
   'updateDialog.status.updating': '更新中...',
   'updateDialog.error.updateFailed': '更新失敗',
-  'updateDialog.error.takingLonger': '更新耗時超出預期。請稍等後重新整理，或執行：openchamber update',
+  'updateDialog.error.takingLonger': '更新耗時超出預期。請稍等後重新整理，或執行：ivaldi update',
   'mobileUpdate.toast.available.title': 'Ivaldi 更新可用',
   'mobileUpdate.toast.available.description': '版本 {version} 已可用於 Android。',
   'mobileUpdate.toast.actions.download': '下載',

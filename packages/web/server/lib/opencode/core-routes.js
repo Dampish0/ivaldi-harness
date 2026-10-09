@@ -24,6 +24,29 @@ const parseLoopbackUrl = (rawUrl) => {
   return url;
 };
 
+// Health fields that carry absolute paths, the OS username inside them, launch
+// arguments, or raw error text. /health is reachable before login, so these
+// go only to local callers that pass UI auth, or to everyone local when no
+// UI password is set. Status flags stay public for reachability probes.
+const HEALTH_DIAGNOSTIC_FIELDS = [
+  'openCodeAuthSource',
+  'lastOpenCodeError',
+  'lastOpenCodeLaunchDiagnostics',
+  'lastOpenCodeHealthFailure',
+  'lastManagedOpenCodeProcess',
+  'lastOpenCodeRestartDiagnostics',
+  'opencodeBinaryResolved',
+  'opencodeBinarySource',
+  'opencodeLaunchBinary',
+  'opencodeLaunchArgs',
+  'opencodeLaunchWrapperType',
+  'opencodeWslBinary',
+  'opencodeWslPath',
+  'opencodeWslDistro',
+  'nodeBinaryResolved',
+  'bunBinaryResolved',
+];
+
 export const registerServerStatusRoutes = (app, dependencies) => {
   const {
     express,
@@ -204,8 +227,28 @@ export const registerServerStatusRoutes = (app, dependencies) => {
     }
   };
 
-  app.get('/health', async (_req, res) => {
+  const canReadHealthDiagnostics = async (req) => {
+    const requestScope = typeof tunnelAuthController?.classifyRequestScope === 'function'
+      ? tunnelAuthController.classifyRequestScope(req)
+      : 'local';
+    if (requestScope !== 'local') return false;
+    if (!uiAuthController?.enabled) return true;
+    if (typeof uiAuthController.resolveAuthContext !== 'function') return false;
+    try {
+      return Boolean(await uiAuthController.resolveAuthContext(req, null, { allowUrlToken: false }));
+    } catch {
+      return false;
+    }
+  };
+
+  app.get('/health', async (req, res) => {
     const serverId = await resolveServerId();
+    const snapshot = { ...getHealthSnapshot() };
+    if (!(await canReadHealthDiagnostics(req))) {
+      for (const field of HEALTH_DIAGNOSTIC_FIELDS) {
+        delete snapshot[field];
+      }
+    }
     res.json({
       status: 'ok',
       timestamp: new Date().toISOString(),
@@ -213,7 +256,7 @@ export const registerServerStatusRoutes = (app, dependencies) => {
       runtime: runtimeName,
       compatibility,
       ...(serverId ? { serverId } : {}),
-      ...getHealthSnapshot(),
+      ...snapshot,
     });
   });
 

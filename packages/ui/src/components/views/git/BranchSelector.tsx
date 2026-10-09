@@ -204,6 +204,7 @@ export const BranchSelector: React.FC<BranchSelectorProps> = ({
                 <div className="px-2 py-1.5">
                   <div className="flex items-center gap-2 mb-2">
                     <button
+                      aria-label={t('common.actions.back')}
                       type="button"
                       onClick={handleBackFromRemoteSelect}
                       disabled={isCreating}
@@ -275,6 +276,7 @@ export const BranchSelector: React.FC<BranchSelectorProps> = ({
                     )}
                   </button>
                   <button
+                    aria-label={t('common.actions.cancel')}
                     type="button"
                     onClick={handleCancelCreate}
                     disabled={isCreating}

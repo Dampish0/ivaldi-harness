@@ -214,6 +214,8 @@ const SessionFolderItemBase = <TSessionNode,>({
               <button
                 type="submit"
                 className="shrink-0 text-muted-foreground hover:text-foreground"
+                aria-label={t('sessions.sidebar.folderItem.renameSave')}
+                title={t('sessions.sidebar.folderItem.renameSave')}
                 onClick={(event) => event.stopPropagation()}
                 onPointerDown={(event) => event.stopPropagation()}
                 onMouseDown={(event) => event.stopPropagation()}
@@ -229,6 +231,8 @@ const SessionFolderItemBase = <TSessionNode,>({
                 onPointerDown={(event) => event.stopPropagation()}
                 onMouseDown={(event) => event.stopPropagation()}
                 className="shrink-0 text-muted-foreground hover:text-foreground"
+                aria-label={t('sessions.sidebar.folderItem.renameCancel')}
+                title={t('sessions.sidebar.folderItem.renameCancel')}
               >
                 <Icon name="close" className="size-4" />
               </button>

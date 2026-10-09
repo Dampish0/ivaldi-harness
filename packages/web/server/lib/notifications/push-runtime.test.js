@@ -16,7 +16,7 @@ const createRuntime = () => createPushRuntime({
   },
   PUSH_SUBSCRIPTIONS_FILE_PATH: '/tmp/push-subscriptions.json',
   readSettingsFromDiskMigrated: vi.fn(async () => ({})),
-  writeSettingsToDisk: vi.fn(async () => {}),
+  updateSettings: vi.fn(async (mutate) => (await mutate({})) ?? {}),
 });
 
 afterEach(() => {

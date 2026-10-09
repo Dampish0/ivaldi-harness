@@ -3,7 +3,6 @@ import { createRealpathCache } from '../path-realpath-cache.js';
 import nodeFsPromises from 'node:fs/promises';
 import nodePath from 'node:path';
 
-const EXEC_JOB_TTL_MS = 30 * 60 * 1000;
 const OUTSIDE_FILE_GRANT_TTL_MS = 10 * 60 * 1000;
 
 const outsideFileGrants = new Map();
@@ -87,22 +86,6 @@ const resolveOutsideFileGrant = async ({ token, targetPath, scope, fsPromises })
   return { ok: true, base: grant.base, resolved: canonicalPath, granted: true };
 };
 
-const createCommandTimeoutMs = () => {
-  const raw = Number(process.env.OPENCHAMBER_FS_EXEC_TIMEOUT_MS);
-  if (Number.isFinite(raw) && raw > 0) return raw;
-  return 5 * 60 * 1000;
-};
-
-// How long a cached git-read result stays fresh. The location of a repo's git
-// directory is effectively static while the app runs, so a short TTL safely
-// absorbs the burst of identical lookups a fresh client (e.g. right after a
-// page reload) fires for every project. Set to 0 to disable caching.
-const createGitReadCacheTtlMs = () => {
-  const raw = Number(process.env.OPENCHAMBER_GIT_READ_CACHE_TTL_MS);
-  if (Number.isFinite(raw) && raw >= 0) return raw;
-  return 30 * 1000;
-};
-
 const createGitCheckIgnoreTimeoutMs = () => {
   const raw = Number(process.env.OPENCHAMBER_GIT_CHECK_IGNORE_TIMEOUT_MS);
   if (Number.isFinite(raw) && raw >= 0) return raw;
@@ -113,6 +96,21 @@ const createUploadMaxBytes = () => {
   const raw = Number(process.env.OPENCHAMBER_FS_UPLOAD_MAX_BYTES);
   if (Number.isFinite(raw) && raw > 0) return Math.floor(raw);
   return 100 * 1024 * 1024;
+};
+
+// User files that can run script when a browser opens them as a document.
+// Served same-origin, they would run with the app's privileges: a repository's
+// HTML file could drive the terminal API. The CSP sandbox gives them an opaque
+// origin instead. Not applied to PDF, which Chromium refuses to render in a
+// sandboxed document.
+const SCRIPTABLE_DOCUMENT_MIME_TYPES = new Set(['text/html', 'image/svg+xml', 'application/xml', 'text/xml', 'application/xhtml+xml']);
+const USER_DOCUMENT_SANDBOX_CSP = 'sandbox allow-scripts allow-forms';
+
+const setUserFileSecurityHeaders = (res, mimeType) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  if (SCRIPTABLE_DOCUMENT_MIME_TYPES.has(mimeType)) {
+    res.setHeader('Content-Security-Policy', USER_DOCUMENT_SANDBOX_CSP);
+  }
 };
 
 const FILE_MIME_MAP = Object.freeze({
@@ -167,26 +165,6 @@ const streamUploadBody = async (req, handle, maxBytes) => {
     }
   }
 };
-
-// Only deterministic, side-effect-free git plumbing path queries are cacheable.
-// Anything outside this allowlist (including any non-git command) runs normally
-// — we never cache arbitrary exec.
-const normalizeCommand = (command) =>
-  typeof command === 'string' ? command.trim().replace(/\s+/g, ' ') : '';
-
-const isCacheableGitReadCommand = (command) => {
-  const normalized = normalizeCommand(command);
-  return /^git rev-parse(?: --(?:absolute-git-dir|git-common-dir|show-toplevel)){1,3}$/.test(normalized);
-};
-
-// Dual-constraint bound per the project's caching policy (count + bytes). Git
-// rev-parse outputs are tiny, so these ceilings are generous and only guard
-// against pathological growth on long-lived, many-directory deployments.
-const GIT_READ_CACHE_MAX_ENTRIES = 500;
-const GIT_READ_CACHE_MAX_BYTES = 1024 * 1024;
-
-const gitReadEntryBytes = (key, result) =>
-  key.length + (result?.stdout?.length || 0) + (result?.stderr?.length || 0);
 
 const isPathWithinRoot = (resolvedPath, rootPath, path, os) => {
   const resolvedRoot = path.resolve(rootPath || os.homedir());
@@ -345,75 +323,6 @@ const resolveReadPathFromContext = async ({ req, targetPath, scope, resolveProje
   });
 };
 
-const runCommandInDirectory = ({ shell, shellFlag, command, resolvedCwd, spawn, buildAugmentedPath, commandTimeoutMs }) => {
-  return new Promise((resolve) => {
-    let stdout = '';
-    let stderr = '';
-    let timedOut = false;
-
-    const envPath = buildAugmentedPath();
-    const execEnv = { ...process.env, PATH: envPath };
-
-    const child = spawn(shell, [shellFlag, command], {
-      cwd: resolvedCwd,
-      env: execEnv,
-      windowsHide: true,
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
-
-    const timeout = setTimeout(() => {
-      timedOut = true;
-      try {
-        child.kill('SIGKILL');
-      } catch {
-      }
-    }, commandTimeoutMs);
-
-    child.stdout?.on('data', (chunk) => {
-      stdout += chunk.toString();
-    });
-
-    child.stderr?.on('data', (chunk) => {
-      stderr += chunk.toString();
-    });
-
-    child.on('error', (error) => {
-      clearTimeout(timeout);
-      resolve({
-        command,
-        success: false,
-        exitCode: undefined,
-        stdout: stdout.trim(),
-        stderr: stderr.trim(),
-        error: (error && error.message) || 'Command execution failed',
-      });
-    });
-
-    child.on('close', (code, signal) => {
-      clearTimeout(timeout);
-      const exitCode = typeof code === 'number' ? code : undefined;
-      const base = {
-        command,
-        success: exitCode === 0 && !timedOut,
-        exitCode,
-        stdout: stdout.trim(),
-        stderr: stderr.trim(),
-      };
-
-      if (timedOut) {
-        resolve({
-          ...base,
-          success: false,
-          error: `Command timed out after ${commandTimeoutMs}ms` + (signal ? ` (${signal})` : ''),
-        });
-        return;
-      }
-
-      resolve(base);
-    });
-  });
-};
-
 export const registerFsRoutes = (app, dependencies) => {
   const {
     os,
@@ -431,6 +340,16 @@ export const registerFsRoutes = (app, dependencies) => {
   const realpathCache = createRealpathCache({
     realpath: fsPromises.realpath.bind(fsPromises),
   });
+
+  const isUnlistableDirectory = async (directoryPath) => {
+    try {
+      const handle = await fsPromises.opendir(directoryPath);
+      await handle.close();
+      return false;
+    } catch (error) {
+      return error?.code === 'EPERM' || error?.code === 'EACCES';
+    }
+  };
 
   const spawnDetached = (command, args) => new Promise((resolve, reject) => {
     let child;
@@ -453,153 +372,7 @@ export const registerFsRoutes = (app, dependencies) => {
     child.once('spawn', onSpawn);
   });
 
-  const execJobs = new Map();
-  const commandTimeoutMs = createCommandTimeoutMs();
-  const gitReadCacheTtlMs = createGitReadCacheTtlMs();
   const gitCheckIgnoreTimeoutMs = createGitCheckIgnoreTimeoutMs();
-  const gitReadCache = new Map();
-  const inFlightGitReadCache = new Map();
-
-  const pruneExecJobs = () => {
-    const now = Date.now();
-    for (const [jobId, job] of execJobs.entries()) {
-      if (!job || typeof job !== 'object') {
-        execJobs.delete(jobId);
-        continue;
-      }
-      const updatedAt = typeof job.updatedAt === 'number' ? job.updatedAt : 0;
-      if (updatedAt && now - updatedAt > EXEC_JOB_TTL_MS) {
-        execJobs.delete(jobId);
-      }
-    }
-  };
-
-  const pruneGitReadCache = () => {
-    if (gitReadCacheTtlMs <= 0) {
-      return;
-    }
-    const now = Date.now();
-    for (const [key, entry] of gitReadCache.entries()) {
-      if (!entry || now - entry.at > gitReadCacheTtlMs) {
-        gitReadCache.delete(key);
-      }
-    }
-  };
-
-  // Insert with LRU (oldest-first) eviction enforcing both count and byte caps.
-  // Map iteration order is insertion order, so deleting+re-setting a key moves
-  // it to the most-recently-used position.
-  const setGitReadCacheEntry = (key, result) => {
-    gitReadCache.delete(key);
-    gitReadCache.set(key, { result, at: Date.now() });
-
-    let totalBytes = 0;
-    for (const [k, entry] of gitReadCache) {
-      totalBytes += gitReadEntryBytes(k, entry.result);
-    }
-    while (
-      gitReadCache.size > GIT_READ_CACHE_MAX_ENTRIES ||
-      (totalBytes > GIT_READ_CACHE_MAX_BYTES && gitReadCache.size > 1)
-    ) {
-      const oldest = gitReadCache.entries().next().value;
-      if (!oldest) {
-        break;
-      }
-      totalBytes -= gitReadEntryBytes(oldest[0], oldest[1].result);
-      gitReadCache.delete(oldest[0]);
-    }
-  };
-
-  // Runs a command, transparently serving/storing cacheable git-read results.
-  // Non-cacheable commands always execute and are never stored.
-  const runCommandWithGitReadCache = async ({ shell, shellFlag, command, resolvedCwd }) => {
-    const cacheable = gitReadCacheTtlMs > 0 && isCacheableGitReadCommand(command);
-    const cacheKey = cacheable ? `${resolvedCwd}${normalizeCommand(command)}` : null;
-
-    if (cacheKey) {
-      const cached = gitReadCache.get(cacheKey);
-      if (cached && Date.now() - cached.at < gitReadCacheTtlMs) {
-        // Refresh recency for LRU without altering the entry's age/TTL.
-        gitReadCache.delete(cacheKey);
-        gitReadCache.set(cacheKey, cached);
-        return { ...cached.result, command };
-      }
-      if (cached) {
-        gitReadCache.delete(cacheKey);
-      }
-
-      const inFlight = inFlightGitReadCache.get(cacheKey);
-      if (inFlight) {
-        const result = await inFlight;
-        return { ...result, command };
-      }
-    }
-
-    const runPromise = runCommandInDirectory({
-      shell,
-      shellFlag,
-      command,
-      resolvedCwd,
-      spawn,
-      buildAugmentedPath,
-      commandTimeoutMs,
-    }).then((result) => {
-      // Only cache successful results — failures may be transient.
-      if (cacheKey && result && result.success) {
-        setGitReadCacheEntry(cacheKey, result);
-      }
-      return result;
-    }).finally(() => {
-      if (cacheKey && inFlightGitReadCache.get(cacheKey) === runPromise) {
-        inFlightGitReadCache.delete(cacheKey);
-      }
-    });
-
-    if (cacheKey) {
-      inFlightGitReadCache.set(cacheKey, runPromise);
-    }
-
-    return runPromise;
-  };
-
-  const runExecJob = async (job) => {
-    job.status = 'running';
-    job.updatedAt = Date.now();
-
-    const results = [];
-    for (const command of job.commands) {
-      if (typeof command !== 'string' || !command.trim()) {
-        results.push({ command, success: false, error: 'Invalid command' });
-        continue;
-      }
-
-      try {
-        const result = await runCommandWithGitReadCache({
-          shell: job.shell,
-          shellFlag: job.shellFlag,
-          command,
-          resolvedCwd: job.resolvedCwd,
-        });
-        results.push(result);
-      } catch (error) {
-        results.push({
-          command,
-          success: false,
-          error: (error && error.message) || 'Command execution failed',
-        });
-      }
-
-      job.results = results;
-      job.updatedAt = Date.now();
-    }
-
-    job.results = results;
-    job.success = results.every((r) => r.success);
-    job.status = 'done';
-    job.finishedAt = Date.now();
-    job.updatedAt = Date.now();
-  };
-
   app.get('/api/fs/home', (_req, res) => {
     try {
       const home = os.homedir();
@@ -936,6 +709,7 @@ export const registerFsRoutes = (app, dependencies) => {
 
       const content = await fsPromises.readFile(canonicalPath);
       res.setHeader('Cache-Control', 'no-store');
+      setUserFileSecurityHeaders(res, mimeType);
       if (resolved.granted) {
         res.setHeader('Referrer-Policy', 'no-referrer');
       }
@@ -992,7 +766,7 @@ export const registerFsRoutes = (app, dependencies) => {
       const mimeType = FILE_MIME_MAP[ext] || 'application/octet-stream';
       const content = await fsPromises.readFile(canonicalPath);
       res.setHeader('Cache-Control', 'no-store');
-      res.setHeader('X-Content-Type-Options', 'nosniff');
+      setUserFileSecurityHeaders(res, mimeType);
       return res.type(mimeType).send(content);
     } catch (error) {
       const err = error;
@@ -1333,119 +1107,6 @@ export const registerFsRoutes = (app, dependencies) => {
     }
   });
 
-  app.post('/api/fs/exec', async (req, res) => {
-    const { commands, cwd, background } = req.body || {};
-    if (!Array.isArray(commands) || commands.length === 0) {
-      return res.status(400).json({ error: 'Commands array is required' });
-    }
-    if (!cwd || typeof cwd !== 'string') {
-      return res.status(400).json({ error: 'Working directory (cwd) is required' });
-    }
-
-    pruneExecJobs();
-    pruneGitReadCache();
-
-    try {
-      if (background === true) {
-        console.warn('Rejected background /api/fs/exec request');
-        return res.status(400).json({ error: 'Background command execution is not allowed' });
-      }
-      const resolvedCwdCandidate = path.resolve(normalizeDirectoryPath(cwd));
-      const resolvedForWorkspace = await resolveWorkspacePathFromContext({
-        req,
-        targetPath: resolvedCwdCandidate,
-        resolveProjectDirectory,
-        path,
-        os,
-        normalizeDirectoryPath,
-        openchamberUserConfigRoot,
-      });
-      if (!resolvedForWorkspace.ok) {
-        console.warn(`Rejected /api/fs/exec outside workspace: ${resolvedForWorkspace.error}`);
-        return res.status(403).json({ error: resolvedForWorkspace.error });
-      }
-      const resolvedCwd = resolvedForWorkspace.resolved;
-      const stats = await fsPromises.stat(resolvedCwd);
-      if (!stats.isDirectory()) {
-        return res.status(400).json({ error: 'Specified cwd is not a directory' });
-      }
-
-      const shell = process.env.SHELL || (process.platform === 'win32' ? 'cmd.exe' : '/bin/sh');
-      const shellFlag = process.platform === 'win32' ? '/c' : '-c';
-
-      const jobId = crypto.randomUUID();
-      const job = {
-        jobId,
-        status: 'queued',
-        success: null,
-        commands,
-        resolvedCwd,
-        shell,
-        shellFlag,
-        results: [],
-        startedAt: Date.now(),
-        finishedAt: null,
-        updatedAt: Date.now(),
-      };
-
-      execJobs.set(jobId, job);
-
-      const isBackground = false;
-      if (isBackground) {
-        void runExecJob(job).catch((error) => {
-          job.status = 'done';
-          job.success = false;
-          job.results = Array.isArray(job.results) ? job.results : [];
-          job.results.push({
-            command: '',
-            success: false,
-            error: (error && error.message) || 'Command execution failed',
-          });
-          job.finishedAt = Date.now();
-          job.updatedAt = Date.now();
-        });
-
-        return res.status(202).json({
-          jobId,
-          status: 'running',
-        });
-      }
-
-      await runExecJob(job);
-      return res.json({
-        jobId,
-        status: job.status,
-        success: job.success === true,
-        results: job.results,
-      });
-    } catch (error) {
-      console.error('Failed to execute commands:', error);
-      return res.status(500).json({ error: (error && error.message) || 'Failed to execute commands' });
-    }
-  });
-
-  app.get('/api/fs/exec/:jobId', (req, res) => {
-    const jobId = typeof req.params?.jobId === 'string' ? req.params.jobId : '';
-    if (!jobId) {
-      return res.status(400).json({ error: 'Job id is required' });
-    }
-
-    pruneExecJobs();
-
-    const job = execJobs.get(jobId);
-    if (!job) {
-      return res.status(404).json({ error: 'Job not found' });
-    }
-
-    job.updatedAt = Date.now();
-    return res.json({
-      jobId: job.jobId,
-      status: job.status,
-      success: job.success === true,
-      results: Array.isArray(job.results) ? job.results : [],
-    });
-  });
-
   app.get('/api/fs/list', async (req, res) => {
     const rawPath = typeof req.query.path === 'string' && req.query.path.trim().length > 0
       ? req.query.path.trim()
@@ -1540,6 +1201,13 @@ export const registerFsRoutes = (app, dependencies) => {
             } catch {
               isDirectory = false;
             }
+          }
+
+          // Windows keeps legacy junctions such as "Cookies" or "My Documents"
+          // in the profile and denies listing them. They can never be opened,
+          // so they only add noise to pickers and file trees.
+          if (platform === 'win32' && isSymbolicLink && isDirectory && await isUnlistableDirectory(physicalEntryPath)) {
+            return null;
           }
 
           return {

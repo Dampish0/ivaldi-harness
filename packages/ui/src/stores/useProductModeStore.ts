@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+import { setWorkWording } from '@/lib/i18n/store';
 import { DEFAULT_PRODUCT_MODE, isDeveloperOnlyContextMode, type ProductMode } from '@/lib/productMode';
 import { useUIStore } from './useUIStore';
 
@@ -34,3 +35,7 @@ export const useProductModeStore = create<ProductModeStore>()(
     },
   ),
 );
+
+// Work mode shows everyday wording wherever a language has it.
+setWorkWording(useProductModeStore.getState().mode === 'work');
+useProductModeStore.subscribe((state) => setWorkWording(state.mode === 'work'));

@@ -346,7 +346,7 @@ export const TimelineDialog: React.FC<TimelineDialogProps> = ({
                                             {messageTime}
                                         </span>
                                         <p className={cn(
-                                            "flex-1 min-w-0 typography-small truncate",
+                                            "flex-1 min-w-0 typography-meta truncate",
                                             isSelected ? "text-interactive-selection-foreground" : "text-foreground"
                                         )}>
                                             {snippet ?? (preview || t('chat.timeline.noTextContent'))}
@@ -358,6 +358,7 @@ export const TimelineDialog: React.FC<TimelineDialogProps> = ({
                                                 <Tooltip>
                                                     <TooltipTrigger asChild>
                                                         <button
+                                                            aria-label={t('chat.timeline.actions.revertFromHere')}
                                                             type="button"
                                                             className="h-5 w-5 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
                                                             onClick={async (e) => {

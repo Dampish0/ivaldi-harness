@@ -300,6 +300,9 @@ export async function handleSystemBridgeMessage(
     }
 
     case 'api:openchamber:update-check': {
+      if (!deps.updateCheckUrl) {
+        return { id, type, success: true, data: { available: false } };
+      }
       try {
         const body = (payload && typeof payload === 'object' ? payload : {}) as Record<string, unknown>;
         const currentVersion = typeof body.currentVersion === 'string' && body.currentVersion.trim().length > 0
@@ -450,7 +453,7 @@ export async function handleSystemBridgeMessage(
           data: {
             removed,
             ...(removed
-              ? buildDeferredRestartResponse(`Provider ${providerId} disconnected successfully. Restart OpenCode to apply.`)
+              ? buildDeferredRestartResponse(`Provider ${providerId} disconnected successfully. Restart Ivaldi to apply.`)
               : {
                 success: true,
                 requiresReload: false,

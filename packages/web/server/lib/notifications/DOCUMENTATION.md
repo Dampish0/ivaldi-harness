@@ -65,7 +65,7 @@ This module provides notification message preparation utilities for the web serv
   - `isUiVisible(token)`
 
 ### APNs runtime API (apns-runtime.js)
-- `createApnsRuntime(dependencies)`: creates runtime for native iOS APNs push and device-token state. Dependencies: `fsPromises`, `path`, `crypto`, `http2`, `APNS_TOKENS_FILE_PATH`, `readSettingsFromDiskMigrated`, `writeSettingsToDisk` (persists the auto-generated relay signing keypair).
+- `createApnsRuntime(dependencies)`: creates runtime for native iOS APNs push and device-token state. Dependencies: `fsPromises`, `path`, `crypto`, `http2`, `APNS_TOKENS_FILE_PATH`, `readSettingsFromDiskMigrated`, `updateSettings` (creates and persists the relay signing keypair in one queued step).
 - Returned API:
   - `addOrUpdateApnsToken(uiSessionToken, deviceToken, userAgent, platform, environment)` — also binds a newly-seen token on the relay (signed `/v1/push/register-token`). `environment` is the APNs environment the token was minted for (`sandbox` for Xcode/dev-signed installs, `production` otherwise — reported by the client at registration); delivery groups tokens by it.
   - `removeApnsToken(uiSessionToken, deviceToken)`

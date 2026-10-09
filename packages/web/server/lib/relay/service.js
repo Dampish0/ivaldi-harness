@@ -49,7 +49,7 @@ const envRelayUrlOverride = () => {
  * @param {{
  *   crypto: typeof import('node:crypto'),
  *   readSettingsFromDiskMigrated: () => Promise<object>,
- *   writeSettingsToDisk: (settings: object) => Promise<void>,
+ *   updateSettings: (mutate: (settings: object) => object | null | Promise<object | null>) => Promise<object>,
  *   getLocalPort: () => number,
  *   logger?: Pick<Console, 'warn'>,
  * }} deps
@@ -57,10 +57,9 @@ const envRelayUrlOverride = () => {
 export const createRelayService = ({
   crypto,
   readSettingsFromDiskMigrated,
-  writeSettingsToDisk,
-  // Strict settings reader (throws on corrupt/unreadable) gating identity
-  // regeneration — see identity.js/signing-key.js.
-  readSettingsStrict,
+  // Queued read, change and write. It also gates identity creation on a
+  // strict read, see identity.js and signing-key.js.
+  updateSettings,
   getLocalPort,
   // Returns true when any paired device or pending pairing session uses the
   // relay transport. The relay lifecycle is driven purely by this demand.
@@ -77,7 +76,7 @@ export const createRelayService = ({
   allowPassiveHost = true,
   logger = console,
 }) => {
-  const identityRuntime = createRelayIdentityRuntime({ crypto, readSettingsFromDiskMigrated, writeSettingsToDisk, readSettingsStrict });
+  const identityRuntime = createRelayIdentityRuntime({ crypto, updateSettings });
 
   let hostClient = null;
   let status = { state: 'disabled', lastError: null, connectedClients: 0 };
@@ -107,11 +106,10 @@ export const createRelayService = ({
   };
 
   const writeConfig = async (config) => {
-    const settings = await readSettingsFromDiskMigrated();
-    await writeSettingsToDisk({
-      ...settings,
+    await updateSettings((current) => ({
+      ...current,
       privateRelay: { enabled: config.enabled === true, relayUrl: normalizeRelayUrl(config.relayUrl) },
-    });
+    }));
   };
 
   const stopHostClient = () => {

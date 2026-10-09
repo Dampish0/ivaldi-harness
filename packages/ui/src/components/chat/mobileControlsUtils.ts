@@ -25,6 +25,9 @@ export const getCycledPrimaryAgentName = (
 
 const capitalizeLabel = (value: string) => value.charAt(0).toUpperCase() + value.slice(1);
 
+/** Display form of an agent name, as the composer shows it ("build" becomes "Build"). */
+export const formatAgentDisplayName = (agentName: string) => capitalizeLabel(agentName);
+
 export const getAgentDisplayName = (agents: Agent[], agentName?: string) => {
     if (agentName) {
         const agent = agents.find((entry) => entry.name === agentName);

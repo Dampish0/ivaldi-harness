@@ -474,8 +474,8 @@ const FileRow: React.FC<FileRowProps> = ({
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
-                      size="icon"
-                      className="h-6 w-6"
+                      size="icon-xs"
+                     
                       onClick={handleMenuButtonClick}
                       title={t('sidebarFilesTree.actions.fileMenuTitle')}
                       aria-label={t('sidebarFilesTree.actions.fileMenuTitle')}

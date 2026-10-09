@@ -16,6 +16,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { useProductModeStore } from '@/stores/useProductModeStore';
@@ -31,6 +32,18 @@ type ComposerAttachmentControlsProps = {
     onMenuOpenChange?: (open: boolean) => void;
     /** Mobile: open the attachment bottom sheet instead of the dropdown menu. */
     onOpenMobileSheet?: () => void;
+    /** Desktop: show the shared tooltip instead of the native title. */
+    withTooltip?: boolean;
+};
+
+const ControlTooltip = ({ enabled, label, children }: { enabled: boolean; label: string; children: React.ReactElement }) => {
+    if (!enabled) return children;
+    return (
+        <Tooltip>
+            <TooltipTrigger asChild>{children}</TooltipTrigger>
+            <TooltipContent side="top" sideOffset={6}>{label}</TooltipContent>
+        </Tooltip>
+    );
 };
 
 export const ComposerAttachmentControls = React.memo(function ComposerAttachmentControls(props: ComposerAttachmentControlsProps) {
@@ -44,7 +57,11 @@ export const ComposerAttachmentControls = React.memo(function ComposerAttachment
         openIssuePicker,
         openPrPicker,
         onOpenSettings,
+        withTooltip = false,
     } = props;
+    const addAttachmentLabel = t('chat.chatInput.actions.addAttachment');
+    const attachFilesLabel = t('chat.chatInput.actions.attachFiles');
+    const modelAgentSettingsLabel = t('chat.chatInput.actions.modelAgentSettings');
 
     return (
         <div className="flex items-center gap-x-1.5">
@@ -70,27 +87,31 @@ export const ComposerAttachmentControls = React.memo(function ComposerAttachment
                         <Icon name="add-circle" className={cn(iconSizeClass, 'text-current')} />
                     </button>
                 ) : isVSCode ? (
-                    <button
-                        type="button"
-                        className={footerIconButtonClass}
-                        onClick={handlePickLocalFiles}
-                        title={t('chat.chatInput.actions.attachFiles')}
-                        aria-label={t('chat.chatInput.actions.attachFiles')}
-                    >
-                        <Icon name="attachment-2" className={cn(iconSizeClass, 'text-current')} />
-                    </button>
+                    <ControlTooltip enabled={withTooltip} label={attachFilesLabel}>
+                        <button
+                            type="button"
+                            className={footerIconButtonClass}
+                            onClick={handlePickLocalFiles}
+                            {...(withTooltip ? {} : { title: attachFilesLabel })}
+                            aria-label={attachFilesLabel}
+                        >
+                            <Icon name="attachment-2" className={cn(iconSizeClass, 'text-current')} />
+                        </button>
+                    </ControlTooltip>
                 ) : (
                     <DropdownMenu onOpenChange={props.onMenuOpenChange}>
-                        <DropdownMenuTrigger asChild>
-                            <button
-                                type="button"
-                                className={footerIconButtonClass}
-                                title={t('chat.chatInput.actions.addAttachment')}
-                                aria-label={t('chat.chatInput.actions.addAttachment')}
-                            >
-                                <Icon name="add-circle" className={cn(iconSizeClass, 'text-current')} />
-                            </button>
-                        </DropdownMenuTrigger>
+                        <ControlTooltip enabled={withTooltip} label={addAttachmentLabel}>
+                            <DropdownMenuTrigger asChild>
+                                <button
+                                    type="button"
+                                    className={footerIconButtonClass}
+                                    {...(withTooltip ? {} : { title: addAttachmentLabel })}
+                                    aria-label={addAttachmentLabel}
+                                >
+                                    <Icon name="add-circle" className={cn(iconSizeClass, 'text-current')} />
+                                </button>
+                            </DropdownMenuTrigger>
+                        </ControlTooltip>
                         <DropdownMenuContent side="top" align="start">
                             <DropdownMenuItem
                                 onSelect={() => {
@@ -98,7 +119,7 @@ export const ComposerAttachmentControls = React.memo(function ComposerAttachment
                                 }}
                             >
                                 <Icon name="attachment-2"/>
-                                {t('chat.chatInput.actions.attachFiles')}
+                                {attachFilesLabel}
                             </DropdownMenuItem>
                             {isDeveloperMode ? (
                                 <>
@@ -126,15 +147,17 @@ export const ComposerAttachmentControls = React.memo(function ComposerAttachment
             </div>
 
             {isDeveloperMode && onOpenSettings ? (
-                <button
-                    type="button"
-                    onClick={onOpenSettings}
-                    className={footerIconButtonClass}
-                    title={t('chat.chatInput.actions.modelAgentSettings')}
-                    aria-label={t('chat.chatInput.actions.modelAgentSettings')}
-                >
-                    <Icon name="ai-agent" className={cn(iconSizeClass, 'text-current')} />
-                </button>
+                <ControlTooltip enabled={withTooltip} label={modelAgentSettingsLabel}>
+                    <button
+                        type="button"
+                        onClick={onOpenSettings}
+                        className={footerIconButtonClass}
+                        {...(withTooltip ? {} : { title: modelAgentSettingsLabel })}
+                        aria-label={modelAgentSettingsLabel}
+                    >
+                        <Icon name="ai-agent" className={cn(iconSizeClass, 'text-current')} />
+                    </button>
+                </ControlTooltip>
             ) : null}
         </div>
     );
@@ -145,4 +168,5 @@ export const ComposerAttachmentControls = React.memo(function ComposerAttachment
     && prev.onOpenSettings === next.onOpenSettings
     && prev.onMenuOpenChange === next.onMenuOpenChange
     && prev.onOpenMobileSheet === next.onOpenMobileSheet
+    && prev.withTooltip === next.withTooltip
 ));

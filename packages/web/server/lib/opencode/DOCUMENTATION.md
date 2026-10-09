@@ -257,9 +257,14 @@ Managed health failures are classified as `timeout`, `connection_refused`, `conn
 - `createSettingsRuntime(dependencies)`: creates settings lifecycle runtime for read/migrate/persist concerns.
 - Returned API:
   - `readSettingsFromDisk()`
+  - `readSettingsFromDiskStrict()`
   - `readSettingsFromDiskMigrated()`
   - `writeSettingsToDisk(settings)`
+  - `updateSettings(mutate)`: strict read, `mutate(current)`, and write, in one queued step. `mutate` returns the next settings, or null to write nothing. Resolves to the settings now on disk.
   - `persistSettings(changes)`
+- Mutations and migration reads require a readable JSON object. Only `ENOENT` means first run. Malformed content and other I/O failures reject without replacing the unreadable file with defaults. The lenient reader remains available for existing read-only callers.
+- `persistSettings`, `updateSettings` and migration reads share one in-process queue. A caller receives its own failure, while subsequent operations read the current committed file and can succeed. A failed patch is never replayed automatically. Modules that own a settings field, such as the relay keys, VAPID keys, push origin and private relay config, change it through `updateSettings` so a concurrent save is not overwritten. The ordering does not cover external processes such as the CLI. Windows replace retries and their copy fallback retain their existing behavior.
+- The legacy `lastDirectory` migration only creates a project for a file with no `projects` key, and never for the home folder. An empty `projects` list stays empty, and the UI's first-run `lastDirectory` of home does not become a project.
 - Persistent permission auto-accept policy is stored under `permissionAutoAccept`; execution ownership lives in `lib/permission-auto-accept/`.
 - User-level lifecycle hook configuration is stored under `lifecycleHooks`; validation and execution ownership live in `lib/lifecycle-hooks/`.
 - Shared sidebar preferences are stored as validated top-level fields: `sidebarProjectDisplayMode`, `sidebarSessionGroupingMode`, `sidebarProjectSortOrder`, and `sidebarShowRecentSection`. Device-local picker selection and sticky-header state do not enter `settings.json`.
@@ -325,7 +330,7 @@ Managed health failures are classified as `timeout`, `connection_refused`, `conn
 
 ## Public exports (core-routes.js)
 - `registerServerStatusRoutes(app, dependencies)`: registers status/system endpoints:
-  - `GET /health`
+  - `GET /health`: reachable before login. Status flags are public. Fields in `HEALTH_DIAGNOSTIC_FIELDS`, which hold binary paths, launch args and raw errors, go only to local-scope callers that pass UI auth, or to every local caller when no UI password is set. Tunnel callers never get them.
   - `POST /api/system/shutdown`
   - `GET /api/system/info`
  - `registerAuthAndAccessRoutes(app, dependencies)`: registers browser auth/session exchange and API access middleware:
@@ -488,5 +493,6 @@ an authoritative loopback callback URL even when OpenChamber binds port `0`.
 - Route ownership moved to module-level `routes.js`; `index.js` wires dependencies only.
 - All file writes include automatic backup before modification.
 - Config merging follows priority: custom > project > user.
-- UI auth uses scrypt for password hashing with constant-time comparison.
+- UI auth uses async scrypt for password hashing with constant-time comparison, and rate-limits logins by `req.ip`.
 - Tunnel auth treats `host.docker.internal` as local-only when the socket remote IP is private/loopback.
+- Tunnel scope uses the raw Host and every `X-Forwarded-Host` value, not `req.hostname`; see `../security/DOCUMENTATION.md`.

@@ -18,7 +18,7 @@ export const createPushRuntime = (deps) => {
     webPush,
     PUSH_SUBSCRIPTIONS_FILE_PATH,
     readSettingsFromDiskMigrated,
-    writeSettingsToDisk,
+    updateSettings,
   } = deps;
 
   let persistPushSubscriptionsLock = Promise.resolve();
@@ -79,24 +79,24 @@ export const createPushRuntime = (deps) => {
     return persistPushSubscriptionsLock;
   };
 
+  // Check and create in one queued update, so two first-run callers share one
+  // key pair and a concurrent settings save is not overwritten.
   const getOrCreateVapidKeys = async () => {
-    const settings = await readSettingsFromDiskMigrated();
-    const existing = settings?.vapidKeys;
-    if (existing && typeof existing.publicKey === 'string' && typeof existing.privateKey === 'string') {
-      return { publicKey: existing.publicKey, privateKey: existing.privateKey };
-    }
-
-    const generated = webPush.generateVAPIDKeys();
-    const next = {
-      ...settings,
-      vapidKeys: {
-        publicKey: generated.publicKey,
-        privateKey: generated.privateKey,
-      },
-    };
-
-    await writeSettingsToDisk(next);
-    return { publicKey: generated.publicKey, privateKey: generated.privateKey };
+    const settings = await updateSettings((current) => {
+      const existing = current.vapidKeys;
+      if (existing && typeof existing.publicKey === 'string' && typeof existing.privateKey === 'string') {
+        return null;
+      }
+      const generated = webPush.generateVAPIDKeys();
+      return {
+        ...current,
+        vapidKeys: {
+          publicKey: generated.publicKey,
+          privateKey: generated.privateKey,
+        },
+      };
+    });
+    return { publicKey: settings.vapidKeys.publicKey, privateKey: settings.vapidKeys.privateKey };
   };
 
   const normalizePushSubscriptions = (record) => {

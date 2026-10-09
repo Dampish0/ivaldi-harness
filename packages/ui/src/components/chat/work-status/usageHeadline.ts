@@ -36,9 +36,9 @@ export const resolveQuotaProviderId = (modelProviderId: string | null | undefine
 /**
  * Shortest reported window for the provider the composer is pointed at.
  *
- * Returns null when nothing matches — the section then falls back to its
- * display-mode label rather than showing a quota belonging to some other
- * provider, which would read as the active one.
+ * Returns null when nothing matches — the section then shows no summary
+ * rather than showing a quota belonging to some other provider, which would
+ * read as the active one.
  */
 export const pickUsageHeadline = (
   groups: readonly UsageProviderGroup[],

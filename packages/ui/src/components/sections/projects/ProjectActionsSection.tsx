@@ -277,6 +277,7 @@ export const ProjectActionsSection: React.FC<ProjectActionsSectionProps> = ({ pr
                   </CollapsibleTrigger>
 
                   <Button
+                    aria-label={t('common.actions.delete')}
                     type="button"
                     variant="ghost"
                     size="xs"

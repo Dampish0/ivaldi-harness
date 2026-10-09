@@ -1160,18 +1160,18 @@ export function NewWorktreeDialog({
                       className="h-8"
                     />
                     {isLoadingBranches ? (
-                      <div className="px-2 py-8 text-center typography-small text-muted-foreground">
+                      <div className="px-2 py-8 text-center typography-meta text-muted-foreground">
                         {t('session.newWorktree.loadingBranches')}
                       </div>
                     ) : localBranches.length === 0 && remoteBranches.length === 0 ? (
-                      <div className="px-2 py-8 text-center typography-small text-muted-foreground">
+                      <div className="px-2 py-8 text-center typography-meta text-muted-foreground">
                         {t('session.newWorktree.noBranchesFound')}
                       </div>
                     ) : (
                       <div className="space-y-4">
                         {hasExistingBranchQuery && hasExistingBranchMatches && (
                           <div className="space-y-2">
-                            <div className="typography-small font-semibold text-foreground px-2">
+                            <div className="typography-meta font-semibold text-foreground px-2">
                               {t('session.newWorktree.matchingBranches')}
                             </div>
                             <div className="space-y-1">
@@ -1194,7 +1194,7 @@ export function NewWorktreeDialog({
                                       : 'hover:bg-interactive-hover'
                                   )}
                                 >
-                                  <span className="typography-small break-all">{branch.label}</span>
+                                  <span className="typography-meta break-all">{branch.label}</span>
                                 </button>
                               ))}
                             </div>
@@ -1202,14 +1202,14 @@ export function NewWorktreeDialog({
                         )}
 
                         {hasExistingBranchQuery && !hasExistingBranchMatches && (
-                          <div className="px-2 py-1 text-center typography-small text-muted-foreground">
+                          <div className="px-2 py-1 text-center typography-meta text-muted-foreground">
                             {t('session.newWorktree.noMatchingBranches')}
                           </div>
                         )}
 
                         {existingBranchRankedGroups.otherLocal.length > 0 && (
                           <div className="space-y-2">
-                            <div className="typography-small font-semibold text-foreground px-2">
+                            <div className="typography-meta font-semibold text-foreground px-2">
                               {hasExistingBranchQuery ? t('session.newWorktree.otherLocalBranches') : t('session.newWorktree.localBranches')}
                             </div>
                             <div className="space-y-1">
@@ -1232,7 +1232,7 @@ export function NewWorktreeDialog({
                                       : 'hover:bg-interactive-hover'
                                   )}
                                 >
-                                  <span className="typography-small break-all">{branch}</span>
+                                  <span className="typography-meta break-all">{branch}</span>
                                 </button>
                               ))}
                             </div>
@@ -1241,7 +1241,7 @@ export function NewWorktreeDialog({
 
                         {existingBranchRankedGroups.otherRemote.length > 0 && (
                           <div className="space-y-2">
-                            <div className="typography-small font-semibold text-foreground px-2">
+                            <div className="typography-meta font-semibold text-foreground px-2">
                               {hasExistingBranchQuery ? t('session.newWorktree.otherRemoteBranches') : t('session.newWorktree.remoteBranches')}
                             </div>
                             <div className="space-y-1">
@@ -1264,7 +1264,7 @@ export function NewWorktreeDialog({
                                       : 'hover:bg-interactive-hover'
                                   )}
                                 >
-                                  <span className="typography-small break-all">{branch}</span>
+                                  <span className="typography-meta break-all">{branch}</span>
                                 </button>
                               ))}
                             </div>
@@ -1426,18 +1426,18 @@ export function NewWorktreeDialog({
                       className="h-8"
                     />
                     {isLoadingBranches ? (
-                      <div className="px-2 py-8 text-center typography-small text-muted-foreground">
+                      <div className="px-2 py-8 text-center typography-meta text-muted-foreground">
                         {t('session.newWorktree.loadingBranches')}
                       </div>
                     ) : localBranches.length === 0 && remoteBranches.length === 0 ? (
-                      <div className="px-2 py-8 text-center typography-small text-muted-foreground">
+                      <div className="px-2 py-8 text-center typography-meta text-muted-foreground">
                         {t('session.newWorktree.noBranchesFound')}
                       </div>
                     ) : (
                       <div className="space-y-4">
                         {hasSourceBranchQuery && hasSourceBranchMatches && (
                           <div className="space-y-2">
-                            <div className="typography-small font-semibold text-foreground px-2">
+                            <div className="typography-meta font-semibold text-foreground px-2">
                               {t('session.newWorktree.matchingBranches')}
                             </div>
                             <div className="space-y-1">
@@ -1455,7 +1455,7 @@ export function NewWorktreeDialog({
                                       : 'hover:bg-interactive-hover'
                                   )}
                                 >
-                                  <span className="typography-small break-all">{branch.label}</span>
+                                  <span className="typography-meta break-all">{branch.label}</span>
                                 </button>
                               ))}
                             </div>
@@ -1463,14 +1463,14 @@ export function NewWorktreeDialog({
                         )}
 
                         {hasSourceBranchQuery && !hasSourceBranchMatches && (
-                          <div className="px-2 py-1 text-center typography-small text-muted-foreground">
+                          <div className="px-2 py-1 text-center typography-meta text-muted-foreground">
                             {t('session.newWorktree.noMatchingBranches')}
                           </div>
                         )}
 
                         {sourceBranchRankedGroups.otherLocal.length > 0 && (
                           <div className="space-y-2">
-                            <div className="typography-small font-semibold text-foreground px-2">
+                            <div className="typography-meta font-semibold text-foreground px-2">
                               {hasSourceBranchQuery ? t('session.newWorktree.otherLocalBranches') : t('session.newWorktree.localBranches')}
                             </div>
                             <div className="space-y-1">
@@ -1488,7 +1488,7 @@ export function NewWorktreeDialog({
                                       : 'hover:bg-interactive-hover'
                                   )}
                                 >
-                                  <span className="typography-small break-all">{branch}</span>
+                                  <span className="typography-meta break-all">{branch}</span>
                                 </button>
                               ))}
                             </div>
@@ -1497,7 +1497,7 @@ export function NewWorktreeDialog({
 
                         {sourceBranchRankedGroups.otherRemote.length > 0 && (
                           <div className="space-y-2">
-                            <div className="typography-small font-semibold text-foreground px-2">
+                            <div className="typography-meta font-semibold text-foreground px-2">
                               {hasSourceBranchQuery ? t('session.newWorktree.otherRemoteBranches') : t('session.newWorktree.remoteBranches')}
                             </div>
                             <div className="space-y-1">
@@ -1515,7 +1515,7 @@ export function NewWorktreeDialog({
                                       : 'hover:bg-interactive-hover'
                                   )}
                                 >
-                                  <span className="typography-small break-all">{branch}</span>
+                                  <span className="typography-meta break-all">{branch}</span>
                                 </button>
                               ))}
                             </div>
@@ -1561,6 +1561,7 @@ export function NewWorktreeDialog({
                   </a>
                   
                   <button
+                    aria-label={t('common.actions.remove')}
                     onClick={handleClearLinkedItem}
                     className="text-muted-foreground hover:text-foreground shrink-0 p-0.5 rounded hover:bg-muted transition-colors"
                   >
@@ -1642,7 +1643,7 @@ export function NewWorktreeDialog({
                         />
                         <CommandList disableHorizontal>
                           {isLoadingBranches ? (
-                            <div className="px-2 py-4 text-center typography-small text-muted-foreground">
+                            <div className="px-2 py-4 text-center typography-meta text-muted-foreground">
                               {t('session.newWorktree.loadingBranches')}
                             </div>
                           ) : localBranches.length === 0 && remoteBranches.length === 0 ? (
@@ -1665,14 +1666,14 @@ export function NewWorktreeDialog({
                                         setExistingBranchDropdownOpen(false);
                                       }}
                                     >
-                                      <span className="typography-small break-all">{branch.label}</span>
+                                      <span className="typography-meta break-all">{branch.label}</span>
                                     </CommandItem>
                                   ))}
                                 </CommandGroup>
                               )}
 
                               {hasExistingBranchQuery && !hasExistingBranchMatches && (
-                                <div className="px-2 py-1 text-center typography-small text-muted-foreground">
+                                <div className="px-2 py-1 text-center typography-meta text-muted-foreground">
                                   {t('session.newWorktree.noMatchingBranches')}
                                 </div>
                               )}
@@ -1695,7 +1696,7 @@ export function NewWorktreeDialog({
                                           setExistingBranchDropdownOpen(false);
                                         }}
                                       >
-                                        <span className="typography-small break-all">{branch}</span>
+                                        <span className="typography-meta break-all">{branch}</span>
                                       </CommandItem>
                                     ))}
                                   </CommandGroup>
@@ -1722,7 +1723,7 @@ export function NewWorktreeDialog({
                                           setExistingBranchDropdownOpen(false);
                                         }}
                                       >
-                                        <span className="typography-small break-all">{branch}</span>
+                                        <span className="typography-meta break-all">{branch}</span>
                                       </CommandItem>
                                     ))}
                                   </CommandGroup>
@@ -1886,7 +1887,7 @@ export function NewWorktreeDialog({
                         />
                         <CommandList disableHorizontal>
                           {isLoadingBranches ? (
-                            <div className="px-2 py-4 text-center typography-small text-muted-foreground">
+                            <div className="px-2 py-4 text-center typography-meta text-muted-foreground">
                               {t('session.newWorktree.loadingBranches')}
                             </div>
                           ) : localBranches.length === 0 && remoteBranches.length === 0 ? (
@@ -1904,14 +1905,14 @@ export function NewWorktreeDialog({
                                         setSourceBranchDropdownOpen(false);
                                       }}
                                     >
-                                      <span className="typography-small break-all">{branch.label}</span>
+                                      <span className="typography-meta break-all">{branch.label}</span>
                                     </CommandItem>
                                   ))}
                                 </CommandGroup>
                               )}
 
                               {hasSourceBranchQuery && !hasSourceBranchMatches && (
-                                <div className="px-2 py-1 text-center typography-small text-muted-foreground">
+                                <div className="px-2 py-1 text-center typography-meta text-muted-foreground">
                                   {t('session.newWorktree.noMatchingBranches')}
                                 </div>
                               )}
@@ -1929,7 +1930,7 @@ export function NewWorktreeDialog({
                                           setSourceBranchDropdownOpen(false);
                                         }}
                                       >
-                                        <span className="typography-small break-all">{branch}</span>
+                                        <span className="typography-meta break-all">{branch}</span>
                                       </CommandItem>
                                     ))}
                                   </CommandGroup>
@@ -1951,7 +1952,7 @@ export function NewWorktreeDialog({
                                           setSourceBranchDropdownOpen(false);
                                         }}
                                       >
-                                        <span className="typography-small break-all">{branch}</span>
+                                        <span className="typography-meta break-all">{branch}</span>
                                       </CommandItem>
                                     ))}
                                   </CommandGroup>
@@ -2004,6 +2005,7 @@ export function NewWorktreeDialog({
                     </a>
                     
                     <button
+                      aria-label={t('common.actions.remove')}
                       onClick={handleClearLinkedItem}
                       className="text-muted-foreground hover:text-foreground shrink-0 p-0.5 rounded hover:bg-muted transition-colors"
                     >

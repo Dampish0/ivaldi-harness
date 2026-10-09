@@ -88,7 +88,7 @@ const RatingBar = ({ value, label }: { value: number; label: string }) => (
                 style={{ width: `${(value / 5) * 100}%` }}
             />
         </span>
-        <span className="typography-ui-compact text-muted-foreground">{label}</span>
+        <span className="typography-micro text-muted-foreground">{label}</span>
     </span>
 );
 
@@ -230,7 +230,7 @@ const LocalModelPicker = ({
                                     <div className="flex flex-col gap-1.5">
                                         <RatingBar value={entry.accuracy} label={t('settings.voice.page.stt.meta.accuracy')} />
                                         <RatingBar value={entry.speed} label={t('settings.voice.page.stt.meta.speed')} />
-                                        <span className="typography-ui-compact tabular-nums text-muted-foreground">{entry.size}</span>
+                                        <span className="typography-micro tabular-nums text-muted-foreground">{entry.size}</span>
                                     </div>
                                     {state?.downloadError ? (
                                         <p className="typography-meta text-[var(--status-error)]">{state.downloadError}</p>
@@ -260,7 +260,7 @@ const LocalModelPicker = ({
                                 ) : state?.downloading ? (
                                     <span className="flex items-center gap-1.5">
                                         <Icon name="loader-4" className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
-                                        <span className="typography-ui-compact tabular-nums text-muted-foreground">
+                                        <span className="typography-micro tabular-nums text-muted-foreground">
                                             {typeof state.downloadProgress === 'number' ? `${state.downloadProgress}%` : ''}
                                         </span>
                                     </span>
@@ -362,7 +362,7 @@ const LocalTtsModelStatus = () => {
     return (
         <div className="flex items-center gap-2 py-1.5">
             <span className="typography-ui-label text-foreground">Kokoro</span>
-            <span className="typography-ui-compact tabular-nums text-muted-foreground">305 MB</span>
+            <span className="typography-micro tabular-nums text-muted-foreground">305 MB</span>
             {model.installed ? (
                 <>
                     <Icon
@@ -385,7 +385,7 @@ const LocalTtsModelStatus = () => {
             ) : model.downloading ? (
                 <span className="flex items-center gap-1.5">
                     <Icon name="loader-4" className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
-                    <span className="typography-ui-compact tabular-nums text-muted-foreground">
+                    <span className="typography-micro tabular-nums text-muted-foreground">
                         {typeof model.downloadProgress === 'number' ? `${model.downloadProgress}%` : ''}
                     </span>
                 </span>

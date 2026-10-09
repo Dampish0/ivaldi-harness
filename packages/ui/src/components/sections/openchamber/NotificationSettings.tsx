@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { getClientPlatform } from '@/lib/platform';
 import { useI18n } from '@/lib/i18n';
+import { useProductModeStore } from '@/stores/useProductModeStore';
 import {
   SettingsSection,
   SettingsTwoColumn,
@@ -40,9 +41,18 @@ const TEMPLATE_EVENT_LABEL_KEYS = {
   error: 'settings.notifications.page.template.event.error',
   question: 'settings.notifications.page.template.event.question',
 } as const satisfies Record<NotificationTemplateEvent, string>;
+// Work mode avoids "agent" and "subagent" wording.
+const WORK_TEMPLATE_EVENT_LABEL_KEYS = {
+  completion: 'settings.notifications.page.events.completionLabelWork',
+  subtask: 'settings.notifications.page.events.subtaskLabelWork',
+  error: 'settings.notifications.page.template.event.error',
+  question: 'settings.notifications.page.template.event.question',
+} as const satisfies Record<NotificationTemplateEvent, string>;
 
 export const NotificationSettings: React.FC = () => {
   const { t } = useI18n();
+  const isWorkMode = useProductModeStore((state) => state.mode === 'work');
+  const templateEventLabelKeys = isWorkMode ? WORK_TEMPLATE_EVENT_LABEL_KEYS : TEMPLATE_EVENT_LABEL_KEYS;
   const isDesktop = React.useMemo(() => isDesktopShell(), []);
   const isVSCode = React.useMemo(() => isVSCodeRuntime(), []);
   // The native Capacitor app runs in a WKWebView with no Web Notification API; it has its
@@ -528,29 +538,29 @@ export const NotificationSettings: React.FC = () => {
                 <SettingsCheckboxRow
                   checked={notifyOnCompletion}
                   onChange={setNotifyOnCompletion}
-                  label={t('settings.notifications.page.events.completionLabel')}
-                  ariaLabel={t('settings.notifications.page.events.completionAria')}
+                  label={t(isWorkMode ? 'settings.notifications.page.events.completionLabelWork' : 'settings.notifications.page.events.completionLabel')}
+                  ariaLabel={t(isWorkMode ? 'settings.notifications.page.events.completionLabelWork' : 'settings.notifications.page.events.completionAria')}
                 />
 
                 <SettingsCheckboxRow
                   checked={notifyOnSubtasks}
                   onChange={setNotifyOnSubtasks}
-                  label={t('settings.notifications.page.events.subtaskLabel')}
-                  ariaLabel={t('settings.notifications.page.events.subtaskAria')}
+                  label={t(isWorkMode ? 'settings.notifications.page.events.subtaskLabelWork' : 'settings.notifications.page.events.subtaskLabel')}
+                  ariaLabel={t(isWorkMode ? 'settings.notifications.page.events.subtaskLabelWork' : 'settings.notifications.page.events.subtaskAria')}
                 />
 
                 <SettingsCheckboxRow
                   checked={notifyOnError}
                   onChange={setNotifyOnError}
-                  label={t('settings.notifications.page.events.errorLabel')}
-                  ariaLabel={t('settings.notifications.page.events.errorAria')}
+                  label={t(isWorkMode ? 'settings.notifications.page.events.errorLabelWork' : 'settings.notifications.page.events.errorLabel')}
+                  ariaLabel={t(isWorkMode ? 'settings.notifications.page.events.errorLabelWork' : 'settings.notifications.page.events.errorAria')}
                 />
 
                 <SettingsCheckboxRow
                   checked={notifyOnQuestion}
                   onChange={setNotifyOnQuestion}
-                  label={t('settings.notifications.page.events.questionLabel')}
-                  ariaLabel={t('settings.notifications.page.events.questionAria')}
+                  label={t(isWorkMode ? 'settings.notifications.page.events.questionLabelWork' : 'settings.notifications.page.events.questionLabel')}
+                  ariaLabel={t(isWorkMode ? 'settings.notifications.page.events.questionLabelWork' : 'settings.notifications.page.events.questionAria')}
                 />
               </div>
             </SettingsSection>
@@ -574,8 +584,8 @@ export const NotificationSettings: React.FC = () => {
               <SettingsTwoColumn className="gap-2 md:grid-cols-2 md:gap-3 lg:gap-3">
                 {(['completion', 'subtask', 'error', 'question'] as const).map((event: NotificationTemplateEvent) => (
                   <section key={event} className="p-2">
-                    <SettingsGroupTitle className="capitalize">
-                      {t(TEMPLATE_EVENT_LABEL_KEYS[event])}
+                    <SettingsGroupTitle className="first-letter:uppercase">
+                      {t(templateEventLabelKeys[event])}
                     </SettingsGroupTitle>
                     <div className="mt-1.5 space-y-2">
                       <div>

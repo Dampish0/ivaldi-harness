@@ -27,6 +27,7 @@ import { flattenAssistantTextParts } from '@/lib/messages/messageText';
 import { isLikelyProviderAuthFailure, PROVIDER_AUTH_FAILURE_MESSAGE } from '@/lib/messages/providerAuthError';
 import { getProviderModelDisplayName } from '@/lib/modelDisplay';
 import { lazyWithChunkRecovery } from '@/lib/chunkLoadRecovery';
+import { formatAgentDisplayName } from './mobileControlsUtils';
 import type { TurnGroupingContext } from './lib/turns/types';
 import { copyMarkdownToClipboard, copyTextToClipboard } from '@/lib/clipboard';
 import { FadeInOnReveal } from './message/FadeInOnReveal';
@@ -387,7 +388,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     const displayProviderIDValue = useStickyDisplayValue<string>(providerID ?? undefined);
     const displayModelName = useStickyDisplayValue<string>(modelName);
 
-    const headerAgentName = displayAgentName ?? undefined;
+    const headerAgentName = displayAgentName ? formatAgentDisplayName(displayAgentName) : undefined;
     const headerProviderID = displayProviderIDValue ?? null;
     const headerModelName = displayModelName ?? undefined;
 

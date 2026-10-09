@@ -27,9 +27,9 @@
     --text-markdown: 0.9375rem;
     --text-code: 0.8125rem;
     --text-ui-header: 0.9375rem;
-    --text-ui-label: 0.8750rem;
-    --text-meta: 0.875rem;
-    --text-micro: 0.875rem;
+    --text-ui-label: 0.875rem;
+    --text-meta: 0.8125rem;
+    --text-micro: 0.75rem;
     --text-settings-page-title: 1.125rem;
 
     /* Default Light Theme */
@@ -184,15 +184,19 @@
     display: list-item !important;
   }
 
-  /* Remove focus rings globally (except inputs/textareas/dropdowns/selects/explicit accent rings) */
-  *:focus:not(input):not(textarea):not([data-slot="dropdown-menu-content"]):not([data-slot="dropdown-menu-sub-content"]):not([data-slot="select-content"]):not(.focus-ring-accent):not([data-focus-ring="accent"]) {
+  /* Hide focus rings for pointer focus only (except inputs/textareas/dropdowns/selects/explicit accent rings).
+     Keyboard focus (:focus-visible) keeps component rings and the default ring below. */
+  *:focus:not(:focus-visible):not(input):not(textarea):not([data-slot="dropdown-menu-content"]):not([data-slot="dropdown-menu-sub-content"]):not([data-slot="select-content"]):not(.focus-ring-accent):not([data-focus-ring="accent"]) {
     outline: none !important;
     box-shadow: none !important;
   }
 
-  *:focus-visible:not(input):not(textarea):not([data-slot="dropdown-menu-content"]):not([data-slot="dropdown-menu-sub-content"]):not([data-slot="select-content"]):not(.focus-ring-accent):not([data-focus-ring="accent"]) {
-    outline: none !important;
-    box-shadow: none !important;
+  /* Default keyboard focus ring. Not important, so components that set their own
+     focus-visible ring or outline-hidden in the utilities layer win. Inset so it is
+     not clipped by scroll containers. Programmatic focus targets and popups are skipped. */
+  :focus-visible:not(input):not(textarea):not(select):not([contenteditable]):not([tabindex="-1"]):not([role="dialog"]):not([role="alertdialog"]):not([role="menu"]):not([role="listbox"]) {
+    outline: 2px solid var(--interactive-focus, var(--ring));
+    outline-offset: -2px;
   }
 
   .focus-ring-accent:focus-visible,
@@ -286,6 +290,9 @@
   --radius-lg: 0.5625rem; /* 9px */
   --radius-xl: 0.75rem; /* 12px */
   --radius-full: 9999px;
+
+  /* Small floating surfaces such as selection menus and composer popups. Large menus use .oc-glass-floating. */
+  --shadow-float: 0 4px 16px -4px rgb(0 0 0 / 0.12);
 
   /* Semantic spacing aliases (4/8px grid) */
   --space-1: var(--spacing-1); /* 4px */

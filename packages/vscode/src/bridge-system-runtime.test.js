@@ -97,3 +97,28 @@ describe('VS Code system bridge editor:openFile', () => {
     );
   });
 });
+
+describe('VS Code system bridge update check', () => {
+  test('sends nothing when no update service is configured', async () => {
+    const originalFetch = globalThis.fetch;
+    const fetchMock = mock(async () => new Response('{}'));
+    globalThis.fetch = fetchMock;
+    try {
+      const response = await handleSystemBridgeMessage({
+        id: 'update-check',
+        type: 'api:openchamber:update-check',
+        payload: { currentVersion: '1.20.1' },
+      }, undefined, { ...deps, updateCheckUrl: '' });
+
+      expect(response).toEqual({
+        id: 'update-check',
+        type: 'api:openchamber:update-check',
+        success: true,
+        data: { available: false },
+      });
+      expect(fetchMock).not.toHaveBeenCalled();
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+});

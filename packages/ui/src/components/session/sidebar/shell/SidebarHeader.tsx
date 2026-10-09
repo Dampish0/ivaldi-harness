@@ -131,7 +131,7 @@ export function SidebarHeader(props: Props): React.ReactNode {
                   <Icon name="search" className={headerActionIconClass} />
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="bottom" sideOffset={4}><p>{t('sessions.sidebar.header.actions.searchSessions')}</p></TooltipContent>
+              <TooltipContent side="bottom" sideOffset={4}><p>{searchChatsLabel}</p></TooltipContent>
             </Tooltip>
 
             <DropdownMenu>
@@ -141,13 +141,13 @@ export function SidebarHeader(props: Props): React.ReactNode {
                     <button
                       type="button"
                       className={cn(headerActionButtonClass, 'text-muted-foreground hover:text-foreground')}
-                      aria-label={t('sessions.sidebar.header.displayMode.label')}
+                      aria-label={t('sessions.sidebar.header.actions.moreLabel')}
                     >
                       <Icon name="more" className={headerActionIconClass} />
                     </button>
                   </DropdownMenuTrigger>
                 </TooltipTrigger>
-                <TooltipContent side="bottom" sideOffset={4}><p>{t('sessions.sidebar.header.displayMode.label')}</p></TooltipContent>
+                <TooltipContent side="bottom" sideOffset={4}><p>{t('sessions.sidebar.header.actions.moreLabel')}</p></TooltipContent>
               </Tooltip>
               <DropdownMenuContent align="end" className="min-w-[180px]">
                 <DropdownMenuItem onClick={handleOpenDirectoryDialog} className="flex items-center gap-2">
@@ -325,6 +325,7 @@ export function SidebarHeader(props: Props): React.ReactNode {
                 value={sessionSearchQuery}
                 onChange={(event) => setSessionSearchQuery(event.target.value)}
                 placeholder={searchPlaceholder}
+                aria-label={searchChatsLabel}
                 className="h-8 w-full rounded-md border border-border bg-transparent pl-8 pr-8 typography-ui-label text-foreground outline-none focus-visible:ring-2 focus-visible:ring-[var(--interactive-focus-ring)]"
                 onKeyDown={(event) => {
                   if (event.key === 'Escape') {
