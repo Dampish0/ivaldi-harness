@@ -397,9 +397,9 @@ export const WorktreeSectionContent: React.FC<WorktreeSectionContentProps> = ({ 
                 <Button
                   type="button"
                   variant="ghost"
-                  size="icon"
+                  size="icon-compact"
                   onClick={() => handleRemoveCommand(index)}
-                  className="h-7 w-7 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                  className="shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                   aria-label={t('settings.openchamber.worktrees.setup.removeCommandAria')}
                 >
                   <Icon name="close" className="h-4 w-4" />
@@ -410,7 +410,6 @@ export const WorktreeSectionContent: React.FC<WorktreeSectionContentProps> = ({ 
               type="button"
               variant="ghost"
               size="xs"
-              className="!font-normal"
               onClick={handleAddCommand}
             >
               <Icon name="add" className="h-3.5 w-3.5" />
@@ -466,17 +465,18 @@ export const WorktreeSectionContent: React.FC<WorktreeSectionContentProps> = ({ 
                     {formatPathForDisplay(worktree.path, homeDirectory)}
                   </p>
                 </div>
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
+                  size="icon-compact"
                   onClick={() => handleDeleteWorktree(worktree)}
                   className={cn(
-                    'flex h-7 w-7 shrink-0 items-center justify-center rounded text-muted-foreground/50 transition-opacity hover:bg-destructive/10 hover:text-destructive focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
+                    'shrink-0 text-muted-foreground/50 transition-opacity hover:bg-destructive/10 hover:text-destructive focus-visible:opacity-100',
                     alwaysShowActions ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 focus-within:opacity-100'
                   )}
                   aria-label={t('settings.openchamber.worktrees.list.deleteWorktreeAria', { name: worktree.branch || worktree.label || worktree.path })}
                 >
                   <Icon name="delete-bin" className="h-4 w-4" />
-                </button>
+                </Button>
               </div>
             ))}
           </div>

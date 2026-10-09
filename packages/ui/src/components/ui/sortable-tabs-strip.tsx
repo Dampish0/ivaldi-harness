@@ -411,10 +411,9 @@ export const SortableTabsStrip: React.FC<SortableTabsStripProps> = ({
           <div
             className={cn(
               'pointer-events-none absolute left-0 top-0 z-0 rounded-lg [corner-shape:squircle] supports-[corner-shape:squircle]:rounded-full bg-[var(--surface-elevated)]',
-              // Lifted card look: hairline edge plus a soft ambient shadow rather
-              // than a hard border, so the pill reads as raised above the track.
+              // Hairline edge rather than a hard border, so the pill reads as
+              // raised above the track while staying flat like other in-page surfaces.
               'border border-[color-mix(in_srgb,var(--foreground)_7%,transparent)]',
-              'shadow-[0_1px_2px_color-mix(in_srgb,var(--foreground)_10%,transparent),0_2px_6px_color-mix(in_srgb,var(--foreground)_6%,transparent)]',
               shouldAnimateActivePill && pillTransitionEnabled
                 && (nonCompositedIndicator ? 'pill-tabs__indicator--is-animated-layout' : 'pill-tabs__indicator--is-animated')
             )}
@@ -514,7 +513,7 @@ export const SortableTabsStrip: React.FC<SortableTabsStripProps> = ({
                   onPointerCancel={usesIndicator ? () => setPressedId(null) : undefined}
                   className={cn(
                     usesActivePillIndicator
-                      ? 'animated-tabs__button pill-tabs__button relative z-10 flex flex-1 min-w-0 flex-nowrap items-center justify-center rounded-lg [corner-shape:squircle] supports-[corner-shape:squircle]:rounded-full text-sm font-medium transition-colors duration-150 !min-h-0'
+                      ? 'animated-tabs__button pill-tabs__button relative z-10 flex flex-1 min-w-0 flex-nowrap items-center justify-center rounded-lg [corner-shape:squircle] supports-[corner-shape:squircle]:rounded-full typography-ui-label font-medium transition-colors duration-150 !min-h-0'
                       : 'flex h-full min-w-0 flex-nowrap items-center typography-micro',
                     usesActivePillIndicator && activePillLowercase ? 'lowercase' : null,
                     usesActivePillIndicator && (showInactiveIconOnly ? 'gap-0' : 'gap-1.5'),
@@ -624,10 +623,10 @@ export const SortableTabsStrip: React.FC<SortableTabsStripProps> = ({
                       usesActivePillIndicator
                         ? (isActive
                           ? 'text-muted-foreground hover:bg-transparent hover:text-foreground'
-                          : 'text-muted-foreground opacity-0 hover:bg-transparent hover:text-foreground group-hover:opacity-100')
+                          : 'text-muted-foreground opacity-0 hover:bg-transparent hover:text-foreground group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100')
                         : (isActive
                           ? 'text-muted-foreground hover:bg-interactive-hover/60 hover:text-foreground'
-                          : 'text-muted-foreground opacity-0 hover:bg-interactive-hover/80 hover:text-foreground group-hover:opacity-100')
+                          : 'text-muted-foreground opacity-0 hover:bg-interactive-hover/80 hover:text-foreground group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100')
                     )}
                     aria-label={item.closeLabel ?? `Close ${item.label} tab`}
                     title={item.closeLabel ?? `Close ${item.label} tab`}

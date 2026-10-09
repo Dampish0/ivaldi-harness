@@ -122,7 +122,7 @@ export const PermissionModeButton = React.memo(function PermissionModeButton(pro
                                 >
                                     <div className="flex min-w-0 flex-col gap-0.5 pr-1">
                                         <span>{t(`chat.permissionMode.${candidate}.label`)}</span>
-                                        <span className="text-xs font-normal text-muted-foreground">
+                                        <span className="typography-micro font-normal text-muted-foreground">
                                             {supported
                                                 ? t(`chat.permissionMode.${candidate}.description`)
                                                 : t('chat.permissionMode.unavailable')}

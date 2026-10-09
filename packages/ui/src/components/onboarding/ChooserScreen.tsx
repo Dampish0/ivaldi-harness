@@ -236,7 +236,7 @@ export function ChooserScreen({ onCliAvailable, localAvailable = true }: Chooser
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             {t('onboarding.chooser.title')}
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="typography-ui-label text-muted-foreground">
             {t('onboarding.chooser.description')}
           </p>
         </header>
@@ -246,7 +246,7 @@ export function ChooserScreen({ onCliAvailable, localAvailable = true }: Chooser
             <button
               type="button"
               className={cn(
-                'flex-1 px-4 py-2 rounded-lg border transition-colors text-sm',
+                'flex-1 px-4 py-2 rounded-lg border transition-colors typography-ui-label',
                 activeTab === 'local'
                   ? 'border-[var(--interactive-selection)] text-foreground bg-[var(--interactive-selection)]/10'
                   : 'border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground'
@@ -258,7 +258,7 @@ export function ChooserScreen({ onCliAvailable, localAvailable = true }: Chooser
             <button
               type="button"
               className={cn(
-                'flex-1 px-4 py-2 rounded-lg border transition-colors text-sm',
+                'flex-1 px-4 py-2 rounded-lg border transition-colors typography-ui-label',
                 activeTab === 'remote'
                   ? 'border-[var(--interactive-selection)] text-foreground bg-[var(--interactive-selection)]/10'
                   : 'border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground'
@@ -285,15 +285,15 @@ export function ChooserScreen({ onCliAvailable, localAvailable = true }: Chooser
           <div className="space-y-4">
             {platform === 'windows' && (
               <div className="rounded-lg border border-border bg-background/50 p-4">
-                <div className="text-sm text-foreground">{t('onboarding.localSetup.windows.title')}</div>
-                <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
+                <div className="typography-ui-label text-foreground">{t('onboarding.localSetup.windows.title')}</div>
+                <ol className="mt-2 list-decimal space-y-1 pl-5 typography-ui-label text-muted-foreground">
                   <li>{t('onboarding.localSetup.windows.stepRunInstallInWsl')}</li>
                   <li>{t('onboarding.localSetup.windows.stepSetBinaryPath')}</li>
                 </ol>
               </div>
             )}
 
-            <p className="text-sm text-muted-foreground text-center leading-relaxed">
+            <p className="typography-ui-label text-muted-foreground text-center leading-relaxed">
               {t('onboarding.localSetup.intro')}
             </p>
 
@@ -313,7 +313,7 @@ export function ChooserScreen({ onCliAvailable, localAvailable = true }: Chooser
                 href={docsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
+                className="typography-micro text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
               >
                 {platform === 'windows' ? t('onboarding.localSetup.docs.windows') : t('onboarding.localSetup.docs.default')}
                 <Icon name="external-link" className="h-3 w-3" />
@@ -322,7 +322,7 @@ export function ChooserScreen({ onCliAvailable, localAvailable = true }: Chooser
                 type="button"
                 onClick={handleManualCheck}
                 disabled={isManualChecking}
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                className="typography-micro text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
               >
                 {isManualChecking ? t('onboarding.localSetup.actions.checking') : t('onboarding.localSetup.actions.checkNow')}
               </button>
@@ -355,10 +355,10 @@ export function ChooserScreen({ onCliAvailable, localAvailable = true }: Chooser
                 />
               </span>
               <div className="flex-1 min-w-0">
-                <div className="text-sm text-foreground leading-tight">
+                <div className="typography-ui-label text-foreground leading-tight">
                   {t('onboarding.localSetup.status.watching')}
                 </div>
-                <div className="text-xs text-muted-foreground leading-tight mt-0.5">
+                <div className="typography-micro text-muted-foreground leading-tight mt-0.5">
                   {t('onboarding.localSetup.status.autoContinue')}
                 </div>
               </div>
@@ -369,7 +369,7 @@ export function ChooserScreen({ onCliAvailable, localAvailable = true }: Chooser
               open={advancedOpen}
               onToggle={(e) => setAdvancedOpen((e.currentTarget as HTMLDetailsElement).open)}
             >
-              <summary className="flex items-center justify-between cursor-pointer py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors list-none [&::-webkit-details-marker]:hidden">
+              <summary className="flex items-center justify-between cursor-pointer py-2.5 typography-ui-label text-muted-foreground hover:text-foreground transition-colors list-none [&::-webkit-details-marker]:hidden">
                 <span>{t('onboarding.localSetup.advanced.title')}</span>
                 <Icon name="arrow-down-s" className="h-4 w-4 transition-transform group-open:rotate-180" />
               </summary>
@@ -400,7 +400,7 @@ export function ChooserScreen({ onCliAvailable, localAvailable = true }: Chooser
                     {t('onboarding.localSetup.actions.apply')}
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground/70">
+                <p className="typography-micro text-muted-foreground/70">
                   {t('onboarding.localSetup.helper.saveAndReload')}
                 </p>
               </div>
@@ -411,11 +411,11 @@ export function ChooserScreen({ onCliAvailable, localAvailable = true }: Chooser
               open={troubleOpen}
               onToggle={(e) => setTroubleOpen((e.currentTarget as HTMLDetailsElement).open)}
             >
-              <summary className="flex items-center justify-between cursor-pointer py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors list-none [&::-webkit-details-marker]:hidden">
+              <summary className="flex items-center justify-between cursor-pointer py-2.5 typography-ui-label text-muted-foreground hover:text-foreground transition-colors list-none [&::-webkit-details-marker]:hidden">
                 <span>{t('onboarding.localSetup.troubleshoot.title')}</span>
                 <Icon name="arrow-down-s" className="h-4 w-4 transition-transform group-open:rotate-180" />
               </summary>
-              <ul className="pb-4 space-y-1.5 text-xs text-muted-foreground list-disc pl-4">
+              <ul className="pb-4 space-y-1.5 typography-micro text-muted-foreground list-disc pl-4">
                 {platform === 'windows' ? (
                   <>
                     <li>{t('onboarding.localSetup.windows.hintDetectionFailed')}</li>

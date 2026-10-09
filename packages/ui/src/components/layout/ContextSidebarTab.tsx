@@ -4,6 +4,7 @@ import { WorkerHighlightedCode } from '@/components/code/WorkerHighlightedCode';
 
 import { deriveMessageRole } from '@/components/chat/message/messageRole';
 import { Icon } from "@/components/icon/Icon";
+import { Button } from '@/components/ui/button';
 import { useConfigStore } from '@/stores/useConfigStore';
 import { useUIStore } from '@/stores/useUIStore';
 import { useSessionUIStore } from '@/sync/session-ui-store';
@@ -610,9 +611,11 @@ export const ContextPanelContent: React.FC = () => {
                     <div className="border-t border-[var(--surface-subtle)] p-0">
                       <div className="group relative max-h-[26rem] w-full overflow-auto bg-[var(--surface-background)]">
                         <div className="absolute top-1 right-2 z-10 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
-                          <button
+                          <Button
                             type="button"
-                            className="rounded p-1 text-muted-foreground transition-colors hover:bg-interactive-hover/60 hover:text-foreground"
+                            variant="ghost"
+                            size="icon-xs"
+                            className="text-muted-foreground"
                             onClick={(event) => {
                               event.stopPropagation();
                               void handleCopyRawMessage(message.info.id, jsonValue);
@@ -621,7 +624,7 @@ export const ContextPanelContent: React.FC = () => {
                             title={isCopied ? t('contextSidebar.actions.copied') : t('contextSidebar.actions.copy')}
                           >
                             {isCopied ? <Icon name="check" className="size-3.5" /> : <Icon name="file-copy" className="size-3.5" />}
-                          </button>
+                          </Button>
                         </div>
                         <WorkerHighlightedCode
                           language="json"

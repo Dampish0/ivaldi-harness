@@ -28,9 +28,9 @@ export const SidebarTopBar: React.FC = () => (
       className="app-region-no-drag shrink-0"
       style={{ width: 'calc(var(--oc-titlebar-controls-width, 5.5rem) + 0.5rem)' }}
     />
-    {/* Draggable remainder with the product wordmark. Keep the name strong and
-        uncluttered until the standalone app icon gets its own redesign pass. */}
-    <div className="app-region-drag flex flex-1 items-center justify-end pr-4">
+    {/* Draggable remainder with the product wordmark, next to the panel
+        button so the two read as one header. */}
+    <div className="app-region-drag flex flex-1 items-center justify-start pl-1 pr-4">
       <span className="select-none text-[18px] font-semibold leading-none tracking-[-0.035em] text-foreground/90">
         Ivaldi
       </span>

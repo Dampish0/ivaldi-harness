@@ -187,12 +187,12 @@ export const WorkStatusPanel: React.FC<Props> = ({ sessionId, directory, visible
         // Out of the flow entirely, anchored to the chat column's top-right so
         // it reads as a dropdown from the header button. As a flex child it
         // took part in the layout and pushed the transcript, which is the one
-        // thing an overlay must not do. Stronger shadow: it sits on content now.
+        // thing an overlay must not do. Floating shadow: it sits on content now.
         overlay ? [
           'absolute right-3 top-3 z-30 mx-0 my-0',
           'self-start',
           'max-h-[calc(100%-1.5rem)]',
-          'shadow-[0_8px_28px_-8px_rgb(0_0_0_/_0.28)]',
+          'shadow-float',
           // Beside the transcript the translucent fill reads as depth; on top
           // of it, message bubbles showed straight through the rows. Frosting
           // separates the two without going fully opaque.

@@ -1283,7 +1283,7 @@ function SessionNodeItemComponent(props: SessionNodeItemProps): React.ReactNode 
                               <SessionActivityDuration
                                 sessionId={session.id}
                                 running={isStreaming}
-                                className="text-[0.72rem]"
+                                className="typography-micro"
                               />
                             ) : (
                               <>
@@ -1301,13 +1301,13 @@ function SessionNodeItemComponent(props: SessionNodeItemProps): React.ReactNode 
                         </div>
                       ) : null}
                       {pendingPermissionCount > 0 ? (
-                        <span className="inline-flex items-center gap-1 rounded bg-destructive/10 px-1 py-0.5 text-[0.7rem] text-destructive flex-shrink-0" title={t('sessions.sidebar.session.status.permissionRequired')} aria-label={t('sessions.sidebar.session.status.permissionRequired')}>
+                        <span className="inline-flex items-center gap-1 rounded bg-destructive/10 px-1 py-0.5 typography-micro text-destructive flex-shrink-0" title={t('sessions.sidebar.session.status.permissionRequired')} aria-label={t('sessions.sidebar.session.status.permissionRequired')}>
                           <Icon name="shield" className="h-3 w-3" />
                           <span className="leading-none">{pendingPermissionCount}</span>
                         </span>
                       ) : null}
                       {pendingQuestionCount > 0 ? (
-                        <span className="inline-flex items-center gap-1 rounded bg-status-info/10 px-1 py-0.5 text-[0.7rem] text-status-info flex-shrink-0" title={pendingQuestionLabel} aria-label={pendingQuestionLabel}>
+                        <span className="inline-flex items-center gap-1 rounded bg-status-info/10 px-1 py-0.5 typography-micro text-status-info flex-shrink-0" title={pendingQuestionLabel} aria-label={pendingQuestionLabel}>
                           <Icon name="question" className="h-3 w-3" />
                           <span className="leading-none">{pendingQuestionCount}</span>
                         </span>
@@ -1319,7 +1319,7 @@ function SessionNodeItemComponent(props: SessionNodeItemProps): React.ReactNode 
                     the per-row metadata tooltip is redundant noise there. */}
                 {!isVSCode ? (
                 <TooltipContent side="right" sideOffset={8} className="max-w-xs text-left">
-                  <div className="flex min-w-44 flex-col gap-1.5 text-left text-xs">
+                  <div className="flex min-w-44 flex-col gap-1.5 text-left typography-micro">
                     <div className="flex items-center justify-between gap-3">
                       <span className="min-w-0 truncate font-medium text-foreground">{sessionTitle}</span>
                       <span className="flex-shrink-0 text-muted-foreground" title={sessionUpdatedLabel}>{sessionCompactUpdatedLabel}</span>

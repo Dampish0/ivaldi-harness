@@ -366,6 +366,7 @@ export const SkillsCatalogPage: React.FC<SkillsCatalogPageProps> = ({ mode, onMo
                 }}
                 className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center h-4 w-4 rounded text-muted-foreground hover:text-foreground transition-colors"
                 title={t('settings.skills.catalog.page.search.clear')}
+                aria-label={t('settings.skills.catalog.page.search.clear')}
               >
                 <Icon name="close" className="h-3 w-3" />
               </button>
@@ -441,8 +442,7 @@ export const SkillsCatalogPage: React.FC<SkillsCatalogPageProps> = ({ mode, onMo
             <div className="flex items-center gap-1 shrink-0">
               <Button
                 variant="ghost"
-                size="xs"
-                className="!font-normal h-6 w-6 px-0"
+                size="icon-xs"
                 onClick={() => {
                   if (selectedSourceId && !isSearching) {
                     void loadSource(selectedSourceId, { refresh: true });
@@ -452,17 +452,19 @@ export const SkillsCatalogPage: React.FC<SkillsCatalogPageProps> = ({ mode, onMo
                 }}
                 disabled={isLoadingCatalog || isLoadingSource}
                 title={t('settings.skills.catalog.page.actions.refreshTitle')}
+                aria-label={t('settings.skills.catalog.page.actions.refreshTitle')}
               >
                 <Icon name="refresh" className={cn('h-3.5 w-3.5', (isLoadingCatalog || isLoadingSource) && 'animate-spin')} />
               </Button>
               {isCustomSource && !isSearching && (
                 <Button
                   variant="ghost"
-                  size="xs"
-                  className="!font-normal h-6 w-6 px-0 text-[var(--status-error)] hover:text-[var(--status-error)]"
+                  size="icon-xs"
+                  className="text-[var(--status-error)] hover:text-[var(--status-error)]"
                   onClick={() => setIsRemoveCatalogDialogOpen(true)}
                   disabled={isRemovingCatalog}
                   title={t('settings.skills.catalog.page.actions.removeCatalogTitle')}
+                  aria-label={t('settings.skills.catalog.page.actions.removeCatalogTitle')}
                 >
                   <Icon name="delete-bin" className="h-3.5 w-3.5" />
                 </Button>
@@ -545,10 +547,10 @@ export const SkillsCatalogPage: React.FC<SkillsCatalogPageProps> = ({ mode, onMo
                           {skillUrl && (
                             <Button
                               variant="ghost"
-                              size="xs"
-                              className="!font-normal h-6 w-6 px-0"
+                              size="icon-xs"
                               onClick={() => window.open(skillUrl, '_blank', 'noreferrer')}
                               title={t('settings.skills.catalog.page.skill.viewOnGithub')}
+                              aria-label={t('settings.skills.catalog.page.skill.viewOnGithub')}
                             >
                               <Icon name="external-link" className="h-3.5 w-3.5" />
                             </Button>
@@ -561,7 +563,6 @@ export const SkillsCatalogPage: React.FC<SkillsCatalogPageProps> = ({ mode, onMo
                             <Button
                               variant="outline"
                               size="xs"
-                              className="!font-normal"
                               disabled={!item.installable}
                               onClick={() => {
                                 setInstallItem(item);

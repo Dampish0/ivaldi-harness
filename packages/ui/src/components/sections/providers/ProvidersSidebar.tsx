@@ -129,9 +129,9 @@ export const ProvidersSidebar: React.FC<ProvidersSidebarProps> = ({ onItemSelect
         <SettingsProjectSelector className="mb-3" />
         <div className="flex items-center justify-between gap-2">
           <span className="typography-meta text-muted-foreground">{t('settings.providers.sidebar.total', { count: providers.length })}</span>
-          <Button size="sm"
+          <Button size="icon-compact"
             variant="ghost"
-            className="h-7 w-7 px-0 -my-1 text-muted-foreground"
+            className="-my-1 text-muted-foreground"
             onClick={() => {
               setSelectedProvider(ADD_PROVIDER_ID);
               onItemSelect?.();

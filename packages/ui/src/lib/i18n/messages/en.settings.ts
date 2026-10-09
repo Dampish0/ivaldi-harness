@@ -1983,7 +1983,7 @@ export const settingsDict = {
   'settings.openchamber.visual.section.spacingAndLayout': 'Spacing & layout',
   'settings.openchamber.visual.section.densityAndType': 'Density & type',
   'settings.openchamber.visual.section.appInstall': 'App install',
-  'settings.openchamber.visual.section.navigation': 'Navigation',
+  'settings.openchamber.visual.section.navigation': 'Editor and terminal',
   'settings.openchamber.visual.section.chatRenderMode': 'Chat render mode',
   'settings.openchamber.visual.section.chatRenderModeAria': 'Chat render mode',
   'settings.openchamber.visual.section.chatDisplay': 'Display',

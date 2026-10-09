@@ -1285,28 +1285,30 @@ export function ScheduledTaskEditorDialog(props: {
                   </button>
 
                   {isDatePickerOpen ? (
-                    <div className="absolute left-0 top-[calc(100%+6px)] z-50 w-[288px] rounded-xl border border-border bg-background p-3 shadow-sm">
+                    <div className="absolute left-0 top-[calc(100%+6px)] z-50 w-[288px] rounded-xl border border-border bg-background p-3 shadow-float">
                       <div className="mb-2 flex items-center justify-between">
-                        <button
+                        <Button
                           type="button"
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-interactive-hover disabled:cursor-not-allowed disabled:opacity-40"
+                          variant="ghost"
+                          size="icon-sm"
                           onClick={() => setCalendarMonth((prev) => shiftMonth(prev, -1))}
                           aria-label={t('sessions.scheduledTasks.editor.date.previousMonth')}
                           disabled={isAtCurrentMonth}
                         >
                           <Icon name="arrow-left-s" className="h-4 w-4" />
-                        </button>
+                        </Button>
                         <div className="typography-ui-label text-foreground">
                           {new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(calendarMonth)}
                         </div>
-                        <button
+                        <Button
                           type="button"
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-interactive-hover"
+                          variant="ghost"
+                          size="icon-sm"
                           onClick={() => setCalendarMonth((prev) => shiftMonth(prev, 1))}
                           aria-label={t('sessions.scheduledTasks.editor.date.nextMonth')}
                         >
                           <Icon name="arrow-right-s" className="h-4 w-4" />
-                        </button>
+                        </Button>
                       </div>
 
                       <div className="mb-1 grid grid-cols-7 gap-1 px-1">
@@ -1778,7 +1780,7 @@ export function ScheduledTaskEditorDialog(props: {
     >
       <DialogContent
         aria-describedby={descriptionId}
-        className="!max-w-[720px] w-[90vw] h-[680px] max-h-[85vh] gap-0 p-0 overflow-hidden"
+        className="max-w-[720px] w-[90vw] h-[680px] max-h-[85vh] gap-0 p-0 overflow-hidden"
       >
         <DialogDescription id={descriptionId} className="sr-only">
           {description}

@@ -65,7 +65,7 @@ export const SessionSuggestionChip: React.FC<SessionSuggestionChipProps> = React
               onClick={() => onApply(suggestion)}
               onMouseDown={(event) => event.preventDefault()}
               aria-label={t('chat.suggestion.applyAria')}
-              className="group flex w-full min-w-0 select-none items-center gap-1.5 rounded-full border py-1.5 pl-3 pr-8 text-sm text-muted-foreground transition-colors hover:bg-[var(--interactive-hover)] hover:text-foreground"
+              className="group flex w-full min-w-0 select-none items-center gap-1.5 rounded-full border py-1.5 pl-3 pr-8 typography-ui-label text-muted-foreground transition-colors hover:bg-[var(--interactive-hover)] hover:text-foreground"
               style={chipStyle}
             >
               <Icon name="pencil-ai-2" className="h-3.5 w-3.5 shrink-0 opacity-70 transition-opacity group-hover:opacity-100" />

@@ -620,7 +620,7 @@ export function PromptNavigatorRail({
                             className={cn(
                                 'pointer-events-auto absolute right-full top-1/2 z-30 mr-3 -translate-y-1/2',
                                 'w-[min(20rem,calc(100vw-6rem))] overflow-hidden rounded-xl',
-                                'border border-[var(--interactive-border)]/60 bg-[var(--surface-elevated)] py-1 shadow-md',
+                                'border border-[var(--interactive-border)]/60 bg-[var(--surface-elevated)] py-1 shadow-float',
                             )}
                             onMouseEnter={cancelScheduledHide}
                             onMouseLeave={scheduleHide}

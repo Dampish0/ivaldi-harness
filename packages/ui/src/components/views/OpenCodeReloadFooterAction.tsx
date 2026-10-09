@@ -111,7 +111,7 @@ export const OpenCodeReloadFooterAction: React.FC<OpenCodeReloadFooterActionProp
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
           hasPending
             ? 'bg-primary text-primary-foreground typography-ui-label font-semibold hover:bg-primary/90'
-            : 'text-sm font-semibold text-sidebar-foreground/90 hover:text-sidebar-foreground hover:bg-interactive-hover',
+            : 'typography-ui-label font-semibold text-sidebar-foreground/90 hover:text-sidebar-foreground hover:bg-interactive-hover',
           isApplying && 'opacity-80',
           className,
         )}
@@ -155,7 +155,7 @@ export const OpenCodeReloadFooterAction: React.FC<OpenCodeReloadFooterActionProp
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-9 w-full normal-case"
+                  className="w-full normal-case"
                   onClick={() => setConfirmOpen(false)}
                 >
                   {t('settings.view.pendingRestart.confirm.cancel')}
@@ -165,7 +165,7 @@ export const OpenCodeReloadFooterAction: React.FC<OpenCodeReloadFooterActionProp
                 <Button
                   type="button"
                   variant="default"
-                  className="h-9 w-full normal-case"
+                  className="w-full normal-case"
                   onClick={handleConfirmApply}
                 >
                   {t('settings.view.actions.applyAndRestartOpenCode')}

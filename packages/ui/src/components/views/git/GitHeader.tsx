@@ -125,7 +125,7 @@ export const IdentityDropdown: React.FC<IdentityDropdownProps> = ({
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 min-w-0 max-w-[15rem] justify-start gap-1.5 px-2 py-1 typography-ui-label"
+              className="min-w-0 max-w-[15rem] justify-start gap-1.5 px-2 py-1 typography-ui-label"
               style={{ color: getIdentityColor(activeProfile?.color) }}
               disabled={isDisabled}
             >
@@ -273,8 +273,7 @@ export const GitHeader: React.FC<GitHeaderProps> = ({
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 px-0"
+                  size="icon-sm"
                   aria-label={t('gitView.header.repositoryViews')}
                 >
                   <Icon name="more-fill" className="size-4" />
@@ -350,7 +349,7 @@ export const GitHeader: React.FC<GitHeaderProps> = ({
           variant="ghost"
           size="sm"
           onClick={onOpenPullRequest}
-          className="h-8 gap-1.5 px-2 typography-micro"
+          className="gap-1.5 px-2 typography-micro"
         >
           <Icon
             name="git-pull-request"

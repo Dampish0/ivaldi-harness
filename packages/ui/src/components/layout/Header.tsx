@@ -1201,11 +1201,11 @@ export const Header: React.FC = () => {
       <div className="flex min-w-0 flex-1 items-center">
         {activeSurfaceHeader ? (
           <div className="mr-3 flex min-w-0 flex-col items-start px-1 py-0.5 -my-0.5 text-left">
-            <span className="truncate typography-ui-label text-[14px] font-normal leading-tight text-foreground max-w-full">
+            <span className="truncate typography-ui-label font-normal leading-tight text-foreground max-w-full">
               {activeSurfaceHeader.title}
             </span>
             {activeSurfaceHeader.subtitle ? (
-              <span className="truncate typography-micro text-[10.5px] font-normal leading-tight text-muted-foreground/75 max-w-full">
+              <span className="truncate typography-micro font-normal leading-tight text-muted-foreground/75 max-w-full">
                 {activeSurfaceHeader.subtitle}
               </span>
             ) : null}
@@ -1245,7 +1245,7 @@ export const Header: React.FC = () => {
                       }
                     }}
                     placeholder={t('sessions.sidebar.session.menu.rename')}
-                    className="min-w-0 flex-1 bg-transparent typography-ui-label text-[14px] font-normal leading-tight outline-none placeholder:text-muted-foreground"
+                    className="min-w-0 flex-1 bg-transparent typography-ui-label font-normal leading-tight outline-none placeholder:text-muted-foreground"
                   />
                   <button
                     type="submit"
@@ -1266,7 +1266,7 @@ export const Header: React.FC = () => {
                   </button>
                 </form>
               ) : (
-                <span className="truncate typography-ui-label text-[14px] font-normal leading-tight text-foreground max-w-full">
+                <span className="truncate typography-ui-label font-normal leading-tight text-foreground max-w-full">
                   {isNewSessionDraftOpen
                     ? isDeveloperMode
                       ? t('sessions.switcher.draftTitle')
@@ -1275,7 +1275,7 @@ export const Header: React.FC = () => {
                 </span>
               )}
               {showHeaderMetaRow ? (
-                <span className="flex min-w-0 max-w-full items-center gap-1.5 truncate typography-micro text-[10.5px] font-normal leading-tight text-muted-foreground/75">
+                <span className="flex min-w-0 max-w-full items-center gap-1.5 truncate typography-micro font-normal leading-tight text-muted-foreground/75">
                   {activeProjectLabel ? <span className="truncate">{activeProjectLabel}</span> : null}
                   {isDeveloperMode && currentBranchLabel ? (
                     <span className="inline-flex min-w-0 items-center gap-0.5">
@@ -1408,7 +1408,7 @@ export const Header: React.FC = () => {
                       }
                     }}
                     placeholder={t('sessions.sidebar.session.menu.rename')}
-                    className="min-w-0 flex-1 bg-transparent text-[13px] font-medium leading-4 outline-none placeholder:text-muted-foreground"
+                    className="min-w-0 flex-1 bg-transparent typography-meta font-medium leading-4 outline-none placeholder:text-muted-foreground"
                   />
                   <button
                     type="submit"
@@ -1430,7 +1430,7 @@ export const Header: React.FC = () => {
                 </form>
               ) : (
                 <>
-                  <span className="block overflow-hidden whitespace-nowrap text-[13px] font-medium leading-4 text-foreground max-w-full">
+                  <span className="block overflow-hidden whitespace-nowrap typography-meta font-medium leading-4 text-foreground max-w-full">
                     {isNewSessionDraftOpen
                       ? isDeveloperMode
                         ? t('sessions.switcher.draftTitle')
@@ -1438,7 +1438,7 @@ export const Header: React.FC = () => {
                       : currentSessionTitle}
                   </span>
                   {!isDeveloperMode && !isChatContext && activeProjectLabel ? (
-                    <span className="block truncate text-[10.5px] font-normal leading-3 text-muted-foreground/75">
+                    <span className="block truncate typography-micro font-normal leading-4 text-muted-foreground/75">
                       {activeProjectLabel}
                     </span>
                   ) : null}

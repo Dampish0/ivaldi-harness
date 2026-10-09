@@ -1565,7 +1565,7 @@ export const RemoteInstancesPage: React.FC = () => {
             contentClassName="space-y-3"
           >
               <div>
-                <Button type="button" size="xs" className="!font-normal" onClick={() => void openAddDevice()}>
+                <Button type="button" size="xs" onClick={() => void openAddDevice()}>
                   <Icon name="add" className="h-3.5 w-3.5" />
                   {t('settings.remoteInstances.clientAuth.actions.addDevice')}
                 </Button>
@@ -1573,7 +1573,7 @@ export const RemoteInstancesPage: React.FC = () => {
               <div className="space-y-2.5">
                 {revokedClientCount > 0 ? (
                   <div className="flex justify-end">
-                    <Button type="button" variant="ghost" size="xs" className="!font-normal" onClick={() => void purgeRevokedRemoteClients()}>
+                    <Button type="button" variant="ghost" size="xs" onClick={() => void purgeRevokedRemoteClients()}>
                       {t('settings.remoteInstances.clientAuth.actions.clearRevoked')}
                     </Button>
                   </div>
@@ -1596,7 +1596,7 @@ export const RemoteInstancesPage: React.FC = () => {
                           </div>
                           <p className="typography-micro text-muted-foreground truncate">{t('settings.remoteInstances.clientAuth.state.pending')}</p>
                         </div>
-                        <Button type="button" variant="ghost" size="xs" className="!font-normal" onClick={() => void cancelPendingPairing(pending.id)}>
+                        <Button type="button" variant="ghost" size="xs" onClick={() => void cancelPendingPairing(pending.id)}>
                           {t('settings.common.actions.cancel')}
                         </Button>
                       </div>
@@ -1648,7 +1648,7 @@ export const RemoteInstancesPage: React.FC = () => {
                               <span className={cn('typography-micro truncate', isOnline && !client.revokedAt ? 'text-[var(--status-success)]' : 'text-muted-foreground')}>{statusText}</span>
                             </div>
                           </div>
-                          <Button type="button" variant="ghost" size="xs" className="!font-normal" onClick={() => void revokeRemoteClient(client)} disabled={Boolean(client.revokedAt)}>
+                          <Button type="button" variant="ghost" size="xs" onClick={() => void revokeRemoteClient(client)} disabled={Boolean(client.revokedAt)}>
                             {t('settings.remoteInstances.clientAuth.actions.revoke')}
                           </Button>
                         </div>
@@ -1675,17 +1675,16 @@ export const RemoteInstancesPage: React.FC = () => {
                 type="button"
                 variant="ghost"
                 size="xs"
-                className="!font-normal"
                 data-settings-item="remote-instances.switch-instance"
                 onClick={() => setInstanceSwitcherOpen(true)}
               >
                 <Icon name="server" className="h-3.5 w-3.5" />
                 {t('desktopHostSwitcher.actions.switchInstance')}
               </Button>
-              <Button type="button" size="xs" className="!font-normal" onClick={() => setDirectImportDialogOpen(true)} disabled={directSaving}>
+              <Button type="button" size="xs" onClick={() => setDirectImportDialogOpen(true)} disabled={directSaving}>
                 {t('settings.remoteInstances.direct.import.action')}
               </Button>
-              <Button type="button" variant="outline" size="xs" className="!font-normal" onClick={() => setDirectAddDialogOpen(true)} disabled={directSaving}>
+              <Button type="button" variant="outline" size="xs" onClick={() => setDirectAddDialogOpen(true)} disabled={directSaving}>
                 <Icon name="add" className="h-3.5 w-3.5" />
                 {t('settings.remoteInstances.direct.actions.add')}
               </Button>
@@ -1744,7 +1743,7 @@ export const RemoteInstancesPage: React.FC = () => {
                         </p>
                       </div>
                       <div className="flex shrink-0 items-center gap-1">
-                        <Button type="button" variant="ghost" size="xs" className="!font-normal" onClick={() => void setDefaultDirectHost(host.id)} disabled={directSaving || directDefaultHostId === host.id} aria-label={t('desktopHostSwitcher.actions.setAsDefaultAria')}>
+                        <Button type="button" variant="ghost" size="xs" onClick={() => void setDefaultDirectHost(host.id)} disabled={directSaving || directDefaultHostId === host.id} aria-label={t('desktopHostSwitcher.actions.setAsDefaultAria')}>
                           {directDefaultHostId === host.id ? <Icon name="star-fill" className="h-3.5 w-3.5" /> : <Icon name="star" className="h-3.5 w-3.5" />}
                         </Button>
                         {/* The edit form is URL/token-centric; relay-ONLY hosts have
@@ -1752,12 +1751,12 @@ export const RemoteInstancesPage: React.FC = () => {
                             link instead. Multi-transport hosts keep their relay leg
                             through the edit (object spread preserves it). */}
                         {host.relay && !host.apiUrl ? null : (
-                          <Button type="button" variant="ghost" size="xs" className="!font-normal" onClick={() => beginEditDirectHost(host)} disabled={directSaving}>
+                          <Button type="button" variant="ghost" size="xs" onClick={() => beginEditDirectHost(host)} disabled={directSaving}>
                             <Icon name="pencil" className="h-3.5 w-3.5" />
                             {t('desktopHostSwitcher.actions.edit')}
                           </Button>
                         )}
-                        <Button type="button" variant="ghost" size="xs" className="!font-normal" onClick={() => void handleRemoveDirectHost(host.id)} disabled={directSaving}>
+                        <Button type="button" variant="ghost" size="xs" onClick={() => void handleRemoveDirectHost(host.id)} disabled={directSaving}>
                           <Icon name="delete-bin" className="h-3.5 w-3.5" />
                           {t('settings.common.actions.delete')}
                         </Button>
@@ -1797,19 +1796,19 @@ export const RemoteInstancesPage: React.FC = () => {
                   <div key={header.id} className="flex w-full gap-2">
                     <Input className="h-8 font-mono text-xs" value={header.name} onChange={(event) => setDirectHeaders((headers) => headers.map((item) => item.id === header.id ? { ...item, name: event.target.value } : item))} placeholder={t('settings.remoteInstances.direct.headers.field.namePlaceholder')} disabled={directSaving} />
                     <Input className="h-8 font-mono text-xs" value={header.value} onChange={(event) => setDirectHeaders((headers) => headers.map((item) => item.id === header.id ? { ...item, value: event.target.value } : item))} placeholder={t('settings.remoteInstances.direct.headers.field.valuePlaceholder')} type="password" disabled={directSaving} />
-                    <button type="button" onClick={() => setDirectHeaders((headers) => headers.filter((item) => item.id !== header.id))} className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-[var(--status-error-background)] hover:text-[var(--status-error)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--interactive-focus-ring)]" aria-label={t('settings.remoteInstances.direct.headers.removeAria')} disabled={directSaving}>
+                    <Button variant="ghost" size="icon-sm" onClick={() => setDirectHeaders((headers) => headers.filter((item) => item.id !== header.id))} className="flex-shrink-0 text-muted-foreground hover:bg-[var(--status-error-background)] hover:text-[var(--status-error)]" aria-label={t('settings.remoteInstances.direct.headers.removeAria')} disabled={directSaving}>
                       <Icon name="close" className="h-4 w-4" />
-                    </button>
+                    </Button>
                   </div>
                 ))}
-                <Button type="button" variant="ghost" size="xs" className="!font-normal" onClick={() => setDirectHeaders((headers) => [...headers, createHeaderDraft()])} disabled={directSaving}>
+                <Button type="button" variant="ghost" size="xs" onClick={() => setDirectHeaders((headers) => [...headers, createHeaderDraft()])} disabled={directSaving}>
                   <Icon name="add" className="h-3.5 w-3.5" />
                   {t('settings.remoteInstances.direct.headers.actions.add')}
                 </Button>
               </div>
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" size="xs" className="!font-normal" onClick={() => setDirectAddDialogOpen(false)} disabled={directSaving}>{t('settings.common.actions.cancel')}</Button>
-                <Button type="submit" size="xs" className="!font-normal" disabled={directSaving || !directUrl.trim()}>{t('settings.remoteInstances.direct.actions.add')}</Button>
+                <Button type="button" variant="outline" size="xs" onClick={() => setDirectAddDialogOpen(false)} disabled={directSaving}>{t('settings.common.actions.cancel')}</Button>
+                <Button type="submit" size="xs" disabled={directSaving || !directUrl.trim()}>{t('settings.remoteInstances.direct.actions.add')}</Button>
               </div>
             </form>
           </DialogContent>
@@ -1834,19 +1833,19 @@ export const RemoteInstancesPage: React.FC = () => {
                   <div key={header.id} className="flex w-full gap-2">
                     <Input className="h-8 font-mono text-xs" value={header.name} onChange={(event) => setDirectEditHeaders((headers) => headers.map((item) => item.id === header.id ? { ...item, name: event.target.value } : item))} placeholder={t('settings.remoteInstances.direct.headers.field.namePlaceholder')} disabled={directSaving} />
                     <Input className="h-8 font-mono text-xs" value={header.value} onChange={(event) => setDirectEditHeaders((headers) => headers.map((item) => item.id === header.id ? { ...item, value: event.target.value } : item))} placeholder={t('settings.remoteInstances.direct.headers.field.valuePlaceholder')} type="password" disabled={directSaving} />
-                    <button type="button" onClick={() => setDirectEditHeaders((headers) => headers.filter((item) => item.id !== header.id))} className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-[var(--status-error-background)] hover:text-[var(--status-error)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--interactive-focus-ring)]" aria-label={t('settings.remoteInstances.direct.headers.removeAria')} disabled={directSaving}>
+                    <Button variant="ghost" size="icon-sm" onClick={() => setDirectEditHeaders((headers) => headers.filter((item) => item.id !== header.id))} className="flex-shrink-0 text-muted-foreground hover:bg-[var(--status-error-background)] hover:text-[var(--status-error)]" aria-label={t('settings.remoteInstances.direct.headers.removeAria')} disabled={directSaving}>
                       <Icon name="close" className="h-4 w-4" />
-                    </button>
+                    </Button>
                   </div>
                 ))}
-                <Button type="button" variant="ghost" size="xs" className="!font-normal" onClick={() => setDirectEditHeaders((headers) => [...headers, createHeaderDraft()])} disabled={directSaving}>
+                <Button type="button" variant="ghost" size="xs" onClick={() => setDirectEditHeaders((headers) => [...headers, createHeaderDraft()])} disabled={directSaving}>
                   <Icon name="add" className="h-3.5 w-3.5" />
                   {t('settings.remoteInstances.direct.headers.actions.add')}
                 </Button>
               </div>
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" size="xs" className="!font-normal" onClick={() => setDirectEditingId(null)} disabled={directSaving}>{t('settings.common.actions.cancel')}</Button>
-                <Button type="submit" size="xs" className="!font-normal" disabled={directSaving}>{t('settings.common.actions.saveChanges')}</Button>
+                <Button type="button" variant="outline" size="xs" onClick={() => setDirectEditingId(null)} disabled={directSaving}>{t('settings.common.actions.cancel')}</Button>
+                <Button type="submit" size="xs" disabled={directSaving}>{t('settings.common.actions.saveChanges')}</Button>
               </div>
             </form>
           </DialogContent>
@@ -1861,8 +1860,8 @@ export const RemoteInstancesPage: React.FC = () => {
             <form className="space-y-3" onSubmit={(event) => { event.preventDefault(); void importDirectConnectLink(); }}>
               <Input className="h-8" value={directConnectLink} onChange={(event) => setDirectConnectLink(event.target.value)} placeholder={t('settings.remoteInstances.direct.import.placeholder')} disabled={directSaving} autoFocus />
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" size="xs" className="!font-normal" onClick={() => setDirectImportDialogOpen(false)} disabled={directSaving}>{t('settings.common.actions.cancel')}</Button>
-                <Button type="submit" size="xs" className="!font-normal" disabled={directSaving || !directConnectLink.trim()}>{t('settings.remoteInstances.direct.import.action')}</Button>
+                <Button type="button" variant="outline" size="xs" onClick={() => setDirectImportDialogOpen(false)} disabled={directSaving}>{t('settings.common.actions.cancel')}</Button>
+                <Button type="submit" size="xs" disabled={directSaving || !directConnectLink.trim()}>{t('settings.remoteInstances.direct.import.action')}</Button>
               </div>
             </form>
           </DialogContent>
@@ -1934,8 +1933,8 @@ export const RemoteInstancesPage: React.FC = () => {
                 </div>
                 {remoteClientError ? <p className="typography-meta text-[var(--status-error)]">{remoteClientError}</p> : null}
                 <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" size="xs" className="!font-normal" onClick={() => setAddDeviceOpen(false)} disabled={addDeviceCreating}>{t('settings.common.actions.cancel')}</Button>
-                  <Button type="submit" size="xs" className="!font-normal" disabled={addDeviceCreating || !transportOptions}>{t('settings.remoteInstances.clientAuth.addDevice.create')}</Button>
+                  <Button type="button" variant="outline" size="xs" onClick={() => setAddDeviceOpen(false)} disabled={addDeviceCreating}>{t('settings.common.actions.cancel')}</Button>
+                  <Button type="submit" size="xs" disabled={addDeviceCreating || !transportOptions}>{t('settings.remoteInstances.clientAuth.addDevice.create')}</Button>
                 </div>
               </form>
             ) : (
@@ -1948,14 +1947,14 @@ export const RemoteInstancesPage: React.FC = () => {
                 {pairingUrl ? (
                   <div className="flex items-center gap-2 rounded-md border border-[var(--interactive-border)] p-2">
                     <code className="min-w-0 flex-1 truncate typography-code text-muted-foreground">{pairingUrl}</code>
-                    <Button type="button" variant="outline" size="xs" className="!font-normal shrink-0" onClick={handleCopyPairing}>
+                    <Button type="button" variant="outline" size="xs" className="shrink-0" onClick={handleCopyPairing}>
                       <Icon name={pairingCopied ? 'check' : 'file-copy'} className={cn('h-3.5 w-3.5', pairingCopied && 'text-[var(--status-success)]')} />
                       {pairingCopied ? t('settings.remoteInstances.clientAuth.actions.copied') : t('settings.common.actions.copyAll')}
                     </Button>
                   </div>
                 ) : null}
                 <div className="flex justify-end">
-                  <Button type="button" size="xs" className="!font-normal" onClick={() => setAddDeviceOpen(false)}>{t('settings.remoteInstances.clientAuth.addDevice.done')}</Button>
+                  <Button type="button" size="xs" onClick={() => setAddDeviceOpen(false)}>{t('settings.remoteInstances.clientAuth.addDevice.done')}</Button>
                 </div>
               </div>
             )}
@@ -1966,7 +1965,7 @@ export const RemoteInstancesPage: React.FC = () => {
           title={t('settings.remoteInstances.sidebar.title')}
           description={t('settings.remoteInstances.sidebar.total', { count: instances.length })}
           headerAction={(
-            <Button type="button" size="xs" className="!font-normal" onClick={openSshAddDialog}>
+            <Button type="button" size="xs" onClick={openSshAddDialog}>
               <Icon name="add" className="h-3.5 w-3.5" />
               {t('settings.remoteInstances.sidebar.actions.addSshInstance')}
             </Button>
@@ -2006,12 +2005,12 @@ export const RemoteInstancesPage: React.FC = () => {
                     </div>
                     <div className="flex shrink-0 items-center gap-1">
                       {ready ? (
-                        <Button type="button" variant="ghost" size="xs" className="!font-normal" onClick={() => openInstanceUrl(instanceStatus?.localUrl)}>
+                        <Button type="button" variant="ghost" size="xs" onClick={() => openInstanceUrl(instanceStatus?.localUrl)}>
                           <Icon name="external-link" className="h-3.5 w-3.5" />
                           {t('settings.remoteInstances.page.actions.open')}
                         </Button>
                       ) : null}
-                      <Button type="button" variant="ghost" size="xs" className="!font-normal" onClick={() => {
+                      <Button type="button" variant="ghost" size="xs" onClick={() => {
                         const op = ready ? disconnect(instance.id) : connect(instance.id);
                         void op.catch((err) => toast.error(ready ? t('settings.remoteInstances.sidebar.toast.disconnectFailed') : t('settings.remoteInstances.sidebar.toast.connectFailed'), {
                           description: err instanceof Error ? err.message : String(err),
@@ -2020,11 +2019,11 @@ export const RemoteInstancesPage: React.FC = () => {
                         {ready ? <Icon name="stop" className="h-3.5 w-3.5" /> : <Icon name="plug-2" className="h-3.5 w-3.5" />}
                         {ready ? t('settings.remoteInstances.sidebar.actions.disconnect') : t('settings.remoteInstances.sidebar.actions.connect')}
                       </Button>
-                      <Button type="button" variant="ghost" size="xs" className="!font-normal" onClick={() => setSelectedId(instance.id)}>
+                      <Button type="button" variant="ghost" size="xs" onClick={() => setSelectedId(instance.id)}>
                         <Icon name="pencil" className="h-3.5 w-3.5" />
                         {t('desktopHostSwitcher.actions.edit')}
                       </Button>
-                      <Button type="button" variant="ghost" size="xs" className="!font-normal" onClick={() => {
+                      <Button type="button" variant="ghost" size="xs" onClick={() => {
                         const ok = window.confirm(t('settings.remoteInstances.page.confirm.removeInstance'));
                         if (!ok) return;
                         void removeInstance(instance.id).catch((err) => toast.error(t('settings.remoteInstances.page.toast.removeInstanceFailed'), {
@@ -2089,7 +2088,6 @@ export const RemoteInstancesPage: React.FC = () => {
                           type="button"
                           variant="outline"
                           size="xs"
-                          className="!font-normal"
                           onClick={() => void handleImportCandidate(candidate.host, candidate.pattern)}
                         >
                           {t('settings.remoteInstances.page.addDialog.use')}
@@ -2104,8 +2102,8 @@ export const RemoteInstancesPage: React.FC = () => {
                 <Input className="h-8" value={sshNameDraft} onChange={(event) => setSshNameDraft(event.target.value)} placeholder={t('settings.remoteInstances.page.field.nicknamePlaceholder')} disabled={isSaving} />
                 <Input className="h-8" value={sshCommandDraft} onChange={(event) => setSshCommandDraft(event.target.value)} placeholder={t('settings.remoteInstances.page.field.sshCommandPlaceholder')} disabled={isSaving} autoFocus />
                 <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" size="xs" className="!font-normal" onClick={() => setSshAddDialogOpen(false)} disabled={isSaving}>{t('settings.common.actions.cancel')}</Button>
-                  <Button type="submit" size="xs" className="!font-normal" disabled={isSaving || !sshCommandDraft.trim()}>{t('settings.common.actions.create')}</Button>
+                  <Button type="button" variant="outline" size="xs" onClick={() => setSshAddDialogOpen(false)} disabled={isSaving}>{t('settings.common.actions.cancel')}</Button>
+                  <Button type="submit" size="xs" disabled={isSaving || !sshCommandDraft.trim()}>{t('settings.common.actions.create')}</Button>
                 </div>
               </form>
             )}
@@ -2141,10 +2139,10 @@ export const RemoteInstancesPage: React.FC = () => {
                 autoFocus
               />
               <div className="flex items-center justify-end gap-2">
-                <Button type="button" variant="outline" size="xs" className="!font-normal" onClick={closePatternDialog} disabled={patternCreating}>
+                <Button type="button" variant="outline" size="xs" onClick={closePatternDialog} disabled={patternCreating}>
                   {t('settings.common.actions.cancel')}
                 </Button>
-                <Button type="submit" size="xs" className="!font-normal" disabled={patternCreating}>
+                <Button type="submit" size="xs" disabled={patternCreating}>
                   {t('settings.remoteInstances.page.actions.create')}
                 </Button>
               </div>
@@ -2187,7 +2185,6 @@ export const RemoteInstancesPage: React.FC = () => {
               type="button"
               variant={canDisconnect ? 'outline' : 'default'}
               size="xs"
-              className="!font-normal"
               onClick={handlePrimaryConnectionAction}
               disabled={isPrimaryActionPending || isRetryPending}
             >
@@ -2198,7 +2195,6 @@ export const RemoteInstancesPage: React.FC = () => {
               type="button"
               variant="outline"
               size="xs"
-              className="!font-normal"
               onClick={handleRetryAction}
               disabled={!canRetry}
             >
@@ -2209,7 +2205,6 @@ export const RemoteInstancesPage: React.FC = () => {
               type="button"
               variant="outline"
               size="xs"
-              className="!font-normal"
               onClick={() => {
                 void handleOpenLogs();
               }}
@@ -2221,7 +2216,7 @@ export const RemoteInstancesPage: React.FC = () => {
               type="button"
               variant="outline"
               size="xs"
-              className="!font-normal text-[var(--status-error)] border-[var(--status-error)]/30 hover:text-[var(--status-error)]"
+              className="text-[var(--status-error)] border-[var(--status-error)]/30 hover:text-[var(--status-error)]"
               onClick={() => {
                 const ok = window.confirm(t('settings.remoteInstances.page.confirm.removeInstance'));
                 if (!ok) return;
@@ -2252,7 +2247,6 @@ export const RemoteInstancesPage: React.FC = () => {
                   type="button"
                   variant="outline"
                   size="xs"
-                  className="!font-normal"
                   onClick={() => void applyErrorRemedy(currentRemedy)}
                 >
                   {currentRemedy === 'uiPassword'
@@ -2570,9 +2564,9 @@ export const RemoteInstancesPage: React.FC = () => {
               <Button
                 type="button"
                 variant="outline"
-                size="xs"
-                className="!font-normal h-7 w-7 px-0"
+                size="icon-compact"
                 title={t('settings.remoteInstances.page.actions.pickRandomPort')}
+                aria-label={t('settings.remoteInstances.page.actions.pickRandomPort')}
                 onClick={() =>
                   updateDraft((current) => ({
                     ...current,
@@ -2735,8 +2729,8 @@ export const RemoteInstancesPage: React.FC = () => {
                       aria-label={t('common.actions.delete')}
                       type="button"
                       variant="ghost"
-                      size="xs"
-                      className="!font-normal h-6 w-6 px-0 text-[var(--status-error)] hover:text-[var(--status-error)]"
+                      size="icon-xs"
+                      className="text-[var(--status-error)] hover:text-[var(--status-error)]"
                       onClick={() =>
                         updateDraft((current) => ({
                           ...current,
@@ -2902,7 +2896,6 @@ export const RemoteInstancesPage: React.FC = () => {
                           type="button"
                           variant="outline"
                           size="xs"
-                          className="!font-normal"
                           onClick={() => {
                             void openExternalUrl(localEndpointUrl).then((opened) => {
                               if (!opened) {
@@ -2926,7 +2919,7 @@ export const RemoteInstancesPage: React.FC = () => {
             type="button"
             variant="outline"
             size="xs"
-            className="!font-normal mt-1"
+            className="mt-1"
             onClick={() => {
               const nextForward = makeForward();
               updateDraft((current) => ({
@@ -2949,7 +2942,7 @@ export const RemoteInstancesPage: React.FC = () => {
 
       <div className="mt-8 border-t border-[var(--interactive-border)] pt-3">
         <div className="flex items-center gap-2">
-          <Button type="button" size="xs" className="!font-normal" onClick={() => void handleSave()} disabled={!hasChanges || isSaving}>
+          <Button type="button" size="xs" onClick={() => void handleSave()} disabled={!hasChanges || isSaving}>
             {t('settings.common.actions.saveChanges')}
           </Button>
           {status?.localUrl ? (
@@ -2958,7 +2951,6 @@ export const RemoteInstancesPage: React.FC = () => {
                 type="button"
                 variant="outline"
                 size="xs"
-                className="!font-normal"
                 onClick={() => {
                   void copyTextToClipboard(status.localUrl || '').then((result) => {
                     if (result.ok) {
@@ -2974,7 +2966,6 @@ export const RemoteInstancesPage: React.FC = () => {
                 type="button"
                 variant="outline"
                 size="xs"
-                className="!font-normal"
                 onClick={() => {
                   void handleOpenCurrentInstance();
                 }}
@@ -2997,11 +2988,11 @@ export const RemoteInstancesPage: React.FC = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="flex items-center justify-end gap-2">
-            <Button type="button" variant="outline" size="xs" className="!font-normal" onClick={handleCopyAllLogs} disabled={logDialogLoading || !logLinesText.trim()}>
+            <Button type="button" variant="outline" size="xs" onClick={handleCopyAllLogs} disabled={logDialogLoading || !logLinesText.trim()}>
               <Icon name="file-copy" className="h-3.5 w-3.5" />
               {t('settings.common.actions.copyAll')}
             </Button>
-            <Button type="button" variant="outline" size="xs" className="!font-normal" onClick={() => void handleClearLogs()} disabled={logDialogLoading}>
+            <Button type="button" variant="outline" size="xs" onClick={() => void handleClearLogs()} disabled={logDialogLoading}>
               <Icon name="delete-bin" className="h-3.5 w-3.5" />
               {t('settings.common.actions.clear')}
             </Button>
@@ -3049,10 +3040,10 @@ export const RemoteInstancesPage: React.FC = () => {
               autoFocus
             />
             <div className="flex items-center justify-end gap-2">
-              <Button type="button" variant="outline" size="xs" className="!font-normal" onClick={closePatternDialog} disabled={patternCreating}>
+              <Button type="button" variant="outline" size="xs" onClick={closePatternDialog} disabled={patternCreating}>
                 {t('settings.common.actions.cancel')}
               </Button>
-              <Button type="submit" size="xs" className="!font-normal" disabled={patternCreating}>
+              <Button type="submit" size="xs" disabled={patternCreating}>
                 {t('settings.common.actions.create')}
               </Button>
             </div>

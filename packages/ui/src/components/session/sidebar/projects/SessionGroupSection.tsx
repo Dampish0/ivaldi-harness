@@ -57,6 +57,8 @@ export type SessionGroupSectionProps = {
   groupKey: string;
   projectId?: string | null;
   hideGroupLabel?: boolean;
+  /** Say "No chats yet" when this unlabeled group is the project's only one. */
+  showEmptyState?: boolean;
   hasSessionSearchQuery: boolean;
   normalizedSessionSearchQuery: string;
   groupSearchDataByGroup: WeakMap<SessionGroup, GroupSearchData>;
@@ -174,6 +176,7 @@ const areGroupPropsEqual = (prev: SessionGroupSectionProps, next: SessionGroupSe
   if (prev.groupKey !== next.groupKey) return false;
   if (prev.projectId !== next.projectId) return false;
   if (prev.hideGroupLabel !== next.hideGroupLabel) return false;
+  if (prev.showEmptyState !== next.showEmptyState) return false;
   if (prev.compactBodyPadding !== next.compactBodyPadding) return false;
   if (prev.groupSearchDataByGroup !== next.groupSearchDataByGroup) return false;
   if (prev.visibleSessionCount !== next.visibleSessionCount) return false;
@@ -265,6 +268,7 @@ function SessionGroupSectionBase(props: SessionGroupSectionProps): React.ReactNo
     groupKey,
     projectId,
     hideGroupLabel,
+    showEmptyState,
     hasSessionSearchQuery,
     normalizedSessionSearchQuery,
     groupSearchDataByGroup,
@@ -1037,7 +1041,7 @@ function SessionGroupSectionBase(props: SessionGroupSectionProps): React.ReactNo
       )}
       {totalSessions === 0
         && allFoldersForGroup.length === 0
-        && (!hideGroupLabel || group.isArchivedBucket || bootstrapLoading || Boolean(bootstrapFailureNotice)) ? (
+        && (!hideGroupLabel || showEmptyState || group.isArchivedBucket || bootstrapLoading || Boolean(bootstrapFailureNotice)) ? (
         // pl-[26px] lines the text up with the worktree sub-header label
         // (gutter + icon + gap).
         <div className="py-1 pl-[26px] text-left typography-micro text-muted-foreground">
@@ -1064,7 +1068,7 @@ function SessionGroupSectionBase(props: SessionGroupSectionProps): React.ReactNo
         <button
           type="button"
           onClick={() => showMoreGroupSessions(groupKey, visibleSessions.length, sessionBatchSize ?? 7)}
-          className="mt-0.5 flex items-center justify-start rounded-md pl-[26px] pr-1.5 py-0.5 text-left text-xs text-muted-foreground/70 leading-tight hover:text-foreground hover:underline"
+          className="mt-0.5 flex items-center justify-start rounded-md pl-[26px] pr-1.5 py-0.5 text-left typography-micro text-muted-foreground/70 leading-tight hover:text-foreground hover:underline"
         >
           {t('sessions.sidebar.group.showMore')}
         </button>
@@ -1073,7 +1077,7 @@ function SessionGroupSectionBase(props: SessionGroupSectionProps): React.ReactNo
         <button
           type="button"
           onClick={() => resetGroupSessionLimit(groupKey)}
-          className="mt-0.5 flex items-center justify-start rounded-md pl-[26px] pr-1.5 py-0.5 text-left text-xs text-muted-foreground/70 leading-tight hover:text-foreground hover:underline"
+          className="mt-0.5 flex items-center justify-start rounded-md pl-[26px] pr-1.5 py-0.5 text-left typography-micro text-muted-foreground/70 leading-tight hover:text-foreground hover:underline"
         >
           {t('sessions.sidebar.group.showFewer')}
         </button>
@@ -1131,7 +1135,7 @@ function SessionGroupSectionBase(props: SessionGroupSectionProps): React.ReactNo
           {...(dragHandleProps?.listeners ?? {})}
         >
           <div className="min-w-0 flex flex-1 flex-col justify-center gap-0.5 overflow-hidden">
-            <p className="text-[14px] font-normal truncate text-foreground/92">
+            <p className="typography-ui-label font-normal truncate text-foreground/92">
               {group.isArchivedBucket ? (
                 <span className="inline-flex min-w-0 max-w-full items-center gap-1">
                   <span className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center">
@@ -1168,7 +1172,7 @@ function SessionGroupSectionBase(props: SessionGroupSectionProps): React.ReactNo
                   {groupActivityIndicator}
                   {groupPrSummary ? (
                     <span
-                      className="ml-auto flex-shrink-0 text-[0.72rem] font-medium leading-none"
+                      className="ml-auto flex-shrink-0 typography-micro font-medium leading-none"
                       style={groupPrColor ? { color: groupPrColor } : undefined}
                     >
                       #{groupPrSummary.number}
@@ -1189,7 +1193,7 @@ function SessionGroupSectionBase(props: SessionGroupSectionProps): React.ReactNo
                 ) : (
                   <Icon name="git-branch" className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
                 )}
-                <span className="min-w-0 truncate text-[11px] font-medium text-muted-foreground/80">
+                <span className="min-w-0 truncate typography-micro font-medium text-muted-foreground/80">
                   {statusLine.label}
                 </span>
               </span>

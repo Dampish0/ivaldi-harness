@@ -792,19 +792,17 @@ export function DesktopHostSwitcherDialog({
               <span className="font-medium text-foreground">{t('desktopHostSwitcher.header.default')}</span>
               <span className="max-w-[9rem] truncate text-muted-foreground">{redactSensitiveUrl(currentDefaultLabel)}</span>
             </div>
-            <button
+            <Button
               type="button"
-              className={cn(
-                'inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors',
-                'hover:text-foreground hover:bg-interactive-hover',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--interactive-focus-ring)]'
-              )}
+              variant="ghost"
+              size="icon-compact"
+              className="text-muted-foreground"
               onClick={() => void probeAll(allHosts)}
               disabled={!desktopAvailable || isLoading || isProbing}
               aria-label={t('desktopHostSwitcher.actions.refreshInstancesAria')}
             >
               <Icon name="refresh" className={cn('h-4 w-4', isProbing && 'animate-spin')} />
-            </button>
+            </Button>
           </div>
         </div>
       ) : (
@@ -853,7 +851,7 @@ export function DesktopHostSwitcherDialog({
         <div className="flex-1 min-h-0 overflow-y-auto">
           <div className={cn('space-y-1', embedded && 'space-y-1.5 px-3 py-1')}>
             {isLoading ? (
-              <div className="px-2 py-2 text-muted-foreground text-sm">{t('desktopHostSwitcher.state.loading')}</div>
+              <div className="px-2 py-2 text-muted-foreground typography-ui-label">{t('desktopHostSwitcher.state.loading')}</div>
             ) : (
               allHosts.map((host) => {
                 const isLocal = host.id === LOCAL_HOST_ID;

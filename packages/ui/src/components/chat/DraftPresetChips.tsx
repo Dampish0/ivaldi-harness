@@ -90,7 +90,7 @@ const SortableChip: React.FC<{
                 {...attributes}
                 {...listeners}
                 onClick={() => onSubmit(item)}
-                className="group inline-flex max-w-full touch-none select-none items-center gap-1.5 rounded-md border border-transparent bg-transparent px-2 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-[var(--interactive-hover)] hover:text-foreground"
+                className="group inline-flex max-w-full touch-none select-none items-center gap-1.5 rounded-md border border-transparent bg-transparent px-2 py-1.5 typography-meta text-muted-foreground transition-colors hover:bg-[var(--interactive-hover)] hover:text-foreground"
             >
                 <Icon name={item.icon} className="h-3.5 w-3.5 shrink-0 opacity-70 transition-opacity group-hover:opacity-100" />
                 <span className="truncate whitespace-nowrap">{item.label}</span>
@@ -101,7 +101,7 @@ const SortableChip: React.FC<{
                     onClick={(e) => { e.stopPropagation(); onRemove(); }}
                     aria-label={isWorkMode ? t('chat.work.draftStarters.remove') : t('chat.draftStarters.remove')}
                     title={isWorkMode ? t('chat.work.draftStarters.remove') : t('chat.draftStarters.remove')}
-                    className="absolute -right-1.5 -top-1.5 hidden h-4 w-4 items-center justify-center rounded-full border border-border bg-[var(--surface-elevated)] text-muted-foreground shadow-sm hover:text-foreground group-hover/chip:flex"
+                    className="absolute -right-1.5 -top-1.5 hidden h-4 w-4 items-center justify-center rounded-full border border-border bg-[var(--surface-elevated)] text-muted-foreground shadow-float hover:text-foreground group-hover/chip:flex group-focus-within/chip:flex"
                 >
                     <Icon name="close" className="h-2.5 w-2.5" />
                 </button>

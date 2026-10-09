@@ -140,7 +140,7 @@ function SwitcherContent({ onSelect, variant, scopeProjectId }: SwitcherContentP
           )}
         >
           <Icon name="chat-new" className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-          <span className="truncate text-[14px] font-normal leading-tight text-foreground">
+          <span className="truncate typography-ui-label font-normal leading-tight text-foreground">
             {isWorkMode ? t('chat.work.newChat') : t('sessions.sidebar.header.actions.newSession')}
           </span>
         </BaseMenu.Item>
@@ -296,7 +296,7 @@ function SwitcherRow({ session, depth, variant, secondaryMeta, hasChildren, isEx
             </span>
           ) : null}
           <span className={cn(
-            'truncate text-[14px] leading-tight',
+            'truncate typography-ui-label leading-tight',
             isActive ? 'font-medium text-interactive-selection-foreground' : 'font-normal text-foreground',
           )}>
             {sessionTitle}

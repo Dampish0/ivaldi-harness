@@ -59,7 +59,7 @@ export function SidebarFooter({
   const avatar = user?.avatarUrl ? (
     <img src={user.avatarUrl} alt="" className="size-7 shrink-0 rounded-full object-cover" loading="lazy" referrerPolicy="no-referrer" />
   ) : (
-    <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-foreground ring-1 ring-border/50" aria-hidden="true">
+    <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted typography-micro font-medium text-foreground ring-1 ring-border/50" aria-hidden="true">
       {initials}
     </span>
   );

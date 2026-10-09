@@ -485,7 +485,7 @@ export const DesktopNetworkSettings: React.FC = () => {
             size="xs"
             onClick={handleSaveAndRestart}
             disabled={saveDisabled}
-            className="shrink-0 !font-normal"
+            className="shrink-0"
           >
             {isSaving ? t('settings.common.actions.saving') : t('settings.openchamber.desktopNetwork.actions.saveAndRestart')}
           </Button>

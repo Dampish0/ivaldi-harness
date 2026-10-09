@@ -3,6 +3,7 @@ import React from 'react';
 
 import { toast } from '@/components/ui';
 import { Icon } from '@/components/icon/Icon';
+import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { KnowledgeCard } from './KnowledgeCard';
 import { useI18n } from '@/lib/i18n';
@@ -104,11 +105,12 @@ const NoteRow: React.FC<{
       ) : null}
       actions={(
         <>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-xs"
             onClick={onTogglePinned}
             className={cn(
-              'inline-flex h-6 w-6 items-center justify-center rounded-md hover:bg-interactive-hover/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--interactive-focus-ring)]',
               pinned ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
             )}
             aria-pressed={pinned}
@@ -121,17 +123,19 @@ const NoteRow: React.FC<{
           >
             {/* Filled means pinned, outline means "pin this" — the same
                 language the work status panel uses. */}
-            <Icon name={pinned ? 'pushpin-2-fill' : 'pushpin'} className="h-3.5 w-3.5" />
-          </button>
-          <button
+            <Icon name={pinned ? 'pushpin-2-fill' : 'pushpin'} className="size-3.5" />
+          </Button>
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-xs"
             onClick={onDelete}
-            className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-interactive-hover/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--interactive-focus-ring)]"
+            className="text-muted-foreground"
             aria-label={t('rightSidebar.contextNotesTodo.notes.actions.delete')}
             title={t('rightSidebar.contextNotesTodo.notes.actions.delete')}
           >
-            <Icon name="delete-bin" className="h-3.5 w-3.5" />
-          </button>
+            <Icon name="delete-bin" className="size-3.5" />
+          </Button>
         </>
       )}
     >
@@ -255,16 +259,18 @@ export const NotesSection: React.FC<{
             <span className="typography-meta text-muted-foreground">
               {composerText.length}/{PROJECT_NOTE_BODY_MAX_LENGTH}
             </span>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-xs"
               onClick={() => void handleAdd()}
               disabled={disabled || composerText.trim().length === 0}
-              className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-interactive-hover/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--interactive-focus-ring)] disabled:cursor-not-allowed disabled:opacity-40"
+              className="text-muted-foreground"
               aria-label={t('rightSidebar.contextNotesTodo.notes.addAria')}
               title={t('rightSidebar.contextNotesTodo.notes.addAria')}
             >
               <Icon name="add" className="h-4 w-4" />
-            </button>
+            </Button>
           </>
         )}
       />

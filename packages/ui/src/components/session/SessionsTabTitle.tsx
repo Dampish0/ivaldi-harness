@@ -4,7 +4,7 @@ interface SessionsTabTitleProps {
 }
 
 const SessionsTabTitle: React.FC<SessionsTabTitleProps> = ({ title }) => (
-  <h1 className="text-sm font-medium truncate" title={title}>{title}</h1>
+  <h1 className="typography-ui-label font-medium truncate" title={title}>{title}</h1>
 );
 
 export { SessionsTabTitle };

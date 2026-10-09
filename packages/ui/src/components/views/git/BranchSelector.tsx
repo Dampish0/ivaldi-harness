@@ -166,7 +166,7 @@ export const BranchSelector: React.FC<BranchSelectorProps> = ({
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 min-w-0 max-w-full justify-start gap-1.5 px-2 py-1"
+              className="min-w-0 max-w-full justify-start gap-1.5 px-2 py-1"
               disabled={disabled}
             >
               <Icon name="git-branch" className="size-4 text-primary" />
@@ -268,6 +268,7 @@ export const BranchSelector: React.FC<BranchSelectorProps> = ({
                     onClick={handleCreate}
                     disabled={!sanitizedNewBranch || isCreating}
                     className="shrink-0 text-muted-foreground hover:text-foreground disabled:opacity-50"
+                    aria-label={t('gitView.branch.create')}
                   >
                     {isCreating ? (
                       <Icon name="loader-4" className="size-4 animate-spin" />

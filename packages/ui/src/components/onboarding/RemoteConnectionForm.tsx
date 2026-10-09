@@ -226,12 +226,12 @@ export function RemoteConnectionForm({
             <h1 className="typography-ui-header text-xl font-semibold text-foreground">
               {t('desktopHostSwitcher.actions.switchInstance')}
             </h1>
-            <p className="text-muted-foreground text-sm">{t('settings.remoteInstances.direct.description')}</p>
+            <p className="text-muted-foreground typography-ui-label">{t('settings.remoteInstances.direct.description')}</p>
           </div>
-          {error ? <div className="text-sm text-[var(--status-error)]">{error}</div> : null}
+          {error ? <div className="typography-ui-label text-[var(--status-error)]">{error}</div> : null}
           <div className="space-y-2">
             {hosts.length === 0 ? (
-              <div className="py-4 text-center text-sm text-muted-foreground">
+              <div className="py-4 text-center typography-ui-label text-muted-foreground">
                 {t('settings.remoteInstances.direct.state.empty')}
               </div>
             ) : hosts.map((host) => (
@@ -269,7 +269,7 @@ export function RemoteConnectionForm({
             <h1 className="typography-ui-header text-xl font-semibold text-foreground">
               {t('settings.remoteInstances.direct.import.action')}
             </h1>
-            <p className="text-muted-foreground text-sm">{t('settings.remoteInstances.direct.import.description')}</p>
+            <p className="text-muted-foreground typography-ui-label">{t('settings.remoteInstances.direct.import.description')}</p>
           </div>
           <Input
             value={connectLink}
@@ -278,7 +278,7 @@ export function RemoteConnectionForm({
             disabled={isTesting}
             autoFocus
           />
-          {error ? <div className="text-sm text-[var(--status-error)]">{error}</div> : null}
+          {error ? <div className="typography-ui-label text-[var(--status-error)]">{error}</div> : null}
           <Button onClick={() => void handleImport()} disabled={isTesting || !connectLink.trim()}>
             {t('settings.remoteInstances.direct.import.action')}
           </Button>
@@ -304,14 +304,14 @@ export function RemoteConnectionForm({
               ? t('onboarding.remoteConnection.titleRecovery')
               : t('onboarding.remoteConnection.title')}
             </h1>
-            <p className="text-muted-foreground text-sm">
+            <p className="text-muted-foreground typography-ui-label">
               {t('onboarding.remoteConnection.description')}
             </p>
           </div>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <label htmlFor="remote-url" className="text-sm text-foreground">
+            <label htmlFor="remote-url" className="typography-ui-label text-foreground">
               {t('onboarding.remoteConnection.field.serverAddress')}
             </label>
             <Input
@@ -325,7 +325,7 @@ export function RemoteConnectionForm({
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="remote-label" className="text-sm text-foreground">
+            <label htmlFor="remote-label" className="typography-ui-label text-foreground">
               {t('onboarding.remoteConnection.field.nameOptional')}
             </label>
             <Input
@@ -342,7 +342,7 @@ export function RemoteConnectionForm({
         {/* Success message */}
         {probeResult && isSuccess && (
           <div
-            className="rounded-lg border p-3 text-sm"
+            className="rounded-lg border p-3 typography-ui-label"
             style={{
               borderColor: 'var(--status-success)',
               color: 'var(--status-success)',
@@ -355,7 +355,7 @@ export function RemoteConnectionForm({
         {/* Auth warning (non-blocking) */}
         {probeResult && isAuth && (
           <div
-            className="rounded-lg border p-3 text-sm"
+            className="rounded-lg border p-3 typography-ui-label"
             style={{
               borderColor: 'var(--status-warning)',
               color: 'var(--status-warning)',
@@ -367,7 +367,7 @@ export function RemoteConnectionForm({
 
         {probeResult && isUpdateRecommended && (
           <div
-            className="rounded-lg border p-3 text-sm"
+            className="rounded-lg border p-3 typography-ui-label"
             style={{
               borderColor: 'var(--status-warning)',
               color: 'var(--status-warning)',
@@ -380,7 +380,7 @@ export function RemoteConnectionForm({
         {/* Blocking errors */}
         {probeResult && isBlocking && (
           <div
-            className="rounded-lg border p-3 text-sm space-y-3"
+            className="rounded-lg border p-3 typography-ui-label space-y-3"
             style={{
               borderColor: 'var(--status-error)',
               color: 'var(--status-error)',
@@ -390,7 +390,7 @@ export function RemoteConnectionForm({
               <div className="font-semibold mb-1">{t('onboarding.remoteConnection.status.connectionFailed')}</div>
               <div className="opacity-90">{probeMessageKey ? t(probeMessageKey as Parameters<typeof t>[0]) : null}</div>
             </div>
-            <div className="text-xs opacity-80">
+            <div className="typography-micro opacity-80">
               {probeResult.status === 'unreachable'
                 ? t('onboarding.remoteConnection.status.suggestionsUnreachable')
                 : t('onboarding.remoteConnection.status.suggestionsWrongService')}
@@ -401,7 +401,7 @@ export function RemoteConnectionForm({
         {/* Generic error */}
         {error && (
           <div
-            className="rounded-lg border p-3 text-sm"
+            className="rounded-lg border p-3 typography-ui-label"
             style={{
               borderColor: 'var(--status-error)',
               color: 'var(--status-error)',
@@ -430,7 +430,7 @@ export function RemoteConnectionForm({
         {/* Suggested actions when connection is blocked */}
         {isBlocking && (
           <div className="flex flex-col gap-2 pt-2 border-t border-border">
-            <div className="text-xs text-muted-foreground text-center">{t('onboarding.remoteConnection.actions.whatToDo')}</div>
+            <div className="typography-micro text-muted-foreground text-center">{t('onboarding.remoteConnection.actions.whatToDo')}</div>
             <div className="flex gap-2">
               <Button
                 variant="outline"

@@ -20,6 +20,7 @@ import { useMcpConfigStore } from '@/stores/useMcpConfigStore';
 import { computeMcpHealth, useMcpStore } from '@/stores/useMcpStore';
 import { McpIcon } from '@/components/icons/McpIcon';
 import { Icon } from "@/components/icon/Icon";
+import { Button } from '@/components/ui/button';
 import { useI18n } from '@/lib/i18n';
 import { toast } from 'sonner';
 import { startMcpAuthorization } from '@/components/sections/mcp/startMcpAuthorization';
@@ -133,15 +134,17 @@ export const McpDropdownContent: React.FC<McpDropdownContentProps> = ({ active, 
           </div>
           <div className="flex shrink-0 items-center gap-1">
             {headerAction}
-            <button
+            <Button
               type="button"
-              className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground hover:bg-interactive-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--interactive-focus-ring)]"
+              variant="ghost"
+              size="icon-compact"
+              className="text-muted-foreground"
               disabled={isSpinning}
               onClick={handleRefresh}
               aria-label={t('mcpDropdown.actions.refreshAria')}
             >
               <Icon name="refresh" className={cn('h-4 w-4', isSpinning && 'animate-spin')} />
-            </button>
+            </Button>
           </div>
         </div>
       </div> : null}

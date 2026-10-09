@@ -51,8 +51,8 @@ export const ProjectsSidebar: React.FC<{ onItemSelect?: () => void }> = ({ onIte
               <Button
                 type="button"
                 variant="ghost"
-                size="icon"
-                className="h-7 w-7 -my-1 text-muted-foreground"
+                size="icon-compact"
+                className="-my-1 text-muted-foreground"
                 onClick={handleAddProject}
                 aria-label={t('settings.projects.sidebar.actions.addProject')}
               >

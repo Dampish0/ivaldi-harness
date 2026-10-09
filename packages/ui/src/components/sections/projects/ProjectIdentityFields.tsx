@@ -163,6 +163,7 @@ export const ProjectIdentityFields: React.FC<ProjectIdentityFieldsProps> = ({ fo
                 : 'border-border/40 hover:border-border hover:bg-[var(--surface-muted)]',
             )}
             title={t('settings.projects.page.field.none')}
+            aria-label={t('settings.projects.page.field.none')}
           >
             <Icon name="close" className="h-4 w-4 text-muted-foreground" />
           </button>
@@ -179,6 +180,7 @@ export const ProjectIdentityFields: React.FC<ProjectIdentityFieldsProps> = ({ fo
               )}
               style={{ backgroundColor: entry.cssVar }}
               title={entry.label}
+              aria-label={entry.label}
             />
           ))}
         </div>
@@ -211,6 +213,7 @@ export const ProjectIdentityFields: React.FC<ProjectIdentityFieldsProps> = ({ fo
                 : 'border-border/40 hover:border-border hover:bg-[var(--surface-muted)]',
             )}
             title={t('settings.projects.page.field.none')}
+            aria-label={t('settings.projects.page.field.none')}
           >
             <Icon name="close" className="h-4 w-4 text-muted-foreground" />
           </button>
@@ -228,6 +231,7 @@ export const ProjectIdentityFields: React.FC<ProjectIdentityFieldsProps> = ({ fo
                     : 'border-transparent hover:border-border hover:bg-[var(--surface-muted)]',
                 )}
                 title={entry.label}
+                aria-label={entry.label}
               >
                 <Icon
                   name={iconName}

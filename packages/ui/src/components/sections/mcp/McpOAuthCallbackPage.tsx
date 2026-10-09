@@ -130,7 +130,7 @@ export const McpOAuthCallbackPage: React.FC = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-6 py-12 text-foreground">
-      <div className="w-full max-w-xl rounded-xl border border-[var(--interactive-border)] bg-[var(--surface-elevated)] p-8 shadow-sm">
+      <div className="w-full max-w-xl rounded-xl border border-[var(--interactive-border)] bg-[var(--surface-elevated)] p-8">
         <div className="space-y-3 text-center">
           <h1 className={SETTINGS_PAGE_TITLE_CLASS}>
             {status === 'working' ? 'Completing Authorization' : status === 'success' ? 'Authorization Complete' : 'Authorization Failed'}

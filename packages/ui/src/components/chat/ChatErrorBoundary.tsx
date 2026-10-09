@@ -62,12 +62,12 @@ class ChatErrorBoundaryView extends React.Component<ChatErrorBoundaryViewProps, 
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground text-center">
+              <p className="typography-ui-label text-muted-foreground text-center">
                 {this.props.texts.description}
               </p>
 
               {this.props.sessionId && (
-                <div className="text-xs text-muted-foreground text-center">
+                <div className="typography-micro text-muted-foreground text-center">
                   {this.props.texts.sessionLabel}: {this.props.sessionId}
                 </div>
               )}
@@ -88,7 +88,7 @@ class ChatErrorBoundaryView extends React.Component<ChatErrorBoundaryViewProps, 
                 </Button>
               </div>
 
-              <div className="text-xs text-muted-foreground text-center">
+              <div className="typography-micro text-muted-foreground text-center">
                 {this.props.texts.persistentHint}
               </div>
             </CardContent>

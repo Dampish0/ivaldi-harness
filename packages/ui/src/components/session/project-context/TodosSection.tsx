@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Icon } from '@/components/icon/Icon';
+import { Button } from '@/components/ui/button';
 import { useI18n } from '@/lib/i18n';
 import { PROJECT_TODO_TEXT_MAX_LENGTH, type ProjectTodoItem } from '@/lib/projectContextApi';
 import { cn } from '@/lib/utils';
@@ -221,16 +222,18 @@ export const TodosSection: React.FC<{
           disabled={disabled}
           className="h-8"
         />
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="icon-sm"
           onClick={handleAddTodo}
           disabled={disabled || todoInputValue.trim().length === 0}
-          className="inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md border border-border/70 text-muted-foreground hover:text-foreground hover:bg-interactive-hover/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--interactive-focus-ring)] disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex-shrink-0 text-muted-foreground"
           aria-label={t('rightSidebar.contextNotesTodo.todo.addAria')}
           title={t('rightSidebar.contextNotesTodo.todo.addAria')}
         >
           <Icon name="add" className="h-4 w-4" />
-        </button>
+        </Button>
       </div>
 
       <div className="border-t border-[var(--interactive-border)]">
@@ -298,26 +301,30 @@ export const TodosSection: React.FC<{
                             {todo.text}
                           </button>
                           <div className="flex h-6 items-center gap-0.5">
-                            <button
+                            <Button
                               type="button"
+                              variant="ghost"
+                              size="icon-xs"
                               onClick={() => handleDeleteTodo(todo.id)}
-                              className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-interactive-hover/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--interactive-focus-ring)]"
+                              className="text-muted-foreground"
                               aria-label={t('rightSidebar.contextNotesTodo.todo.actions.delete', { text: todo.text })}
                               title={t('rightSidebar.contextNotesTodo.todo.actions.delete', { text: todo.text })}
                             >
-                              <Icon name="delete-bin" className="h-3.5 w-3.5" />
-                            </button>
+                              <Icon name="delete-bin" className="size-3.5" />
+                            </Button>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <button
+                                <Button
                                   type="button"
+                                  variant="ghost"
+                                  size="icon-xs"
                                   disabled={sendingTodoId === todo.id}
-                                  className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-interactive-hover/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--interactive-focus-ring)] disabled:cursor-not-allowed disabled:opacity-50"
+                                  className="text-muted-foreground"
                                   aria-label={t('rightSidebar.contextNotesTodo.todo.actions.send', { text: todo.text })}
                                   title={t('rightSidebar.contextNotesTodo.todo.actions.send', { text: todo.text })}
                                 >
-                                  <Icon name="send-plane" className="h-3.5 w-3.5" />
-                                </button>
+                                  <Icon name="send-plane" className="size-3.5" />
+                                </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-56">
                                 <DropdownMenuItem onClick={() => onSendToCurrentSession(todo.text)}>

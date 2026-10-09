@@ -51,11 +51,11 @@ export function InlineCommentCard({
         className="flex items-center gap-1.5 px-3 py-1.5"
         style={{ backgroundColor: 'color-mix(in srgb, var(--surface-mutedForeground) 8%, transparent)' }}
       >
-        <span className="min-w-0 max-w-[200px] truncate text-xs font-medium text-[var(--surface-foreground)]" title={draft.fileLabel}>
+        <span className="min-w-0 max-w-[200px] truncate typography-micro font-medium text-[var(--surface-foreground)]" title={draft.fileLabel}>
           {draft.fileLabel}
         </span>
-        <span className="text-xs text-[var(--surface-mutedForeground)]">•</span>
-        <span className="min-w-0 flex-1 truncate text-xs text-[var(--surface-mutedForeground)]">
+        <span className="typography-micro text-[var(--surface-mutedForeground)]">•</span>
+        <span className="min-w-0 flex-1 truncate typography-micro text-[var(--surface-mutedForeground)]">
           {t('inlineComment.range.lines', { start: draft.startLine, end: draft.endLine })}
           {draft.side ? ` (${draft.side})` : ''}
         </span>
@@ -83,7 +83,7 @@ export function InlineCommentCard({
 
       <div className="px-3 py-2">
         <Collapsible open={isOpen || !isLongContent} onOpenChange={setIsOpen}>
-          <div className={cn('whitespace-pre-wrap break-words text-sm leading-relaxed text-[var(--surface-foreground)]', !isOpen && isLongContent && 'line-clamp-3')}>
+          <div className={cn('whitespace-pre-wrap break-words typography-ui-label leading-relaxed text-[var(--surface-foreground)]', !isOpen && isLongContent && 'line-clamp-3')}>
             {draftText}
           </div>
 
@@ -91,8 +91,8 @@ export function InlineCommentCard({
             <CollapsibleTrigger asChild>
               <Button
                 variant="ghost"
-                size="sm"
-                className="mt-1 h-6 w-full justify-start px-0 text-xs text-muted-foreground hover:text-foreground"
+                size="xs"
+                className="mt-1 w-full justify-start px-0 text-muted-foreground hover:text-foreground"
               >
                 {isOpen ? (
                   <>

@@ -244,7 +244,7 @@ export function WorkingPlaceholder({
     >
       {/* Keyed on the status so each new one slides in; the shimmer and the
           pulsing dot keep it obvious that work is still going on. */}
-      <span key={displayedText} className="text-sm animate-reveal-up">
+      <span key={displayedText} className="typography-ui-label animate-reveal-up">
         {hasProviderLogo && providerLogoSrc ? (
           <img
             src={providerLogoSrc}

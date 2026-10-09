@@ -23,9 +23,9 @@ const ToolbarButton: React.FC<ToolbarButtonProps> = ({ icon, label, onClick, dis
       <Button
         type="button"
         variant={pressed ? 'secondary' : 'ghost'}
-        size="xs"
+        size="icon-xs"
         className={cn(
-          'w-6 shrink-0 rounded-full px-0 text-muted-foreground',
+          'shrink-0 rounded-full text-muted-foreground',
           'hover:text-foreground',
           pressed && 'text-foreground',
         )}

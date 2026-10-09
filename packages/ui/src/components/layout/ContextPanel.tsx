@@ -1011,12 +1011,11 @@ export const ContextPanel: React.FC = () => {
           <Button
             type="button"
             variant="ghost"
-            size="sm"
+            size="icon-compact"
             onClick={() => {
               if (!directoryKey) return;
               openNewContextBrowserTab(directoryKey);
             }}
-            className="h-7 w-7 p-0"
             title={t('contextPanel.browser.newTab')}
             aria-label={t('contextPanel.browser.newTab')}
           >
@@ -1027,9 +1026,8 @@ export const ContextPanel: React.FC = () => {
           <Button
             type="button"
             variant="ghost"
-            size="sm"
+            size="icon-compact"
             onClick={toggleContextEditorTree}
-            className="h-7 w-7 p-0"
             title={t('contextRail.editorTree.toggle')}
             aria-label={t('contextRail.editorTree.toggle')}
             aria-pressed={contextEditorTreeVisible}
@@ -1040,9 +1038,8 @@ export const ContextPanel: React.FC = () => {
         <Button
           type="button"
           variant="ghost"
-          size="sm"
+          size="icon-compact"
           onClick={handleToggleExpanded}
-          className="h-7 w-7 p-0"
           title={isExpanded ? t('contextPanel.actions.collapsePanel') : t('contextPanel.actions.expandPanel')}
           aria-label={isExpanded ? t('contextPanel.actions.collapsePanel') : t('contextPanel.actions.expandPanel')}
         >
@@ -1051,9 +1048,8 @@ export const ContextPanel: React.FC = () => {
         <Button
           type="button"
           variant="ghost"
-          size="sm"
+          size="icon-compact"
           onClick={handleClose}
-          className="h-7 w-7 p-0"
           title={t('contextPanel.actions.closePanel')}
           aria-label={t('contextPanel.actions.closePanel')}
         >

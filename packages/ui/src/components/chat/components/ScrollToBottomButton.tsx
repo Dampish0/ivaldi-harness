@@ -30,7 +30,7 @@ const PillWorkingStatus: React.FC = () => {
         : status.charAt(0).toUpperCase() + status.slice(1);
 
     return (
-        <span className="min-w-0 truncate pr-3 text-sm text-muted-foreground">
+        <span className="min-w-0 truncate pr-3 typography-ui-label text-muted-foreground">
             {label}
             <span className="animate-pulse"> …</span>
         </span>
@@ -60,7 +60,7 @@ const ScrollToBottomButton: React.FC<ScrollToBottomButtonProps> = ({ visible, wo
                 {/* The soft shadow lives on this wrapper, away from the glass
                     button's backdrop-filter: sharing one element made the
                     shadow intermittently drop after hide/show cycles. */}
-                <div className="inline-flex max-w-full rounded-full shadow-[0_2px_6px_-2px_rgb(0_0_0_/_0.10)] dark:shadow-[0_2px_6px_-2px_rgb(0_0_0_/_0.35)]">
+                <div className="inline-flex max-w-full rounded-full shadow-float">
                 <button
                     type="button"
                     onClick={onClick}

@@ -912,7 +912,7 @@ export const TerminalView: React.FC<TerminalViewProps> = ({ visible, contextPane
 
     if (!hasActiveContext) {
         return (
-            <div className="flex h-full items-center justify-center p-4 text-center text-sm text-muted-foreground">
+            <div className="flex h-full items-center justify-center p-4 text-center typography-ui-label text-muted-foreground">
                 {t('terminalView.empty.selectSession')}
             </div>
         );
@@ -920,14 +920,11 @@ export const TerminalView: React.FC<TerminalViewProps> = ({ visible, contextPane
 
     if (!effectiveDirectory) {
         return (
-            <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center text-sm text-muted-foreground">
+            <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center typography-ui-label text-muted-foreground">
                 <p>{t('terminalView.empty.noWorkingDirectoryForSession')}</p>
-                <button
-                    onClick={handleRestart}
-                    className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
-                >
+                <Button size="compact" onClick={handleRestart}>
                     {t('terminalView.actions.retry')}
-                </button>
+                </Button>
             </div>
         );
     }
@@ -973,7 +970,7 @@ export const TerminalView: React.FC<TerminalViewProps> = ({ visible, contextPane
                 onClick={() => handleModifierToggle('ctrl')}
                 disabled={quickKeysDisabled}
             >
-                <span className="text-xs font-medium">{formatShortcutForDisplay('ctrl')}</span>
+                <span className="typography-micro font-medium">{formatShortcutForDisplay('ctrl')}</span>
                 <span className="sr-only">{t('terminalView.quickKeys.controlModifierAria')}</span>
             </Button>
             <Button
@@ -986,7 +983,7 @@ export const TerminalView: React.FC<TerminalViewProps> = ({ visible, contextPane
                 onClick={() => handleModifierToggle('alt')}
                 disabled={quickKeysDisabled}
             >
-                <span className="text-xs font-medium">{formatShortcutForDisplay('alt')}</span>
+                <span className="typography-micro font-medium">{formatShortcutForDisplay('alt')}</span>
                 <span className="sr-only">{t('terminalView.quickKeys.altModifierAria')}</span>
             </Button>
             <Button
@@ -1055,7 +1052,7 @@ export const TerminalView: React.FC<TerminalViewProps> = ({ visible, contextPane
     return (
         <div className="flex h-full flex-col overflow-hidden bg-[var(--surface-background)]">
             <div className={cn(
-                'app-region-no-drag sticky top-0 z-20 shrink-0 bg-[var(--surface-background)] text-xs',
+                'app-region-no-drag sticky top-0 z-20 shrink-0 bg-[var(--surface-background)] typography-micro',
                 isTouchTerminal ? 'px-3 py-1.5' : contextPanelChrome ? 'px-2 py-1' : 'pl-3 pr-1.5 py-1',
             )}>
                 {enableTabs && directoryTerminalState ? (
@@ -1076,24 +1073,24 @@ export const TerminalView: React.FC<TerminalViewProps> = ({ visible, contextPane
 
                         <Button
                             type="button"
-                            size="xs"
+                            size={isTouchTerminal ? 'icon-sm' : 'icon-compact'}
                             variant="ghost"
-                            className={cn('shrink-0', isTouchTerminal ? 'h-8 w-8 p-0' : 'h-7 w-7 p-0')}
+                            className="shrink-0"
                             onClick={handleCreateTab}
                             title={t('terminalView.tabs.newTabTitle')}
+                            aria-label={t('terminalView.tabs.newTabTitle')}
                         >
                             <Icon name="add" className={`${isTouchTerminal ? 'h-[18px] w-[18px]' : 'h-4 w-4'}`}/>
                         </Button>
 
                         <div className="flex shrink-0 items-center gap-1 overflow-visible">
-                            <Button type="button" size="xs" variant="ghost" className="h-7 w-7 p-0" onClick={() => void handleRestart()} disabled={isRestarting} title={t('terminalView.actions.restart')} aria-label={t('terminalView.actions.restart')}>
+                            <Button type="button" size="icon-compact" variant="ghost" onClick={() => void handleRestart()} disabled={isRestarting} title={t('terminalView.actions.restart')} aria-label={t('terminalView.actions.restart')}>
                                 <Icon name="restart" className="h-4 w-4" />
                             </Button>
                             <Button
                                 type="button"
-                                size="xs"
+                                size="icon-compact"
                                 variant="ghost"
-                                className="h-7 w-7 p-0"
                                 onClick={handleAttachSelection}
                                 title={t('terminalView.actions.attachSelection')}
                                 aria-label={t('terminalView.actions.attachSelection')}
@@ -1105,7 +1102,7 @@ export const TerminalView: React.FC<TerminalViewProps> = ({ visible, contextPane
                                     type="button"
                                     size="xs"
                                     variant="outline"
-                                    className="h-6 shrink-0 gap-1 px-2"
+                                    className="shrink-0 gap-1 px-2"
                                     onClick={() => {
                                         if (!effectiveDirectory) return;
                                         openContextPreview(effectiveDirectory, previewUrl);
@@ -1158,7 +1155,7 @@ export const TerminalView: React.FC<TerminalViewProps> = ({ visible, contextPane
                     ) : null}
                 </div>
                 {!isReconnectPending && connectionError && (
-                    <div className="absolute inset-x-0 bottom-0 bg-[var(--status-error-background)] px-3 py-2 text-xs text-[var(--status-error-foreground)] flex items-center justify-between gap-2">
+                    <div className="absolute inset-x-0 bottom-0 bg-[var(--status-error-background)] px-3 py-2 typography-micro text-[var(--status-error-foreground)] flex items-center justify-between gap-2">
                         <span>{connectionError}</span>
                         {isFatalError && isTouchTerminal && (
                             <Button

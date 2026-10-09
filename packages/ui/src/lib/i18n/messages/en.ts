@@ -110,6 +110,10 @@ export const dict = {
   'common.actions.copy': 'Copy',
 
   'common.actions.reset': 'Reset',
+
+  'common.actions.expand': 'Expand',
+
+  'common.actions.collapse': 'Collapse',
   'common.language.english': 'English',
   'common.language.german': 'German',
   'common.language.french': 'French',
@@ -2148,6 +2152,9 @@ export const dict = {
   'chat.pendingChanges.changedInWorkspace': 'changed in workspace',
   'chat.changedFiles.title': 'Changed files',
   'chat.changedFiles.actions.openFileTitle': 'Open {path}',
+  'chat.changedFiles.changedInReply': '{files} changed in this reply',
+  'chat.diffView.switchToSideBySide': 'Switch to side-by-side view',
+  'chat.diffView.switchToUnified': 'Switch to unified view',
   'chat.emptyState.opencodeUnreachable': 'Ivaldi runtime is not reachable',
   'chat.emptyState.startNewChat': 'Start a new chat',
   'chat.work.newChat': 'New chat',

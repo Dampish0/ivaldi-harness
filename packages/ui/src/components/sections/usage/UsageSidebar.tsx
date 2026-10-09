@@ -66,9 +66,9 @@ export const UsageSidebar: React.FC<UsageSidebarProps> = ({ onItemSelect }) => {
         <div className="flex items-center justify-between gap-2">
           <span className="typography-meta text-muted-foreground">{t('settings.usage.sidebar.total', { count: QUOTA_PROVIDERS.length })}</span>
           <div className="flex items-center gap-2">
-            <Button size="sm"
+            <Button size="icon-compact"
               variant="ghost"
-              className="h-7 w-7 px-0 text-muted-foreground"
+              className="text-muted-foreground"
               onClick={() => fetchAllQuotas()}
               aria-label={t('settings.usage.sidebar.actions.refreshAria')}
               title={t('settings.usage.sidebar.actions.refreshTitle')}

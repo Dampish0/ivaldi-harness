@@ -47,7 +47,7 @@ const ContextCard: React.FC<{
         const comment = text.trim();
         return (
             <div
-                className="my-1 flex min-w-0 max-w-full cursor-pointer items-center gap-1.5 border-l-2 border-[var(--interactive-border)] pl-3 text-xs text-[var(--surface-mutedForeground)]"
+                className="my-1 flex min-w-0 max-w-full cursor-pointer items-center gap-1.5 border-l-2 border-[var(--interactive-border)] pl-3 typography-micro text-[var(--surface-mutedForeground)]"
                 onClick={onExpand}
                 onKeyDown={onExpand ? (event) => {
                     if (event.key !== 'Enter' && event.key !== ' ') return;
@@ -63,7 +63,7 @@ const ContextCard: React.FC<{
                 <span className="truncate">
                     {comment.length > 0 ? `${summary}: ` : summary}
                     {comment.length > 0 ? (
-                        <span className="text-sm text-[var(--surface-foreground)]">{comment}</span>
+                        <span className="typography-ui-label text-[var(--surface-foreground)]">{comment}</span>
                     ) : null}
                 </span>
             </div>
@@ -86,7 +86,7 @@ const ContextCard: React.FC<{
                 aria-expanded={hasBody ? expanded : undefined}
                 title={title}
             >
-                <div className="flex items-center gap-1.5 text-xs text-[var(--surface-mutedForeground)]">
+                <div className="flex items-center gap-1.5 typography-micro text-[var(--surface-mutedForeground)]">
                     <Icon name={icon} className="h-3.5 w-3.5 shrink-0" />
                     <span className="truncate">{summary}</span>
                 </div>
@@ -94,7 +94,7 @@ const ContextCard: React.FC<{
                     <div
                         className={cn(
                             'mt-1 whitespace-pre-wrap break-words text-[var(--surface-mutedForeground)]',
-                            mono ? 'font-mono text-xs leading-5' : 'text-sm',
+                            mono ? 'font-mono text-xs leading-5' : 'typography-ui-label',
                             !expanded && 'line-clamp-4'
                         )}
                     >
@@ -103,7 +103,7 @@ const ContextCard: React.FC<{
                 ) : null}
             </div>
             {hasText ? (
-                <div className="mt-1.5 whitespace-pre-wrap break-words font-sans text-sm text-[var(--surface-foreground)]">{text}</div>
+                <div className="mt-1.5 whitespace-pre-wrap break-words font-sans typography-ui-label text-[var(--surface-foreground)]">{text}</div>
             ) : null}
         </div>
     );

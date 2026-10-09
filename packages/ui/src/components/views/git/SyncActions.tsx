@@ -140,8 +140,7 @@ export const SyncActions: React.FC<SyncActionsProps> = ({
                   <Button
                     type="button"
                     variant="destructive"
-                    size="xs"
-                    className="h-6 w-6 px-0"
+                    size="icon-xs"
                     disabled={syncAction !== null || isRemovingRemote}
                     onPointerDown={(event) => {
                       skipRemoteSelectRef.current = true;

@@ -134,10 +134,11 @@ export const WorktreeBranchDisplay: React.FC<WorktreeBranchDisplayProps> = ({
         {showEditButton && onRename && currentBranch && (
           <Button
             variant="ghost"
-            size="sm"
-            className="h-7 w-7 p-0 shrink-0"
+            size="icon-compact"
+            className="shrink-0"
             onClick={handleStartEdit}
             title={t('gitView.branch.renameTitle')}
+            aria-label={t('gitView.branch.renameTitle')}
           >
             <Icon name="edit" className="size-4" />
           </Button>

@@ -504,7 +504,7 @@ const ReadOnlyPromptBanner: React.FC = () => {
             <div className="chat-input-column">
                 <div className={cn(
                     'border border-border/70 bg-[var(--surface-background)] px-4 py-3 text-center typography-ui-label text-muted-foreground',
-                    isMobileSurface ? 'rounded-md' : 'rounded-2xl',
+                    isMobileSurface ? 'rounded-md' : 'rounded-xl',
                 )}>
                     {t('chat.container.readOnlySubagentPromptBanner')}
                 </div>
@@ -884,7 +884,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
             variant="outline"
             size="xs"
             onClick={handleReturnToParentSession}
-            className="absolute left-3 top-3 z-20 !font-normal bg-[var(--surface-background)]/95"
+            className="absolute left-3 top-3 z-20 bg-[var(--surface-background)]/95"
             aria-label={t('chat.container.returnToParent.aria')}
             title={parentSession.title?.trim()
                 ? t('chat.container.returnToParent.titleNamed', { title: parentSession.title })

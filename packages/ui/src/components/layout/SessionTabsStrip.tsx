@@ -212,7 +212,7 @@ const SessionTabItem: React.FC<{
                     )}
                     >
                       {isActive ? children : (
-                        <span className="text-[13px] font-medium leading-4">{title}</span>
+                        <span className="typography-meta font-medium leading-4">{title}</span>
                       )}
                     </div>
                     {showDot ? (

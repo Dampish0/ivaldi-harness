@@ -236,10 +236,10 @@ export const CommandsSidebar: React.FC<CommandsSidebarProps> = ({ onItemSelect }
         <SettingsProjectSelector className="mb-3" />
         <div className="flex items-center justify-between gap-2">
           <span className="typography-meta text-muted-foreground">{t('settings.commands.sidebar.total', { count: commandOnlyItems.length })}</span>
-          <Button size="sm"
+          <Button size="icon-compact"
             data-settings-item="commands.create"
             variant="ghost"
-            className="h-7 w-7 px-0 -my-1 text-muted-foreground"
+            className="-my-1 text-muted-foreground"
             onClick={handleCreateNew}
             aria-label={t('settings.commands.page.title.new')}
             title={t('settings.commands.page.title.new')}
@@ -469,9 +469,9 @@ const CommandListItem: React.FC<CommandListItemProps> = ({
 
         <DropdownMenu open={isMenuOpen} onOpenChange={(open) => { if (open) setIsContextMenuOpen(false); onMenuOpenChange(open); }}>
           <DropdownMenuTrigger asChild>
-            <Button aria-label={t('common.actions.moreActions')} size="sm"
+            <Button aria-label={t('common.actions.moreActions')} size="icon-xs"
               variant="ghost"
-              className="h-6 w-6 px-0 flex-shrink-0 -mr-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:data-[state=open]:opacity-100"
+              className="flex-shrink-0 -mr-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:data-[state=open]:opacity-100"
             >
               <Icon name="more-2" className="h-3.5 w-3.5" />
             </Button>

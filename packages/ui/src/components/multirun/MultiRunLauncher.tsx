@@ -5,6 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { SettingsInfoHint } from '@/components/sections/shared/SettingsInfoHint';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollShadow } from '@/components/ui/ScrollShadow';
@@ -55,17 +56,10 @@ interface MultiRunLauncherProps {
   isWindowed?: boolean;
 }
 
+// The shared settings hint: reachable by keyboard, named for screen readers,
+// and opens on click as well as hover.
 const InfoTip: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <Tooltip>
-    <TooltipTrigger asChild>
-      <button type="button" tabIndex={-1} className="inline-flex items-center justify-center text-muted-foreground/50 hover:text-muted-foreground transition-colors">
-        <Icon name="information" className="h-3.5 w-3.5" />
-      </button>
-    </TooltipTrigger>
-    <TooltipContent side="top" className="max-w-[240px]">
-      {children}
-    </TooltipContent>
-  </Tooltip>
+  <SettingsInfoHint contentClassName="max-w-[240px]">{children}</SettingsInfoHint>
 );
 
 const FieldLabel: React.FC<{

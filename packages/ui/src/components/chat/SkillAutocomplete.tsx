@@ -172,7 +172,7 @@ export const SkillAutocomplete = React.forwardRef<SkillAutocompleteHandle, Skill
   return (
     <div
       ref={containerRef}
-      className="absolute bottom-full left-0 z-[100] mb-2 flex max-h-60 w-full min-w-0 max-w-[450px] flex-col overflow-hidden rounded-lg border border-[var(--interactive-border)]/70 bg-[var(--surface-elevated)] shadow-md"
+      className="absolute bottom-full left-0 z-[100] mb-2 flex max-h-60 w-full min-w-0 max-w-[450px] flex-col overflow-hidden rounded-lg border border-[var(--interactive-border)]/70 bg-[var(--surface-elevated)] shadow-float"
       style={mobileMaxHeight !== undefined ? { ...style, maxHeight: mobileMaxHeight } : style}
     >
       <ScrollableOverlay preventOverscroll outerClassName="flex-1 min-h-0" className="p-1">

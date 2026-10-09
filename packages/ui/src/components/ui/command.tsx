@@ -143,7 +143,7 @@ function CommandShortcut({
 
     if (normalized === 'ctrl' || normalized === 'control') {
       return (
-        <span className="text-xs font-medium">
+        <span className="typography-micro font-medium">
           ctrl
         </span>
       );
@@ -158,7 +158,7 @@ function CommandShortcut({
     }
 
     return (
-      <span className="text-xs font-medium">
+      <span className="typography-micro font-medium">
         {keyLabel}
       </span>
     );
@@ -182,7 +182,7 @@ function CommandShortcut({
       {tokens.length > 0
         ? tokens.map((token, index) => (
             <React.Fragment key={`${token}-${index}`}>
-              {index > 0 && <span className="opacity-60 text-xs">+</span>}
+              {index > 0 && <span className="opacity-60 typography-micro">+</span>}
               {renderKey(token)}
             </React.Fragment>
           ))

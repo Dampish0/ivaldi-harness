@@ -568,7 +568,7 @@ const FileRow: React.FC<FileRowProps> = ({
         </span>
         {!isDir && status && <FileStatusDot status={status} />}
         {isDir && badge && (
-          <span className="text-xs flex items-center gap-1 ml-auto mr-1">
+          <span className="typography-micro flex items-center gap-1 ml-auto mr-1">
             {badge.modified > 0 && <span className="text-[var(--status-warning)]">M{badge.modified}</span>}
             {badge.added > 0 && <span className="text-[var(--status-success)]">+{badge.added}</span>}
           </span>
@@ -2320,7 +2320,7 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
               {loadErrorsByDir[node.path] ? (
                 <li className="flex items-center gap-2 px-2 py-1 typography-meta text-muted-foreground">
                   <span className="min-w-0 flex-1 truncate text-[var(--status-error)]" title={loadErrorsByDir[node.path]}>{loadErrorsByDir[node.path]}</span>
-                  <Button variant="ghost" size="xs" className="h-6 gap-1" onClick={() => void refreshDirectory(node.path)}>
+                  <Button variant="ghost" size="xs" className="gap-1" onClick={() => void refreshDirectory(node.path)}>
                     <Icon name="refresh" className="size-3.5" />
                     {t('filesView.tree.actions.refreshTitle')}
                   </Button>
@@ -3172,7 +3172,7 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
     const saveShortcut = formatShortcutForDisplay(getEffectiveShortcutCombo('save_file'));
     const wrapperCls = docked
       ? 'pointer-events-auto flex flex-wrap items-center gap-1'
-      : 'pointer-events-auto flex items-center gap-1 rounded-lg border border-[var(--interactive-border)] bg-[var(--surface-elevated)] p-1 shadow-sm';
+      : 'pointer-events-auto flex items-center gap-1 rounded-lg border border-[var(--interactive-border)] bg-[var(--surface-elevated)] p-1 shadow-float';
 
     const withTooltip = (label: React.ReactNode, trigger: React.ReactElement) => (
       <Tooltip>
@@ -3214,10 +3214,10 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
             {withTooltip(autoSaveEnabled ? t('filesView.editor.autoSaveOn') : t('filesView.editor.manualSave'),
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon-xs"
                 onClick={() => setAutoSaveEnabled(!autoSaveEnabled)}
                 className={cn(
-                  'size-6 p-0 transition-opacity hover:bg-transparent focus-visible:bg-transparent active:bg-transparent',
+                  'transition-opacity hover:bg-transparent focus-visible:bg-transparent active:bg-transparent',
                   autoSaveEnabled ? 'text-foreground opacity-100' : 'text-muted-foreground opacity-65 hover:opacity-100'
                 )}
                 title={autoSaveEnabled ? t('filesView.editor.autoSaveOn') : t('filesView.editor.manualSave')}
@@ -3236,8 +3236,8 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    size="sm"
-                    className="size-6 p-0 text-foreground opacity-100 hover:bg-transparent focus-visible:bg-transparent active:bg-transparent"
+                    size="icon-xs"
+                    className="text-foreground opacity-100 hover:bg-transparent focus-visible:bg-transparent active:bg-transparent"
                     title={t('filesView.editor.openInDesktopApp')}
                     aria-label={t('filesView.editor.openInDesktopApp')}
                   >
@@ -3276,13 +3276,14 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
             {withTooltip(wrapLines ? t('filesView.editor.disableLineWrap') : t('filesView.editor.enableLineWrap'),
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon-xs"
                 onClick={() => setWrapLines(!wrapLines)}
                 className={cn(
-                  'size-6 p-0 transition-opacity hover:bg-transparent focus-visible:bg-transparent active:bg-transparent',
+                  'transition-opacity hover:bg-transparent focus-visible:bg-transparent active:bg-transparent',
                   wrapLines ? 'text-foreground opacity-100' : 'text-muted-foreground opacity-65 hover:opacity-100'
                 )}
                 title={wrapLines ? t('filesView.editor.disableLineWrap') : t('filesView.editor.enableLineWrap')}
+                aria-label={wrapLines ? t('filesView.editor.disableLineWrap') : t('filesView.editor.enableLineWrap')}
               >
                 <Icon name="text-wrap" className="size-4" />
               </Button>
@@ -3292,13 +3293,14 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
                 {withTooltip(t('filesView.editor.findInFile'),
                   <Button
                     variant="ghost"
-                    size="sm"
+                    size="icon-xs"
                     onClick={(event) => {
                       setIsSearchOpen(!isSearchOpen);
                       event.currentTarget.blur();
                     }}
-                    className="size-6 p-0 text-foreground opacity-100 transition-opacity hover:bg-transparent focus-visible:bg-transparent active:bg-transparent"
+                    className="text-foreground opacity-100 transition-opacity hover:bg-transparent focus-visible:bg-transparent active:bg-transparent"
                     title={t('filesView.editor.findInFile')}
+                    aria-label={t('filesView.editor.findInFile')}
                   >
                     <Icon name="search" className="size-4" />
                   </Button>
@@ -3306,13 +3308,14 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
                 {withTooltip(t('filesView.editor.goToLine'),
                   <Button
                     variant="ghost"
-                    size="sm"
+                    size="icon-xs"
                     onClick={(event) => {
                       setIsGoToLineOpen((open) => !open);
                       event.currentTarget.blur();
                     }}
-                    className="size-6 p-0 text-foreground opacity-100 transition-opacity hover:bg-transparent focus-visible:bg-transparent active:bg-transparent"
+                    className="text-foreground opacity-100 transition-opacity hover:bg-transparent focus-visible:bg-transparent active:bg-transparent"
                     title={t('filesView.editor.goToLine')}
+                    aria-label={t('filesView.editor.goToLine')}
                   >
                     <Icon name="menu-fold-2" className="size-4" />
                   </Button>
@@ -3342,10 +3345,10 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
             t(getMdViewMode() === 'preview' ? 'filesView.editor.switchToEditMode' : 'filesView.editor.switchToPreviewMode'),
             <Button
               variant="ghost"
-              size="sm"
+              size="icon-xs"
               onClick={() => saveMdViewMode(getMdViewMode() === 'preview' ? 'edit' : 'preview')}
               className={cn(
-                'size-6 p-0 transition-colors hover:bg-[var(--interactive-hover)] focus-visible:bg-[var(--interactive-hover)] active:bg-[var(--interactive-hover)]',
+                'transition-colors hover:bg-[var(--interactive-hover)] focus-visible:bg-[var(--interactive-hover)] active:bg-[var(--interactive-hover)]',
                 getMdViewMode() === 'preview'
                   ? 'bg-[var(--interactive-selection)] text-[var(--interactive-selection-foreground)] hover:bg-[var(--interactive-selection)] focus-visible:bg-[var(--interactive-selection)] active:bg-[var(--interactive-selection)]'
                   : 'text-muted-foreground opacity-65 hover:opacity-100'
@@ -3372,8 +3375,8 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
-                size="sm"
-                className="size-6 p-0 text-muted-foreground opacity-65 hover:bg-transparent hover:opacity-100 focus-visible:bg-transparent active:bg-transparent"
+                size="icon-xs"
+                className="text-muted-foreground opacity-65 hover:bg-transparent hover:opacity-100 focus-visible:bg-transparent active:bg-transparent"
                 aria-label={isTTSPlaying ? t('filesView.tts.stopSpeaking') : t('filesView.tts.readAloud')}
                 onClick={() => {
                   if (isTTSPlaying) {
@@ -3405,7 +3408,7 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
             {drawioViewMode === 'preview' && (
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon-xs"
                 onClick={async () => {
                   const xml = diagramEditorRef.current?.getXml();
                   if (diagramAutoSaveTimerRef.current) {
@@ -3419,8 +3422,9 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
                     setTimeout(() => setDiagramSaved(false), 1500);
                   }
                 }}
-                className="size-6 p-0 text-foreground hover:bg-transparent focus-visible:bg-transparent active:bg-transparent"
+                className="text-foreground hover:bg-transparent focus-visible:bg-transparent active:bg-transparent"
                 title={t('filesView.diagram.saveDiagram')}
+                aria-label={t('filesView.diagram.saveDiagram')}
               >
                 {diagramSaved ? (
                   <Icon name="check" className="size-4 text-[color:var(--status-success)]" />
@@ -3436,10 +3440,11 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
           withTooltip(jsonViewMode === 'tree' ? t('filesView.editor.switchToTextView') : t('filesView.editor.switchToTreeView'),
             <Button
               variant="ghost"
-              size="sm"
+              size="icon-xs"
               onClick={() => saveJsonViewMode(jsonViewMode === 'tree' ? 'text' : 'tree')}
-              className="size-6 p-0 text-muted-foreground opacity-65 hover:bg-transparent hover:opacity-100 focus-visible:bg-transparent active:bg-transparent"
+              className="text-muted-foreground opacity-65 hover:bg-transparent hover:opacity-100 focus-visible:bg-transparent active:bg-transparent"
               title={jsonViewMode === 'tree' ? t('filesView.editor.switchToTextView') : t('filesView.editor.switchToTreeView')}
+              aria-label={jsonViewMode === 'tree' ? t('filesView.editor.switchToTextView') : t('filesView.editor.switchToTreeView')}
             >
               {jsonViewMode === 'tree' ? (
                 <Icon name="code-sslash" className="size-4" />
@@ -3454,7 +3459,7 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
           withTooltip(t('filesView.editor.copyFileContents'),
             <Button
               variant="ghost"
-              size="sm"
+              size="icon-xs"
               onClick={async () => {
                 const result = await copyTextToClipboard(fileContent);
                 if (result.ok) {
@@ -3469,7 +3474,7 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
                   toast.error(t('filesView.toast.copyFailed'));
                 }
               }}
-              className="size-6 p-0 hover:bg-transparent focus-visible:bg-transparent active:bg-transparent"
+              className="hover:bg-transparent focus-visible:bg-transparent active:bg-transparent"
               title={t('filesView.editor.copyFileContents')}
               aria-label={t('filesView.editor.copyFileContents')}
             >
@@ -3486,7 +3491,7 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
           withTooltip(t('filesView.editor.copyFilePathTitle', { path: displaySelectedPath }),
             <Button
               variant="ghost"
-              size="sm"
+              size="icon-xs"
               onClick={async () => {
                 const result = await copyTextToClipboard(displaySelectedPath);
                 if (result.ok) {
@@ -3501,7 +3506,7 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
                   toast.error(t('filesView.toast.copyFailed'));
                 }
               }}
-              className="size-6 p-0 hover:bg-transparent focus-visible:bg-transparent active:bg-transparent"
+              className="hover:bg-transparent focus-visible:bg-transparent active:bg-transparent"
               title={t('filesView.editor.copyFilePathTitle', { path: displaySelectedPath })}
               aria-label={t('filesView.editor.copyFilePathTitle', { path: displaySelectedPath })}
             >
@@ -3518,7 +3523,7 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
           withTooltip(t('filesView.editor.saveFile'),
             <Button
               variant="ghost"
-              size="sm"
+              size="icon-xs"
               onClick={() => {
                 const fn = files.downloadFile;
                 if (fn) void fn(selectedFile.path).catch((error) => {
@@ -3526,7 +3531,7 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
                   toast.error(t('sidebarFilesTree.toast.operationFailed'));
                 });
               }}
-              className="size-6 p-0 hover:bg-transparent focus-visible:bg-transparent active:bg-transparent"
+              className="hover:bg-transparent focus-visible:bg-transparent active:bg-transparent"
               title={t('filesView.editor.saveFile')}
               aria-label={t('filesView.editor.saveFile')}
             >
@@ -3539,9 +3544,9 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
           withTooltip(t('filesView.editor.exitFullscreen'),
             <Button
               variant="ghost"
-              size="sm"
+              size="icon-xs"
               onClick={() => setIsFullscreen(false)}
-              className="size-6 p-0 hover:bg-transparent focus-visible:bg-transparent active:bg-transparent"
+              className="hover:bg-transparent focus-visible:bg-transparent active:bg-transparent"
               title={t('filesView.editor.exitFullscreen')}
               aria-label={t('filesView.editor.exitFullscreen')}
             >
@@ -3552,9 +3557,9 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
           withTooltip(isFullscreen ? t('filesView.editor.exitFullscreen') : t('filesView.editor.fullscreen'),
             <Button
               variant="ghost"
-              size="sm"
+              size="icon-xs"
               onClick={() => setIsFullscreen(!isFullscreen)}
-              className="size-6 p-0 hover:bg-transparent focus-visible:bg-transparent active:bg-transparent"
+              className="hover:bg-transparent focus-visible:bg-transparent active:bg-transparent"
               title={isFullscreen ? t('filesView.editor.exitFullscreen') : t('filesView.editor.fullscreen')}
               aria-label={isFullscreen ? t('filesView.editor.exitFullscreen') : t('filesView.editor.fullscreen')}
             >
@@ -3828,7 +3833,7 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
               fallback={
                 <div className="rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2">
                   <div className="mb-1 font-medium text-destructive">{t('filesView.error.jsonViewerUnavailable')}</div>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="typography-ui-label text-muted-foreground">
                     {t('filesView.error.switchToTextMode')}
                   </div>
                 </div>
@@ -3850,7 +3855,7 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
                 fileContent={fileContent}
               />
               {fileContent.length > 500 * 1024 && (
-                <div className="mb-3 rounded-md border border-status-warning/20 bg-status-warning/10 px-3 py-2 text-sm text-status-warning">
+                <div className="mb-3 rounded-md border border-status-warning/20 bg-status-warning/10 px-3 py-2 typography-ui-label text-status-warning">
                   {t('filesView.warning.largeFilePreviewLimited', { sizeKb: Math.round(fileContent.length / 1024) })}
                 </div>
               )}
@@ -3858,7 +3863,7 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
                 fallback={
                   <div className="rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2">
                     <div className="mb-1 font-medium text-destructive">{t('filesView.error.previewUnavailable')}</div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="typography-ui-label text-muted-foreground">
                       {t('filesView.error.switchToEditMode')}
                     </div>
                   </div>
@@ -4070,8 +4075,8 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
               <Button
                 type="button"
                 variant="ghost"
-                size="sm"
-                className="size-8 shrink-0 p-0"
+                size="icon-sm"
+                className="shrink-0"
                 aria-label={t('filesView.tree.actions.moreAria')}
                 title={t('filesView.tree.actions.moreAria')}
               >
@@ -4211,7 +4216,7 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
                 />
               ) : null}
               {fileContent.length > 500 * 1024 && (
-                  <div className="mb-3 rounded-md border border-status-warning/20 bg-status-warning/10 px-3 py-2 text-sm text-status-warning">
+                  <div className="mb-3 rounded-md border border-status-warning/20 bg-status-warning/10 px-3 py-2 typography-ui-label text-status-warning">
                     {t('filesView.warning.largeFilePreviewLimited', { sizeKb: Math.round(fileContent.length / 1024) })}
                   </div>
                 )}
@@ -4219,7 +4224,7 @@ export const FilesView: React.FC<FilesViewProps> = ({ mode = 'full' }) => {
                 fallback={
                   <div className="rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2">
                     <div className="mb-1 font-medium text-destructive">{t('filesView.error.previewUnavailable')}</div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="typography-ui-label text-muted-foreground">
                       {t('filesView.error.switchToEditMode')}
                     </div>
                   </div>

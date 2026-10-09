@@ -99,15 +99,17 @@ const MemoryRow: React.FC<{
         </span>
       ) : null}
       actions={(
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon-xs"
           onClick={onDelete}
-          className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-interactive-hover/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--interactive-focus-ring)]"
+          className="text-muted-foreground"
           aria-label={t('rightSidebar.contextNotesTodo.memory.actions.delete')}
           title={t('rightSidebar.contextNotesTodo.memory.actions.delete')}
         >
-          <Icon name="delete-bin" className="h-3.5 w-3.5" />
-        </button>
+          <Icon name="delete-bin" className="size-3.5" />
+        </Button>
       )}
     >
       {expanded ? (
@@ -231,7 +233,6 @@ export const MemorySection: React.FC<{
             variant="chip"
             size="xs"
             aria-pressed={scope === option.id}
-            className="!font-normal"
             onClick={() => setScope(option.id)}
           >
             {`${option.label} ${option.count}`}

@@ -42,7 +42,7 @@ export const AutoReviewBanner = memo(({ isMobile = false }: { isMobile?: boolean
     <div className="pb-2 w-full px-1">
       <div className={cn(
         'overflow-hidden border border-border/60 bg-[var(--surface-elevated)] text-[var(--surface-elevated-foreground)]',
-        isMobile ? 'rounded-md shadow-none' : 'rounded-xl shadow-sm',
+        isMobile ? 'rounded-md shadow-none' : 'rounded-xl',
       )}>
         <div className="flex w-full items-center gap-2 px-3 py-2 text-left">
           <Icon name="loader-4" className="h-4 w-4 animate-spin text-muted-foreground" aria-hidden="true" />

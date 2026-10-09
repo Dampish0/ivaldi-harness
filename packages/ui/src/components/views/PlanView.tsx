@@ -878,7 +878,7 @@ export const PlanView: React.FC<PlanViewProps> = ({ targetPath = null, projectPl
                       fallback={
                         <div className="rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2">
                           <div className="mb-1 font-medium text-destructive">{t('planView.error.previewUnavailable')}</div>
-                          <div className="text-sm text-muted-foreground">
+                          <div className="typography-ui-label text-muted-foreground">
                             {t('planView.error.switchToEditMode')}
                           </div>
                         </div>

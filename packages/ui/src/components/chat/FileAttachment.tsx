@@ -188,7 +188,7 @@ const ImagePreview = memo(({ file, onRemove, onShowPopup, gallery, index = 0 }: 
   if (!imageUrl) {
     // Fallback to text-only for server images without preview
     return (
-      <div className="flex items-center gap-1.5 text-sm hover:opacity-80 transition-opacity text-left h-5">
+      <div className="flex items-center gap-1.5 typography-ui-label hover:opacity-80 transition-opacity text-left h-5">
         <FileTypeIcon filePath={file.filename} extension={extension} className="h-4 w-4" />
         <span className="text-foreground truncate max-w-[200px]">
           {displayName}
@@ -286,7 +286,7 @@ const FileChip = memo(({ file, onRemove }: FileChipProps) => {
   const { displayName, fileSize, extension } = useFileDetails(file);
 
   return (
-    <div className="flex items-center gap-1.5 text-sm hover:opacity-80 transition-opacity text-left h-5">
+    <div className="flex items-center gap-1.5 typography-ui-label hover:opacity-80 transition-opacity text-left h-5">
       <FileTypeIcon filePath={file.filename} extension={extension} className="h-4 w-4" />
       <span className="text-foreground truncate max-w-[200px]">
         {displayName}
@@ -318,7 +318,7 @@ const VSCodeFileChip = memo(({ file, onRemove }: FileChipProps) => {
 
   return (
     <span
-      className="inline-flex items-center gap-1 text-xs pr-1 rounded-sm border border-solid bg-transparent text-foreground not-italic hover:opacity-90 transition-colors text-left"
+      className="inline-flex items-center gap-1 typography-micro pr-1 rounded-sm border border-solid bg-transparent text-foreground not-italic hover:opacity-90 transition-colors text-left"
       style={{ borderColor: 'var(--syntax-punctuation)' }}
       title={file.vscodePath}
     >
@@ -501,7 +501,7 @@ export const ActiveEditorFileSuggestion = memo(() => {
     <div className="inline-flex items-center">
       {showSelectionPin && (
         <div
-          className="inline-flex items-center gap-1 text-xs pr-1 rounded-sm italic text-muted-foreground border border-dashed bg-transparent"
+          className="inline-flex items-center gap-1 typography-micro pr-1 rounded-sm italic text-muted-foreground border border-dashed bg-transparent"
           style={{ borderColor: 'var(--syntax-punctuation)' }}
           title={relativePath}
         >
@@ -515,12 +515,12 @@ export const ActiveEditorFileSuggestion = memo(() => {
             <Icon name="pushpin-2" className="h-4 w-4" />
           </button>
           <FileTypeIcon filePath={fileName} extension={ext} className="h-4 w-4 flex-shrink-0" />
-          <span className="text-xs whitespace-nowrap">{`${displayName}:${selectionRange}`}</span>
+          <span className="typography-micro whitespace-nowrap">{`${displayName}:${selectionRange}`}</span>
         </div>
       )}
       {showFileAdd && (
         <div
-          className="inline-flex items-center gap-1 text-xs pr-1 rounded-sm italic text-muted-foreground border border-dashed bg-transparent"
+          className="inline-flex items-center gap-1 typography-micro pr-1 rounded-sm italic text-muted-foreground border border-dashed bg-transparent"
           style={{ borderColor: 'var(--syntax-punctuation)' }}
           title={relativePath}
         >
@@ -534,7 +534,7 @@ export const ActiveEditorFileSuggestion = memo(() => {
             <Icon name="add" className="h-4 w-4" />
           </button>
           <FileTypeIcon filePath={fileName} extension={ext} className="h-4 w-4 flex-shrink-0" />
-          <span className="text-xs truncate max-w-[220px]">{displayName}</span>
+          <span className="typography-micro truncate max-w-[220px]">{displayName}</span>
         </div>
       )}
     </div>
@@ -776,8 +776,8 @@ export const MessageFilesDisplay = memo(({ files, onShowPopup, compact = false }
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="absolute bottom-0 left-0 right-0 p-2 text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                <p className="text-xs font-medium truncate">{fileName}</p>
-                {sizeText && <p className="text-xs opacity-80">{sizeText}</p>}
+                <p className="typography-micro font-medium truncate">{fileName}</p>
+                {sizeText && <p className="typography-micro opacity-80">{sizeText}</p>}
               </div>
             </div>
           );
@@ -794,7 +794,7 @@ export const MessageFilesDisplay = memo(({ files, onShowPopup, compact = false }
                   }}
                   className={cn(
                     "flex items-center gap-2 p-2 rounded-lg border border-border/40 bg-muted/10 hover:bg-muted/20 transition-colors text-left",
-                    compact ? "text-xs" : "text-sm"
+                    compact ? "typography-micro" : "typography-ui-label"
                   )}
                 >
                   <div className="flex-shrink-0">
@@ -806,7 +806,7 @@ export const MessageFilesDisplay = memo(({ files, onShowPopup, compact = false }
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{fileName}</p>
-                    {sizeText && <p className="text-xs text-muted-foreground">{sizeText}</p>}
+                    {sizeText && <p className="typography-micro text-muted-foreground">{sizeText}</p>}
                   </div>
                 </button>
               </TooltipTrigger>
@@ -837,13 +837,13 @@ export const MessageFilesDisplay = memo(({ files, onShowPopup, compact = false }
                   }}
                   className={cn(
                     "flex items-center gap-2 p-2 rounded-lg border border-border/40 bg-muted/10 hover:bg-muted/20 transition-colors text-left cursor-pointer",
-                    compact ? "text-xs" : "text-sm"
+                    compact ? "typography-micro" : "typography-ui-label"
                   )}
                 >
                   <Icon name="file" className={cn("text-muted-foreground shrink-0", compact ? "h-3.5 w-3.5" : "h-4 w-4")} />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{fileName}</p>
-                    <p className="text-xs text-status-info">{t('chat.fileAttachment.openInDiagram')}</p>
+                    <p className="typography-micro text-status-info">{t('chat.fileAttachment.openInDiagram')}</p>
                   </div>
                   <Icon name="external-link" className={cn("text-muted-foreground shrink-0", compact ? "h-3 w-3" : "h-3.5 w-3.5")} />
                 </button>
@@ -876,7 +876,7 @@ export const MessageFilesDisplay = memo(({ files, onShowPopup, compact = false }
                 }}
                 className={cn(
                   "flex items-center gap-2 p-2 rounded-lg border border-border/40 bg-muted/10 hover:bg-muted/20 transition-colors text-left",
-                  compact ? "text-xs" : "text-sm"
+                  compact ? "typography-micro" : "typography-ui-label"
                 )}
               >
                 <div className="flex-shrink-0">
@@ -890,7 +890,7 @@ export const MessageFilesDisplay = memo(({ files, onShowPopup, compact = false }
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium truncate">{fileName}</p>
-                  {sizeText && <p className="text-xs text-muted-foreground">{sizeText}</p>}
+                  {sizeText && <p className="typography-micro text-muted-foreground">{sizeText}</p>}
                 </div>
               </button>
             </TooltipTrigger>
@@ -952,7 +952,7 @@ const ImageGallery = memo(({ urls, caption, onShowPopup }: ImageGalleryProps) =>
         ))}
       </div>
       {caption && (
-        <p className="text-sm text-muted-foreground italic">{caption}</p>
+        <p className="typography-ui-label text-muted-foreground italic">{caption}</p>
       )}
     </div>
   );

@@ -10,6 +10,7 @@ import {
   type FlatJsonNode,
 } from '@/lib/jsonTreeUtils';
 import { Icon } from "@/components/icon/Icon";
+import { useI18n } from '@/lib/i18n';
 
 interface JsonTreeViewerProps {
   data: unknown;
@@ -95,6 +96,7 @@ const JsonRow = React.memo(
     onToggle: (id: string) => void;
     onCopyPath?: (path: string) => void;
   }) => {
+    const { t } = useI18n();
     const { node, isExpanded } = flatNode;
     const indent = node.depth * 20;
 
@@ -126,6 +128,8 @@ const JsonRow = React.memo(
           <button
             type="button"
             onClick={handleToggle}
+            aria-label={isExpanded ? t('common.actions.collapse') : t('common.actions.expand')}
+            aria-expanded={isExpanded}
             className="mr-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-sm hover:bg-[var(--interactive-hover)] text-muted-foreground"
           >
             {isExpanded ? (

@@ -237,7 +237,9 @@ const ChatSectionContent: React.FC = () => {
             <OpenChamberVisualSettings
                 visibleSettings={[...visibleSettings]}
             />
-            {!isDeveloperMode ? <SessionRetentionSettings /> : null}
+            {/* Wrapped like the sections above, so the page layout does not
+                treat it as the first section and drop its divider. */}
+            {!isDeveloperMode ? <div><SessionRetentionSettings /></div> : null}
         </>
     );
 };

@@ -342,7 +342,7 @@ const EnvEditor: React.FC<EnvEditorProps> = ({
         <Button
           variant="ghost"
           size="xs"
-          className="!font-normal gap-1 text-muted-foreground"
+          className="gap-1 text-muted-foreground"
           onClick={handlePasteDotEnv}
           type="button"
           title={pasteTitle}
@@ -386,6 +386,7 @@ const EnvEditor: React.FC<EnvEditorProps> = ({
                 onClick={() => toggleReveal(idx)}
                 className="absolute right-2 text-muted-foreground/60 hover:text-muted-foreground"
                 title={revealedKeys.has(idx) ? hideValueTitle : showValueTitle}
+                aria-label={revealedKeys.has(idx) ? hideValueTitle : showValueTitle}
               >
                 {revealedKeys.has(idx)
                   ? <Icon name="eye-off" className="h-3.5 w-3.5" />
@@ -393,9 +394,9 @@ const EnvEditor: React.FC<EnvEditorProps> = ({
               </button>
             </div>
             {/* Remove */}
-            <Button size="sm"
+            <Button size="icon-compact"
               variant="ghost"
-              className="h-7 w-7 px-0 shrink-0 text-muted-foreground hover:text-[var(--status-error)]"
+              className="shrink-0 text-muted-foreground hover:text-[var(--status-error)]"
               onClick={() => removeRow(idx)}
               aria-label={removeVariableAria}
             >
@@ -408,7 +409,7 @@ const EnvEditor: React.FC<EnvEditorProps> = ({
       <Button
         variant="outline"
         size="xs"
-        className="!font-normal gap-1.5"
+        className="gap-1.5"
         onClick={addRow}
         type="button"
       >
@@ -1383,7 +1384,6 @@ export const McpPage: React.FC = () => {
           <Button
             variant={isConnected ? 'outline' : 'default'}
             size="xs"
-            className="!font-normal"
             onClick={handleToggleConnect}
             disabled={isConnecting || !enabled}
           >
@@ -1394,7 +1394,6 @@ export const McpPage: React.FC = () => {
               <Button
                 variant={needsAuthorization ? 'default' : 'outline'}
                 size="xs"
-                className="!font-normal"
                 onClick={() => void handleStartAuthorization()}
                 disabled={isAuthorizing || !enabled}
               >
@@ -1411,7 +1410,7 @@ export const McpPage: React.FC = () => {
               <Button
                 variant="ghost"
                 size="xs"
-                className="!font-normal gap-1 text-muted-foreground"
+                className="gap-1 text-muted-foreground"
                 onClick={() => void handleClearAuthorization()}
                 disabled={isClearingAuth || !enabled}
               >
@@ -1423,7 +1422,7 @@ export const McpPage: React.FC = () => {
             <Button
               variant="ghost"
               size="xs"
-              className="!font-normal gap-1 text-muted-foreground"
+              className="gap-1 text-muted-foreground"
               onClick={() => void handleTestConnection()}
               disabled={isTestingConnection || !enabled}
             >
@@ -1478,7 +1477,6 @@ export const McpPage: React.FC = () => {
                     <Button
                       variant="outline"
                       size="xs"
-                      className="!font-normal"
                       onClick={() => void handleTestConnection()}
                       disabled={isTestingConnection || !enabled}
                     >
@@ -1512,7 +1510,6 @@ export const McpPage: React.FC = () => {
                           <Button
                             variant="outline"
                             size="xs"
-                            className="!font-normal"
                             onClick={() => void handleCopyRedirectUri()}
                           >
                             <Icon name="clipboard" className="h-3.5 w-3.5" />
@@ -1556,11 +1553,11 @@ export const McpPage: React.FC = () => {
                       <div className="typography-micro text-muted-foreground">{t('settings.mcp.page.auth.authorizationUrl')}</div>
                       <div className="break-all typography-micro text-foreground font-mono">{authUrl}</div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <Button variant="outline" size="xs" className="!font-normal" onClick={() => void openExternalUrl(authUrl)}>
+                        <Button variant="outline" size="xs" onClick={() => void openExternalUrl(authUrl)}>
                           <Icon name="external-link" className="h-3.5 w-3.5" />
                           {t('settings.mcp.page.actions.openInBrowser')}
                         </Button>
-                        <Button variant="outline" size="xs" className="!font-normal" onClick={() => void handleCopyAuthUrl()}>
+                        <Button variant="outline" size="xs" onClick={() => void handleCopyAuthUrl()}>
                           <Icon name="clipboard" className="h-3.5 w-3.5" />
                           {t('settings.mcp.page.actions.copyLink')}
                         </Button>
@@ -1596,7 +1593,6 @@ export const McpPage: React.FC = () => {
                         <Button
                           variant="outline"
                           size="xs"
-                          className="!font-normal"
                           onClick={() => void handleCompleteAuthorization()}
                           disabled={isCompletingAuth}
                         >
@@ -1626,7 +1622,7 @@ export const McpPage: React.FC = () => {
             <Button
               variant="ghost"
               size="xs"
-              className="!font-normal gap-1.5 text-muted-foreground"
+              className="gap-1.5 text-muted-foreground"
               onClick={handleOpenImportDialog}
               type="button"
               title={t('settings.mcp.page.server.importJsonTitle')}
@@ -1650,11 +1646,11 @@ export const McpPage: React.FC = () => {
                     value={draftName}
                     onChange={(e) => setDraftName(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '-'))}
                     placeholder={t('settings.mcp.page.server.namePlaceholder')}
-                    className="h-7 w-48 min-w-0 max-w-full shrink font-mono px-2"
+                    className="h-8 w-48 min-w-0 max-w-full shrink font-mono px-2"
                     autoFocus
                   />
                   <Select value={draftScope} onValueChange={(value) => setDraftScope(value as McpScope)}>
-                    <SelectTrigger size={SETTINGS_SELECT_SIZE} className="!h-7 min-w-0 max-w-full gap-1.5 px-2">
+                    <SelectTrigger size={SETTINGS_SELECT_SIZE} className="min-w-0 max-w-full gap-1.5 px-2">
                       <Icon
                         name={draftScope === 'user' ? 'user-3' : 'folder'}
                         className="h-3.5 w-3.5 shrink-0"
@@ -1835,7 +1831,7 @@ export const McpPage: React.FC = () => {
               <Button
                 variant="outline"
                 size="xs"
-                className="!font-normal gap-1.5"
+                className="gap-1.5"
                 onClick={() => setEnvEntries([{ key: '', value: '' }])}
               >
                 <Icon name="add" className="h-3.5 w-3.5" />
@@ -1868,7 +1864,6 @@ export const McpPage: React.FC = () => {
             onClick={handleSave}
             disabled={isSaving || (!isDirty && !isNewServer)}
             size="xs"
-            className="!font-normal"
           >
             {isSaving ? t('settings.common.actions.saving') : isNewServer ? t('settings.common.actions.create') : t('settings.common.actions.saveChanges')}
           </Button>
@@ -1876,7 +1871,6 @@ export const McpPage: React.FC = () => {
             <Button
               variant="destructive"
               size="xs"
-              className="!font-normal"
               onClick={() => setShowDeleteConfirm(true)}
             >
               {t('settings.common.actions.delete')}
@@ -1927,7 +1921,7 @@ export const McpPage: React.FC = () => {
               <Button
                 variant="outline"
                 size="xs"
-                className="!font-normal gap-1"
+                className="gap-1"
                 onClick={handlePasteImportClipboard}
                 type="button"
               >

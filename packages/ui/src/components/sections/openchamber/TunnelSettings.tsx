@@ -1363,7 +1363,6 @@ export const TunnelSettings: React.FC = () => {
                         variant="chip"
                         size="xs"
                         aria-pressed={tunnelMode === option.value}
-                        className="!font-normal"
                         onClick={() => {
                           void handleModeChange(option.value);
                         }}
@@ -1460,7 +1459,6 @@ export const TunnelSettings: React.FC = () => {
                 <Button
                   variant="ghost"
                   size="xs"
-                  className="!font-normal"
                   onClick={() => setIsAddingPreset((prev) => !prev)}
                   disabled={state === 'starting' || state === 'stopping' || isSavingMode}
                 >
@@ -1505,8 +1503,8 @@ export const TunnelSettings: React.FC = () => {
 
                             <Button
                               variant="ghost"
-                              size="xs"
-                              className="h-7 w-7 p-0 text-muted-foreground hover:text-[var(--status-error)]"
+                              size="icon-compact"
+                              className="text-muted-foreground hover:text-[var(--status-error)]"
                               aria-label={t('settings.openchamber.tunnel.actions.removePresetAria', { name: preset.name })}
                               onClick={() => {
                                 void handleRemovePreset(preset.id);
@@ -1548,7 +1546,6 @@ export const TunnelSettings: React.FC = () => {
                                 <Button
                                   variant="ghost"
                                   size="xs"
-                                  className="!font-normal"
                                   disabled={state === 'starting' || state === 'stopping' || rowToken.trim().length === 0}
                                   onClick={() => {
                                     void persistManagedRemoteTunnelToken({
@@ -1606,7 +1603,6 @@ export const TunnelSettings: React.FC = () => {
                     <Button
                       variant="ghost"
                       size="xs"
-                      className="!font-normal"
                       onClick={() => {
                         void handleSaveNewPreset();
                       }}
@@ -1617,7 +1613,6 @@ export const TunnelSettings: React.FC = () => {
                     <Button
                       variant="ghost"
                       size="xs"
-                      className="!font-normal"
                       onClick={() => {
                         setIsAddingPreset(false);
                         setNewPresetName('');
@@ -1673,8 +1668,7 @@ export const TunnelSettings: React.FC = () => {
                   />
                   <Button
                     variant="outline"
-                    size="xs"
-                    className="h-7 w-7 p-0"
+                    size="icon-compact"
                     aria-label={t('settings.openchamber.tunnel.actions.browseConfigFileAria')}
                     onClick={() => {
                       void handleBrowseManagedLocalConfig();
@@ -1686,8 +1680,7 @@ export const TunnelSettings: React.FC = () => {
                   {managedLocalConfigPath && (
                     <Button
                       variant="ghost"
-                      size="xs"
-                      className="h-7 w-7 p-0"
+                      size="icon-compact"
                       aria-label={t('settings.openchamber.tunnel.actions.clearConfigFileAria')}
                       onClick={() => {
                         void handleManagedLocalConfigClear();

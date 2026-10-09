@@ -718,8 +718,8 @@ const ToolScrollableTextOutput: React.FC<{
                 <div className="absolute right-2 top-2 z-10 flex items-center gap-1">
                     <Button
                         variant="ghost"
-                        size="icon"
-                        className={cn('h-6 w-6 rounded-md text-muted-foreground hover:text-foreground', jsonViewMode === 'summary' && 'bg-[var(--interactive-selection)] text-[var(--interactive-selection-foreground)]')}
+                        size="icon-xs"
+                        className={cn('text-muted-foreground hover:text-foreground', jsonViewMode === 'summary' && 'bg-[var(--interactive-selection)] text-[var(--interactive-selection-foreground)]')}
                         onClick={(event) => handleJsonViewChange('summary', event)}
                         onPointerDown={(event) => event.stopPropagation()}
                         aria-label={t('chat.toolPart.showNavigableJson')}
@@ -729,8 +729,8 @@ const ToolScrollableTextOutput: React.FC<{
                     </Button>
                     <Button
                         variant="ghost"
-                        size="icon"
-                        className={cn('h-6 w-6 rounded-md text-muted-foreground hover:text-foreground', jsonViewMode === 'formatted' && 'bg-[var(--interactive-selection)] text-[var(--interactive-selection-foreground)]')}
+                        size="icon-xs"
+                        className={cn('text-muted-foreground hover:text-foreground', jsonViewMode === 'formatted' && 'bg-[var(--interactive-selection)] text-[var(--interactive-selection-foreground)]')}
                         onClick={(event) => handleJsonViewChange('formatted', event)}
                         onPointerDown={(event) => event.stopPropagation()}
                         aria-label={t('chat.toolPart.showFormattedJson')}
@@ -740,8 +740,8 @@ const ToolScrollableTextOutput: React.FC<{
                     </Button>
                     <Button
                         variant="ghost"
-                        size="icon"
-                        className={cn('h-6 w-6 rounded-md text-muted-foreground hover:text-foreground', jsonViewMode === 'raw' && 'bg-[var(--interactive-selection)] text-[var(--interactive-selection-foreground)]')}
+                        size="icon-xs"
+                        className={cn('text-muted-foreground hover:text-foreground', jsonViewMode === 'raw' && 'bg-[var(--interactive-selection)] text-[var(--interactive-selection-foreground)]')}
                         onClick={(event) => handleJsonViewChange('raw', event)}
                         onPointerDown={(event) => event.stopPropagation()}
                         aria-label={t('chat.toolPart.showRawJson')}

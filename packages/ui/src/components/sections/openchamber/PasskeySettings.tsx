@@ -181,7 +181,6 @@ export const PasskeySettings: React.FC = () => {
             onClick={() => void handleRegisterPasskey()}
             disabled={isLoading || isResetting || passwordRequired}
             aria-describedby={passwordRequired ? passwordRequiredId : undefined}
-            className="!font-normal"
           >
             {isRegistering ? t('settings.openchamber.passkeys.actions.cancelSetup') : t('settings.openchamber.passkeys.actions.add')}
           </Button>
@@ -192,7 +191,7 @@ export const PasskeySettings: React.FC = () => {
             onClick={() => void handleResetAllAuth()}
             disabled={isLoading || isRegistering || isResetting || passwordRequired}
             aria-describedby={passwordRequired ? passwordRequiredId : undefined}
-            className="!font-normal text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground"
           >
             {isResetting ? t('settings.openchamber.passkeys.actions.signingOut') : t('settings.openchamber.passkeys.actions.signOutEverywhere')}
           </Button>
@@ -238,7 +237,7 @@ export const PasskeySettings: React.FC = () => {
                   size="xs"
                   onClick={() => void handleRevokePasskey(passkey.id)}
                   disabled={revokingId === passkey.id}
-                  className="!font-normal text-muted-foreground hover:text-foreground"
+                  className="text-muted-foreground hover:text-foreground"
                 >
                   {revokingId === passkey.id ? t('settings.openchamber.passkeys.actions.removing') : t('settings.common.actions.delete')}
                 </Button>

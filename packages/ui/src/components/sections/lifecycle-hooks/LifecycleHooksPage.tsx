@@ -395,8 +395,7 @@ export const LifecycleHooksPage: React.FC = () => {
             <Button
               type="button"
               variant="destructive"
-              size="sm"
-              className="w-8 px-0"
+              size="icon-sm"
               onClick={() => setPendingDeleteId(hook.id)}
               disabled={saving}
               aria-label={t('settings.lifecycleHooks.actions.delete', { name: hook.id })}

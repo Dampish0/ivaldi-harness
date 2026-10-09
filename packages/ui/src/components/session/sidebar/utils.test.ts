@@ -22,6 +22,15 @@ describe('Work chat titles', () => {
     expect(resolveWorkChatTitle('', 'Untitled chat')).toBe('Untitled chat');
     expect(resolveWorkChatTitle('New session - 2026-09-02T09:54:46.932Z', 'Untitled chat')).toBe('Untitled chat');
   });
+
+  test('shows Markdown headings and emphasis as plain words', () => {
+    expect(resolveWorkChatTitle('## Summary', 'Untitled chat')).toBe('Summary');
+    expect(resolveWorkChatTitle('**Trip plan**', 'Untitled chat')).toBe('Trip plan');
+    expect(resolveWorkChatTitle('A plan for the **quarterly report**.', 'Untitled chat')).toBe('A plan for the quarterly report.');
+    expect(resolveWorkChatTitle('Rename my_file and __init__ files', 'Untitled chat')).toBe('Rename my_file and __init__ files');
+    expect(resolveWorkChatTitle('Use `npm` less', 'Untitled chat')).toBe('Use `npm` less');
+    expect(resolveWorkChatTitle('##', 'Untitled chat')).toBe('##');
+  });
 });
 
 describe('isPathWithinProject', () => {

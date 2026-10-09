@@ -241,7 +241,7 @@ export function FilePreviewCommentMenu({ containerRef, filePath, fileContent }: 
             onClick={openComment}
             className={cn(
               'px-3.5 py-1.5 rounded-full',
-              'text-sm font-medium',
+              'typography-ui-label font-medium',
               'text-[var(--surface-foreground)]',
               'hover:bg-[var(--interactive-hover)]',
               'transition-colors duration-150'

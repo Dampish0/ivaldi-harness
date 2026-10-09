@@ -34,7 +34,7 @@ export const AppLinkSecuritySettings: React.FC = () => {
                 variant="ghost"
                 size="xs"
                 onClick={() => removeTrustedScheme(scheme)}
-                className="!font-normal text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground"
                 aria-label={t('settings.openchamber.appLinks.removeAria', { scheme: `${scheme}://` })}
               >
                 {t('settings.common.actions.delete')}

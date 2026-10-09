@@ -477,12 +477,9 @@ export const SettingsRadioOption: React.FC<SettingsRadioOptionProps> = ({
         className={description != null ? 'mt-0.5' : undefined}
       />
       <div className="flex min-w-0 flex-col">
-        <span
-          className={cn(
-            'typography-settings-field-label font-normal',
-            selected ? 'text-foreground' : 'text-foreground/50',
-          )}
-        >
+        {/* Every option reads at full strength; the radio shows the choice.
+            Dimmed text made unselected options look disabled. */}
+        <span className="typography-settings-field-label font-normal text-foreground">
           {label}
         </span>
         {description != null ? (

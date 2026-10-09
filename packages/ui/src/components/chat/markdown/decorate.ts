@@ -243,7 +243,7 @@ const decorateCodeBlocks = (root: HTMLElement, ctx: DecorateContext): void => {
     const wrapper = document.createElement('div');
     wrapper.setAttribute('data-component', 'markdown-code');
     wrapper.className =
-      'my-4 group overflow-hidden rounded-2xl border border-border/80 bg-[var(--surface-elevated)]';
+      'my-4 group overflow-hidden rounded-xl border border-border/80 bg-[var(--surface-elevated)]';
 
     const header = document.createElement('div');
     header.className = 'flex items-center justify-between border-b border-border/70 px-3 py-1.5';
@@ -375,7 +375,7 @@ const decorateTables = (root: HTMLElement, labels: DecorateLabels): void => {
     if (!parent) continue;
     parent.replaceChild(wrapper, table);
     table.setAttribute('data-markdown', 'table');
-    table.classList.add('w-full', 'border-collapse', 'text-sm');
+    table.classList.add('w-full', 'border-collapse', 'typography-ui-label');
 
     for (const tr of Array.from(table.querySelectorAll('tr'))) {
       tr.classList.add('border-b', 'border-border/60');

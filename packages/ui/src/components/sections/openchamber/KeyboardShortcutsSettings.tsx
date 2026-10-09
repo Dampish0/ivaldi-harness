@@ -84,7 +84,7 @@ export const KeyboardShortcutsSettings: React.FC = () => {
             divider={categoryIndex !== 0}
             info={categoryIndex === 0 ? t('settings.openchamber.keyboardShortcuts.tooltip') : undefined}
             headerAction={categoryIndex === 0 ? (
-              <Button type="button" variant="outline" size="xs" className="!font-normal" onClick={() => {
+              <Button type="button" variant="outline" size="xs" onClick={() => {
                 resetAllShortcutOverrides();
                 persist({});
               }}>
@@ -104,7 +104,6 @@ export const KeyboardShortcutsSettings: React.FC = () => {
                     type="button"
                     variant="secondary"
                     size="xs"
-                    className="!font-normal"
                     onClick={() => setEditingAction(action)}
                   >
                     {t('settings.openchamber.keyboardShortcuts.actions.edit')}
@@ -114,7 +113,6 @@ export const KeyboardShortcutsSettings: React.FC = () => {
                       type="button"
                       variant="ghost"
                       size="xs"
-                      className="!font-normal"
                       onClick={() => resetOne(action.id)}
                     >
                       {t('settings.common.actions.reset')}

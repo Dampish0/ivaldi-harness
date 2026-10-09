@@ -86,7 +86,7 @@ class InnerErrorBoundary extends React.Component<InnerErrorBoundaryProps, ErrorB
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground text-center">
+              <p className="typography-ui-label text-muted-foreground text-center">
                 {strings.description}
               </p>
 

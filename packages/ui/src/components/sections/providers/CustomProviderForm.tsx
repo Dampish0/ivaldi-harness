@@ -307,7 +307,6 @@ export const CustomProviderForm: React.FC<CustomProviderFormProps> = ({
           type="button"
           variant="outline"
           size="xs"
-          className="!font-normal"
           onClick={() => {
             setForm((prev) => ({ ...prev, models: [...prev.models, createModelRow()] }));
             setModelErrors((prev) => [...prev, {}]);
@@ -382,7 +381,6 @@ export const CustomProviderForm: React.FC<CustomProviderFormProps> = ({
           type="button"
           variant="outline"
           size="xs"
-          className="!font-normal"
           onClick={() => {
             setForm((prev) => ({ ...prev, headers: [...prev.headers, createHeaderRow()] }));
             setHeaderErrors((prev) => [...prev, {}]);
@@ -394,7 +392,7 @@ export const CustomProviderForm: React.FC<CustomProviderFormProps> = ({
 
       <div className="flex flex-wrap items-center gap-2 py-4">
         {onCancel ? (
-          <Button type="button" variant="outline" size="xs" className="!font-normal" onClick={onCancel} disabled={busy}>
+          <Button type="button" variant="outline" size="xs" onClick={onCancel} disabled={busy}>
             {t('settings.providers.page.custom.actions.back')}
           </Button>
         ) : null}
@@ -403,14 +401,13 @@ export const CustomProviderForm: React.FC<CustomProviderFormProps> = ({
             type="button"
             variant="destructive"
             size="xs"
-            className="!font-normal"
             onClick={() => void onDisconnect()}
             disabled={busy}
           >
             {t('settings.providers.page.actions.disconnect')}
           </Button>
         ) : null}
-        <Button type="submit" size="xs" className="!font-normal" disabled={busy}>
+        <Button type="submit" size="xs" disabled={busy}>
           {busy
             ? t('settings.providers.page.actions.saving')
             : isEdit

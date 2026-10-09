@@ -439,8 +439,8 @@ export const AgentPermissionsEditor: React.FC<AgentPermissionsEditorProps> = ({ 
                       />
                       <Button
                         variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        size="icon-compact"
+                        className="shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                         onClick={() => removePattern(key, index)}
                         aria-label={t('settings.agents.page.permissionsEditor.actions.removeRuleAria')}
                       >
@@ -450,7 +450,7 @@ export const AgentPermissionsEditor: React.FC<AgentPermissionsEditorProps> = ({ 
                   ))}
 
                   {supportsPatterns && (
-                    <Button variant="outline" size="xs" className="!font-normal" onClick={() => addPattern(key)}>
+                    <Button variant="outline" size="xs" onClick={() => addPattern(key)}>
                       <Icon name="add" className="mr-1 h-3.5 w-3.5" />
                       {t('settings.agents.page.permissionsEditor.actions.addRule')}
                     </Button>
@@ -497,7 +497,7 @@ export const AgentPermissionsEditor: React.FC<AgentPermissionsEditorProps> = ({ 
           placeholder={t('settings.agents.page.permissionsEditor.customKeyPlaceholder')}
           className="h-8 w-full max-w-[16rem] font-mono text-xs"
         />
-        <Button variant="outline" size="xs" className="!font-normal" onClick={addCustomKey} disabled={!customKeyDraft.trim()}>
+        <Button variant="outline" size="xs" onClick={addCustomKey} disabled={!customKeyDraft.trim()}>
           <Icon name="add" className="mr-1 h-3.5 w-3.5" />
           {t('settings.agents.page.permissionsEditor.actions.addKey')}
         </Button>

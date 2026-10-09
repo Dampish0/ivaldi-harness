@@ -456,7 +456,7 @@ const FileRow: React.FC<FileRowProps> = ({
         </span>
         {!isDir && status && <FileStatusDot status={status} />}
         {isDir && badge && (
-          <span className="text-xs flex items-center gap-1 ml-auto mr-1">
+          <span className="typography-micro flex items-center gap-1 ml-auto mr-1">
             {badge.modified > 0 && <span className="text-[var(--status-warning)]">M{badge.modified}</span>}
             {badge.added > 0 && <span className="text-[var(--status-success)]">+{badge.added}</span>}
           </span>
@@ -1331,8 +1331,8 @@ export const SidebarFilesTree: React.FC = () => {
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 flex-shrink-0"
+              size="icon-sm"
+              className="flex-shrink-0"
               title={t('sidebarFilesTree.actions.fileMenuTitle')}
               aria-label={t('sidebarFilesTree.actions.fileMenuTitle')}
             >
@@ -1433,7 +1433,7 @@ export const SidebarFilesTree: React.FC = () => {
         </ul>
         </ScrollableOverlay>
         {dropTarget ? (
-          <div className="pointer-events-none absolute left-2 right-2 top-2 z-50 flex items-center gap-2 rounded-md border border-primary bg-background/95 px-2 py-1.5 shadow-sm">
+          <div className="pointer-events-none absolute left-2 right-2 top-2 z-50 flex items-center gap-2 rounded-md border border-primary bg-background/95 px-2 py-1.5 shadow-float">
             <Icon name={isUploading ? 'loader-4' : 'folder-received'} className={cn('size-4 flex-shrink-0', isUploading && 'animate-spin')} />
             <span className="min-w-0 truncate typography-meta" title={dropTargetLabel}>
               {t(isUploading ? 'sidebarFilesTree.drop.uploading' : 'sidebarFilesTree.drop.target', { path: dropTargetLabel })}

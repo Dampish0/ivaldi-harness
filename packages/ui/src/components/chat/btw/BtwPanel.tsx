@@ -65,7 +65,7 @@ export const BtwPanel: React.FC<{ parentSessionId: string; panel: BtwPanelState 
     if (panel.creating) {
         return (
             <BtwFrame title={t('chat.btw.titleFallback')}>
-                <div className="flex items-center gap-2 px-4 py-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2 px-4 py-4 typography-ui-label text-muted-foreground">
                     <Icon name="loader-4" className="size-4 animate-spin" />
                     <span>{t('chat.btw.loading')}</span>
                 </div>
@@ -303,7 +303,7 @@ const BtwSheet: React.FC<{
 
     const toggleLabel = collapsed ? t('chat.btw.expandAria') : t('chat.btw.collapseAria');
     const headerButtonClass = cn(
-        'size-7 text-muted-foreground transition-colors hover:text-foreground hover:!bg-transparent active:!bg-transparent',
+        'text-muted-foreground transition-colors hover:text-foreground hover:bg-transparent active:bg-transparent',
         isMobileSurface ? 'rounded-md' : 'rounded-lg',
     );
     const actions = (
@@ -311,7 +311,7 @@ const BtwSheet: React.FC<{
             <Button
                 type="button"
                 variant="ghost"
-                size="icon"
+                size="icon-compact"
                 className={headerButtonClass}
                 onClick={handlePromote}
                 aria-label={t('chat.btw.promoteAria')}
@@ -322,7 +322,7 @@ const BtwSheet: React.FC<{
             <Button
                 type="button"
                 variant="ghost"
-                size="icon"
+                size="icon-compact"
                 className={headerButtonClass}
                 onClick={handleDestroy}
                 aria-label={t('chat.btw.destroyAria')}
@@ -433,7 +433,7 @@ const BtwMessages: React.FC<{
 
     if (data.isEmpty) {
         return (
-            <div className="flex items-center gap-2 px-4 py-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 px-4 py-4 typography-ui-label text-muted-foreground">
                 <Icon name="loader-4" className="size-4 animate-spin" />
                 <span>{t('chat.btw.loading')}</span>
             </div>
@@ -476,7 +476,7 @@ const BtwMessages: React.FC<{
                     by a line when the indicator disappears. */}
                 <div
                     className={cn(
-                        'flex items-center gap-2 px-1 py-2 text-xs text-muted-foreground',
+                        'flex items-center gap-2 px-1 py-2 typography-micro text-muted-foreground',
                         !data.sessionIsWorking && 'invisible',
                     )}
                     aria-hidden={!data.sessionIsWorking}

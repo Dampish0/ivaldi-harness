@@ -280,8 +280,8 @@ export const ProjectActionsSection: React.FC<ProjectActionsSectionProps> = ({ pr
                     aria-label={t('common.actions.delete')}
                     type="button"
                     variant="ghost"
-                    size="xs"
-                    className="!font-normal h-7 w-7 px-0 text-muted-foreground hover:text-[var(--status-error)]"
+                    size="icon-compact"
+                    className="text-muted-foreground hover:text-[var(--status-error)]"
                     onClick={() => handleRemoveAction(action.id)}
                   >
                     <Icon name="delete-bin" className="h-3.5 w-3.5" />

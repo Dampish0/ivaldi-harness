@@ -58,7 +58,7 @@ export const ComposerActionButtons = React.memo(function ComposerActionButtons(p
         <Button
             type={isMobile ? 'button' : 'submit'}
             data-mobile-composer-action={isMobile ? 'send' : undefined}
-            size="icon"
+            size="icon-sm"
             variant="ghost"
             disabled={!canSend || !hasDestination}
             onClick={(event) => {
@@ -67,7 +67,7 @@ export const ComposerActionButtons = React.memo(function ComposerActionButtons(p
                 onPrimaryAction();
             }}
             className={cn(
-                'mr-0.5 size-8 -translate-y-px rounded-full supports-[corner-shape:squircle]:rounded-full',
+                'mr-0.5 -translate-y-px rounded-full supports-[corner-shape:squircle]:rounded-full',
                 canSend && hasDestination
                     ? 'bg-foreground text-background hover:bg-foreground/90 active:bg-foreground/80'
                     : 'bg-interactive-hover text-muted-foreground opacity-30',
@@ -84,7 +84,7 @@ export const ComposerActionButtons = React.memo(function ComposerActionButtons(p
             const dictationButton = (
                 <Button
                     type="button"
-                    size="icon"
+                    size="icon-sm"
                     variant="ghost"
                     disabled={dictationActive}
                     data-mobile-composer-action={isMobile ? 'dictate' : undefined}
@@ -96,7 +96,7 @@ export const ComposerActionButtons = React.memo(function ComposerActionButtons(p
                         if (isMobile) event.preventDefault();
                         onStartDictation();
                     }}
-                    className="mr-0.5 size-8 -translate-y-px rounded-full bg-foreground text-background hover:bg-foreground/90 active:bg-foreground/80 supports-[corner-shape:squircle]:rounded-full"
+                    className="mr-0.5 -translate-y-px rounded-full bg-foreground text-background hover:bg-foreground/90 active:bg-foreground/80 supports-[corner-shape:squircle]:rounded-full"
                     aria-label={dictationLabel}
                 >
                     <Icon key="dictate" name="mic" className={cn(sendIconSizeClass)} />

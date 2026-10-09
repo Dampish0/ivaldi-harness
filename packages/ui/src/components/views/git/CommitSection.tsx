@@ -141,10 +141,9 @@ export const CommitSection: React.FC<CommitSectionProps> = ({
               <TooltipTrigger asChild>
                 <Button
                   variant="default"
-                  size="sm"
+                  size="icon-compact"
                   onClick={() => onCommitAndPush()}
                   disabled={!canCommit || isGeneratingMessage}
-                  className="h-7 w-7 p-0"
                   aria-label={t('gitView.commit.pushAria')}
                 >
                   {commitAction === 'commitAndPush' ? (

@@ -35,6 +35,12 @@ All notable changes to this project will be documented in this file.
 - Work mode: tool calls fold into one row per run of steps. While it works the row names the step in plain words, such as "Reading a file", and afterwards it says "Worked through 4 steps". Click it to see the steps. The assistant's words between steps stay in the chat and appear as they are written.
 - Chat: the working status line has a pulsing dot and a shimmer, and each new status slides in. Buttons press in slightly when clicked, and the steps row's arrow turns when it opens. All of it stays still when the system asks for reduced motion.
 - Chat: retries say "Trying again in 5s" in your language. In Work mode they say the AI service is busy instead of showing the service's raw error.
+- UI: buttons share one font weight, and dense toolbars and settings rows use a new 28px `compact` button size instead of hand-set heights. About 200 more one-off font sizes now follow the text scale, dialogs and the settings window have a soft shadow, and code blocks and cards in the chat use the same corner as other cards.
+- UI: unchecked checkboxes and radio buttons have a readable outline, and unselected options no longer use faded text, so they don't look disabled.
+- Sidebar: the Ivaldi wordmark sits next to the panel button, the Recent header lines up with Projects, and a project with no chats says "No chats yet". Work mode chat titles drop Markdown marks such as "##" and "**".
+- Settings: the empty footer bar under the settings menu is gone in Work mode. The General page groups auto-save, keymap and shell under "Editor and terminal", or "Files" in Work mode. In Work mode, the Chat page and the empty Connectors page use everyday words.
+- Accessibility: more icon buttons have names, and the diff layout switch and changed files button use translated labels.
+- Connectors: after signing in to an MCP server, the return page opens Ivaldi through an `ivaldi://` link instead of `openchamber://`.
 
 ## [1.21.0] - 2026-08-26
 

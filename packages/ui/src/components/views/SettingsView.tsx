@@ -1031,14 +1031,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onClose, forceMobile
           </div>
         </ScrollShadow>
 
-        {/* Footer */}
-        <div className="overflow-hidden transition-opacity duration-150 opacity-100">
-          <div className="border-t border-border bg-background px-4 py-1.5 space-y-0.5 sm:bg-sidebar">
-            {(productMode === 'developer' ? !runtimeCtx.isVSCode : pendingRestartCount > 0) && (
+        {/* Footer, only when it has an action, so an empty bar never shows. */}
+        {(productMode === 'developer' ? !runtimeCtx.isVSCode : pendingRestartCount > 0) && (
+          <div className="overflow-hidden transition-opacity duration-150 opacity-100">
+            <div className="border-t border-border bg-background px-4 py-1.5 space-y-0.5 sm:bg-sidebar">
               <OpenCodeReloadFooterAction />
-            )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     );
   };
@@ -1203,11 +1203,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onClose, forceMobile
           <Button
             type="button"
             variant="ghost"
-            size="icon"
+            size="icon-compact"
             onClick={onClose}
             aria-label={t('settings.view.actions.closeSettings')}
             title={closeSettingsTitle}
-            className="inline-flex h-7 w-7 items-center justify-center rounded-md p-0.5 text-muted-foreground hover:text-foreground hover:bg-interactive-hover/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="p-0.5 text-muted-foreground hover:text-foreground hover:bg-interactive-hover/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             <Icon name="close" className="h-5 w-5" />
           </Button>

@@ -265,6 +265,7 @@ export const GitIdentityEditorDialog: React.FC<GitIdentityEditorDialogProps> = (
                         )}
                         style={{ backgroundColor: c.cssVar }}
                         title={c.label}
+                        aria-label={c.label}
                       />
                     ))}
                   </div>
@@ -287,6 +288,7 @@ export const GitIdentityEditorDialog: React.FC<GitIdentityEditorDialogProps> = (
                               : 'border-transparent hover:border-[var(--interactive-border)] hover:bg-[var(--surface-muted)]/50'
                           )}
                           title={i.label}
+                          aria-label={i.label}
                         >
                           <Icon name={iconName}
                             className="w-3.5 h-3.5"
@@ -308,7 +310,7 @@ export const GitIdentityEditorDialog: React.FC<GitIdentityEditorDialogProps> = (
               <div>
                 <div className="flex items-center gap-1.5 mb-1.5">
                   <label className={SETTINGS_FIELD_LABEL_CLASS}>{t('settings.gitIdentities.editor.field.userName')}</label>
-                  {!isGlobalProfile && <span className="text-[var(--status-error)] text-xs">*</span>}
+                  {!isGlobalProfile && <span className="text-[var(--status-error)] typography-micro">*</span>}
                   <SettingsInfoHint contentClassName="max-w-xs">
                     {t('settings.gitIdentities.editor.field.userNameTooltip')}
                   </SettingsInfoHint>
@@ -327,7 +329,7 @@ export const GitIdentityEditorDialog: React.FC<GitIdentityEditorDialogProps> = (
               <div>
                 <div className="flex items-center gap-1.5 mb-1.5">
                   <label className={SETTINGS_FIELD_LABEL_CLASS}>{t('settings.gitIdentities.editor.field.emailAddress')}</label>
-                  {!isGlobalProfile && <span className="text-[var(--status-error)] text-xs">*</span>}
+                  {!isGlobalProfile && <span className="text-[var(--status-error)] typography-micro">*</span>}
                   <SettingsInfoHint contentClassName="max-w-xs">
                     {t('settings.gitIdentities.editor.field.emailAddressTooltip')}
                   </SettingsInfoHint>
@@ -418,7 +420,7 @@ export const GitIdentityEditorDialog: React.FC<GitIdentityEditorDialogProps> = (
                     <div>
                       <div className="flex items-center gap-1.5 mb-1.5">
                         <label className={SETTINGS_FIELD_LABEL_CLASS}>{t('settings.gitIdentities.editor.field.host')}</label>
-                        <span className="text-[var(--status-error)] text-xs">*</span>
+                        <span className="text-[var(--status-error)] typography-micro">*</span>
                         <SettingsInfoHint contentClassName="max-w-xs">
                           {t('settings.gitIdentities.editor.field.hostTooltip')}
                         </SettingsInfoHint>

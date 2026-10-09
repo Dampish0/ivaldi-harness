@@ -266,7 +266,7 @@ export const ProviderOAuthMethods: React.FC<ProviderOAuthMethodsProps> = ({
             value={value}
             onChange={(event) => setValue(event.target.value)}
             placeholder={prompt.placeholder}
-            className="max-w-[24rem] text-xs"
+            className="max-w-[24rem] typography-micro"
           />
         )}
       </div>
@@ -292,7 +292,7 @@ export const ProviderOAuthMethods: React.FC<ProviderOAuthMethodsProps> = ({
           <Button
             variant="outline"
             size="xs"
-            className="!font-normal shrink-0"
+            className="shrink-0"
             onClick={() => void copy(
               authorization.userCode ?? '',
               'settings.providers.page.toast.deviceCodeCopied',
@@ -310,13 +310,12 @@ export const ProviderOAuthMethods: React.FC<ProviderOAuthMethodsProps> = ({
             value={authorization.url}
             readOnly
             aria-label={t('settings.providers.page.auth.oauth.linkLabel')}
-            className="text-xs text-muted-foreground"
+            className="typography-micro text-muted-foreground"
           />
           <div className="flex gap-1 shrink-0">
             <Button
               variant="outline"
               size="xs"
-              className="!font-normal"
               onClick={() => void openExternalUrl(authorization.url ?? '')}
             >
               {t('settings.providers.page.actions.open')}
@@ -324,7 +323,6 @@ export const ProviderOAuthMethods: React.FC<ProviderOAuthMethodsProps> = ({
             <Button
               variant="outline"
               size="xs"
-              className="!font-normal"
               onClick={() => void copy(
                 authorization.url ?? '',
                 'settings.providers.page.toast.oauthLinkCopied',
@@ -351,7 +349,7 @@ export const ProviderOAuthMethods: React.FC<ProviderOAuthMethodsProps> = ({
               <Button
                 variant="outline"
                 size="xs"
-                className="!font-normal shrink-0"
+                className="shrink-0"
                 onClick={() => beginConnect(method)}
                 disabled={busy}
               >
@@ -366,10 +364,10 @@ export const ProviderOAuthMethods: React.FC<ProviderOAuthMethodsProps> = ({
                   <p className="typography-meta text-[var(--status-error)]">{flow.error}</p>
                 )}
                 <div className="flex items-center gap-2">
-                  <Button size="xs" className="!font-normal" onClick={submitPrompts}>
+                  <Button size="xs" onClick={submitPrompts}>
                     {t('settings.providers.page.actions.continue')}
                   </Button>
-                  <Button variant="ghost" size="xs" className="!font-normal" onClick={cancel}>
+                  <Button variant="ghost" size="xs" onClick={cancel}>
                     {t('settings.providers.page.actions.cancel')}
                   </Button>
                 </div>
@@ -391,7 +389,7 @@ export const ProviderOAuthMethods: React.FC<ProviderOAuthMethodsProps> = ({
                     <Icon name="loader" className="h-3.5 w-3.5 animate-spin" />
                     {t('settings.providers.page.auth.oauth.waiting')}
                   </p>
-                  <Button variant="ghost" size="xs" className="!font-normal shrink-0" onClick={cancel}>
+                  <Button variant="ghost" size="xs" className="shrink-0" onClick={cancel}>
                     {t('settings.providers.page.actions.cancel')}
                   </Button>
                 </div>
@@ -417,7 +415,7 @@ export const ProviderOAuthMethods: React.FC<ProviderOAuthMethodsProps> = ({
                   />
                   <Button
                     size="xs"
-                    className="!font-normal shrink-0"
+                    className="shrink-0"
                     onClick={submitCode}
                     disabled={flow.submitting || codeInput.trim().length === 0}
                   >
@@ -428,7 +426,7 @@ export const ProviderOAuthMethods: React.FC<ProviderOAuthMethodsProps> = ({
                   <Button
                     variant="ghost"
                     size="xs"
-                    className="!font-normal shrink-0"
+                    className="shrink-0"
                     onClick={cancel}
                     disabled={flow.submitting}
                   >
@@ -444,7 +442,6 @@ export const ProviderOAuthMethods: React.FC<ProviderOAuthMethodsProps> = ({
                 <Button
                   variant="outline"
                   size="xs"
-                  className="!font-normal"
                   onClick={() => beginConnect(method)}
                 >
                   {t('settings.providers.page.actions.tryAgain')}

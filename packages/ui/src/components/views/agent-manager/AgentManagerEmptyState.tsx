@@ -1,6 +1,7 @@
 import React from 'react';
 import { toast } from '@/components/ui';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -476,17 +477,18 @@ export const AgentManagerEmptyState: React.FC<AgentManagerEmptyStateProps> = ({
                         placeholder={t('agentManager.empty.setupCommands.commandPlaceholder')}
                         className="h-8 flex-1 font-mono text-xs"
                       />
-                      <button
-                        type="button"
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
                         onClick={() => {
                           const newCommands = setupCommands.filter((_, i) => i !== index);
                           setSetupCommands(newCommands);
                         }}
-                        className="flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                        className="flex-shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                         aria-label={t('agentManager.empty.setupCommands.removeCommandAria')}
                       >
                         <Icon name="close" className="h-4 w-4" />
-                      </button>
+                      </Button>
                     </div>
                   ))}
                   <button

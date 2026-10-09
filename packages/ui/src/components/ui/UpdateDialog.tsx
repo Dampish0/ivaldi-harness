@@ -351,7 +351,7 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
                   {webUpdateState === 'reconnecting' && t('updateDialog.status.waitingForServer')}
                 </div>
               </div>
-              <p className="mt-2 text-xs text-muted-foreground">
+              <p className="mt-2 typography-micro text-muted-foreground">
                 {t('updateDialog.status.autoReloadHint')}
               </p>
             </div>
@@ -387,7 +387,7 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
                           <span className="typography-ui-label font-mono text-[var(--primary-base)] bg-[var(--primary-base)]/10 px-1.5 py-0.5 rounded">
                             v{section.version}
                           </span>
-                          <span className="text-sm font-medium text-muted-foreground">
+                          <span className="typography-ui-label font-medium text-muted-foreground">
                             {section.dateLabel}
                           </span>
                         </div>
@@ -424,22 +424,23 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
                 <code className="flex-1 font-mono text-sm text-foreground overflow-x-auto whitespace-nowrap">
                   {updateCommand}
                 </code>
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
                   onClick={handleCopyCommand}
                   className={cn(
-                    'flex items-center justify-center p-2 rounded',
-                    'text-muted-foreground hover:text-foreground hover:bg-[var(--interactive-hover)]',
-                    'transition-colors',
+                    'text-muted-foreground',
                     copied && 'text-[var(--status-success)]'
                   )}
                   title={copied ? t('updateDialog.actions.copied') : t('updateDialog.actions.copyCommand')}
+                  aria-label={copied ? t('updateDialog.actions.copied') : t('updateDialog.actions.copyCommand')}
                 >
                   {copied ? (
                     <Icon name="check" className="h-4 w-4" />
                   ) : (
                     <Icon name="clipboard" className="h-4 w-4" />
                   )}
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -447,7 +448,7 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
           {/* Desktop progress bar */}
           {!isWebRuntime && !isMobileRuntime && downloading && (
             <div className="space-y-2 mt-4">
-              <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center justify-between typography-ui-label">
                 <span className="text-muted-foreground">{t('updateDialog.status.downloadingPayload')}</span>
                 <span className="font-mono text-foreground">{progressPercent}%</span>
               </div>
@@ -463,7 +464,7 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
           {/* Error display */}
           {(error || webError) && (
             <div className="p-3 mt-4 bg-[var(--status-error-background)] border border-[var(--status-error-border)] rounded-lg">
-              <p className="text-sm text-[var(--status-error)]">{error || webError}</p>
+              <p className="typography-ui-label text-[var(--status-error)]">{error || webError}</p>
             </div>
           )}
         </div>
@@ -474,7 +475,7 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
             href={releaseUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors shrink-0"
+            className="flex items-center gap-1.5 typography-ui-label text-muted-foreground hover:text-foreground transition-colors shrink-0"
           >
             <Icon name="external-link" className="h-4 w-4" />
             GitHub
@@ -483,33 +484,24 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
           <div className="flex-1 flex justify-end">
             {/* Desktop Buttons */}
             {!isWebRuntime && !isMobileRuntime && !downloaded && !downloading && (
-              <button
-                onClick={onDownload}
-                className="flex items-center justify-center gap-2 px-5 py-2 rounded-md text-sm font-medium bg-[var(--primary-base)] text-[var(--primary-foreground)] hover:opacity-90 transition-opacity"
-              >
+              <Button onClick={onDownload}>
                 <Icon name="download" className="h-4 w-4" />
                 {t('updateDialog.actions.downloadUpdate')}
-              </button>
+              </Button>
             )}
 
             {!isWebRuntime && !isMobileRuntime && downloading && (
-              <button
-                disabled
-                className="flex items-center justify-center gap-2 px-5 py-2 rounded-md text-sm font-medium bg-[var(--primary-base)]/50 text-[var(--primary-foreground)] cursor-not-allowed"
-              >
+              <Button disabled>
                 <Icon name="loader" className="h-4 w-4 animate-spin" />
                 {t('updateDialog.status.downloading')}
-              </button>
+              </Button>
             )}
 
             {!isWebRuntime && !isMobileRuntime && downloaded && (
-              <button
-                onClick={onRestart}
-                className="flex items-center justify-center gap-2 px-5 py-2 rounded-md text-sm font-medium bg-[var(--status-success)] text-white hover:opacity-90 transition-opacity"
-              >
+              <Button onClick={onRestart}>
                 <Icon name="restart" className="h-4 w-4" />
                 {t('updateDialog.actions.restartToUpdate')}
-              </button>
+              </Button>
             )}
 
             {/* Web Buttons */}
@@ -524,23 +516,17 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
             )}
 
             {isWebRuntime && !isWebUpdating && (
-              <button
-                onClick={handleWebUpdate}
-                className="flex items-center justify-center gap-2 px-5 py-2 rounded-md text-sm font-medium bg-[var(--primary-base)] text-[var(--primary-foreground)] hover:opacity-90 transition-opacity"
-              >
+              <Button onClick={handleWebUpdate}>
                 <Icon name="download" className="h-4 w-4" />
                 {t('updateDialog.actions.updateNow')}
-              </button>
+              </Button>
             )}
 
             {isWebRuntime && isWebUpdating && (
-              <button
-                disabled
-                className="flex items-center justify-center gap-2 px-5 py-2 rounded-md text-sm font-medium bg-[var(--primary-base)]/50 text-[var(--primary-foreground)] cursor-not-allowed"
-              >
+              <Button disabled>
                 <Icon name="loader" className="h-4 w-4 animate-spin" />
                 {t('updateDialog.status.updating')}
-              </button>
+              </Button>
             )}
           </div>
         </div>

@@ -294,8 +294,8 @@ export const PluginsSidebar: React.FC<PluginsSidebarProps> = ({
                   type="button"
                   data-settings-item="plugins.create"
                   variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 -my-1 text-muted-foreground"
+                  size="icon-compact"
+                  className="-my-1 text-muted-foreground"
                   onClick={() => void handleRefresh()}
                   disabled={isLoadingRegistry}
                   aria-label={t('settings.plugins.sidebar.actions.refresh')}
@@ -311,8 +311,8 @@ export const PluginsSidebar: React.FC<PluginsSidebarProps> = ({
                 <Button
                   type="button"
                   variant={isDeveloperMode ? 'ghost' : 'outline'}
-                  size={isDeveloperMode ? 'icon' : 'xs'}
-                  className={isDeveloperMode ? 'h-7 w-7 -my-1 text-muted-foreground' : undefined}
+                  size={isDeveloperMode ? 'icon-compact' : 'xs'}
+                  className={isDeveloperMode ? '-my-1 text-muted-foreground' : undefined}
                   onClick={handleAdd}
                   aria-label={t('settings.plugins.sidebar.actions.addTitle')}
                   title={t('settings.plugins.sidebar.actions.addTitle')}

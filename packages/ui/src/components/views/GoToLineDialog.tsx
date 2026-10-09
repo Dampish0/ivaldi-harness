@@ -213,7 +213,6 @@ export function GoToLineDialog({ open, onOpenChange, view, variant = 'overlay' }
           size="xs"
           onClick={handleSubmit}
           disabled={!view || lineNumber === null}
-          className="h-6 px-2"
         >
           {t('goToLineDialog.actions.go')}
         </Button>
@@ -225,7 +224,7 @@ export function GoToLineDialog({ open, onOpenChange, view, variant = 'overlay' }
     <div
       ref={panelRef}
       className={cn(
-        'absolute left-3 top-3 z-40 w-[min(32rem,calc(100%-1.5rem))] rounded-xl border border-[var(--interactive-border)] bg-[color:color-mix(in_srgb,var(--surface-elevated)_94%,transparent)] p-2.5 shadow-lg backdrop-blur-sm transition-all',
+        'absolute left-3 top-3 z-40 w-[min(32rem,calc(100%-1.5rem))] rounded-xl border border-[var(--interactive-border)] bg-[color:color-mix(in_srgb,var(--surface-elevated)_94%,transparent)] p-2.5 shadow-float backdrop-blur-sm transition-all',
         open ? 'pointer-events-auto translate-y-0 opacity-100' : 'pointer-events-none -translate-y-1 opacity-0',
       )}
     >

@@ -1737,11 +1737,12 @@ export function NewWorktreeDialog({
                     </DropdownMenu>
                     <Button
                       variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 px-0 shrink-0"
+                      size="icon-sm"
+                      className="shrink-0"
                       onClick={handleFetchBranches}
                       disabled={!canFetchBranches || isLoadingBranches}
                       title={t('session.newWorktree.fetchBranches')}
+                      aria-label={t('session.newWorktree.fetchBranches')}
                     >
                       {isLoadingBranches ? <Icon name="loader-4" className="size-4 animate-spin" /> : <Icon name="refresh" className="size-4" />}
                     </Button>
@@ -1756,9 +1757,8 @@ export function NewWorktreeDialog({
                     {mode === 'new-branch' && isGitHubConnected && (
                       <Button
                         variant="outline"
-                        size="sm"
+                        size="compact"
                         onClick={() => setGithubDialogOpen(true)}
-                        className="gap-1.5 h-7"
                       >
                         <Icon name="github" className="size-4 text-status-success" />
                       {newBranchState.linkedIssue || newBranchState.linkedPr ? t('session.newWorktree.actions.change') : t('session.newWorktree.actions.startFromGitHubIssuePr')}

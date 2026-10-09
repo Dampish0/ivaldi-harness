@@ -81,7 +81,7 @@ export const ProjectHeaderIdentity: React.FC<ProjectHeaderIdentityProps> = ({
           <Icon name="folder" className="h-3.5 w-3.5 text-muted-foreground/70" />
         )}
       </span>
-      <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-foreground">{projectLabel}</span>
+      <span className="min-w-0 flex-1 truncate typography-meta font-semibold text-foreground">{projectLabel}</span>
     </>
   );
 };

@@ -113,8 +113,8 @@ const DraftPreviewEntry: React.FC<{
         <div>
             <div className="flex items-center gap-1.5 px-3 py-1.5"
                 style={{ backgroundColor: 'color-mix(in srgb, var(--surface-mutedForeground) 8%, transparent)' }}>
-                <span className="text-xs font-medium text-[var(--surface-mutedForeground)]">{index + 1}.</span>
-                <span className="min-w-0 flex-1 truncate text-xs font-medium text-[var(--surface-foreground)]" title={title}>
+                <span className="typography-micro font-medium text-[var(--surface-mutedForeground)]">{index + 1}.</span>
+                <span className="min-w-0 flex-1 truncate typography-micro font-medium text-[var(--surface-foreground)]" title={title}>
                     {title}
                 </span>
                 {onSaveComment ? (
@@ -152,7 +152,7 @@ const DraftPreviewEntry: React.FC<{
                             className={
                                 monoSource(draft.source)
                                     ? 'mt-0.5 whitespace-pre-wrap break-words font-mono text-xs text-[var(--surface-foreground)]'
-                                    : 'mt-0.5 whitespace-pre-wrap break-words text-sm text-[var(--surface-foreground)]'
+                                    : 'mt-0.5 whitespace-pre-wrap break-words typography-ui-label text-[var(--surface-foreground)]'
                             }
                         >
                             {draft.code}
@@ -182,11 +182,11 @@ const DraftPreviewEntry: React.FC<{
                                     }
                                 }}
                                 placeholder={t('chat.textSelection.comment.placeholder')}
-                                className="mt-0.5 w-full resize-none rounded-md border border-[var(--interactive-border)] bg-[var(--surface-background)] px-2 py-1 text-sm text-[var(--surface-foreground)] outline-none placeholder:text-[var(--surface-mutedForeground)]"
+                                className="mt-0.5 w-full resize-none rounded-md border border-[var(--interactive-border)] bg-[var(--surface-background)] px-2 py-1 typography-ui-label text-[var(--surface-foreground)] outline-none placeholder:text-[var(--surface-mutedForeground)]"
                                 style={{ minHeight: 0 }}
                             />
                         ) : (
-                            <div className="mt-0.5 whitespace-pre-wrap break-words text-sm text-[var(--surface-foreground)]">{draft.text}</div>
+                            <div className="mt-0.5 whitespace-pre-wrap break-words typography-ui-label text-[var(--surface-foreground)]">{draft.text}</div>
                         )}
                     </div>
                 ) : null}
@@ -382,9 +382,9 @@ export function ComposerContextChips({ draftTarget, colors, isMobile = false }: 
                         aria-expanded={openGroupKey === group.key}
                     >
                         <Icon name={group.icon} className={`h-3.5 w-3.5 shrink-0 text-muted-foreground ${group.iconClassName ?? ''}`} />
-                        <span className="truncate text-xs font-medium text-muted-foreground">{group.label}</span>
+                        <span className="truncate typography-micro font-medium text-muted-foreground">{group.label}</span>
                         {group.count > 0 ? (
-                            <span className="text-xs font-semibold" style={{ color: colors?.status?.info }}>
+                            <span className="typography-micro font-semibold" style={{ color: colors?.status?.info }}>
                                 {group.count}
                             </span>
                         ) : null}

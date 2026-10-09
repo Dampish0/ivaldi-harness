@@ -201,8 +201,8 @@ export const McpSidebar: React.FC<McpSidebarProps> = ({ onItemSelect }) => {
           <Button
             type="button"
             variant="ghost"
-            size="icon"
-            className="size-7 text-muted-foreground hover:text-foreground"
+            size="icon-compact"
+            className="text-muted-foreground hover:text-foreground"
             disabled={isRefreshingStatus}
             onClick={handleRefresh}
             aria-label={t('settings.mcp.sidebar.actions.refreshStatusAria')}
@@ -217,10 +217,10 @@ export const McpSidebar: React.FC<McpSidebarProps> = ({ onItemSelect }) => {
             {t('settings.mcp.sidebar.total', { count: mcpServers.length })}
           </span>
           <Button
-            size={isDeveloperMode ? 'icon' : 'xs'}
+            size={isDeveloperMode ? 'icon-compact' : 'xs'}
             data-settings-item="mcp.create"
             variant={isDeveloperMode ? 'ghost' : 'outline'}
-            className={isDeveloperMode ? 'h-7 w-7 -my-1 text-muted-foreground' : undefined}
+            className={isDeveloperMode ? '-my-1 text-muted-foreground' : undefined}
             onClick={handleCreateNew}
             aria-label={t('settings.mcp.sidebar.actions.addServerTitle')}
             title={t('settings.mcp.sidebar.actions.addServerTitle')}

@@ -332,7 +332,7 @@ export const ThirdPartyIntegrationsSection: React.FC<ThirdPartyIntegrationsSecti
               <Icon name={plugin.icon} className={cn('size-5', plugin.brandClassName)} />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-semibold text-foreground">{t(plugin.nameKey)}</div>
+              <div className="truncate typography-ui-label font-semibold text-foreground">{t(plugin.nameKey)}</div>
               <p className="mt-0.5 line-clamp-1 typography-meta leading-snug text-muted-foreground">
                 {t(plugin.descriptionKey)}
               </p>
@@ -357,7 +357,7 @@ export const ThirdPartyIntegrationsSection: React.FC<ThirdPartyIntegrationsSecti
           <CollapsibleContent className="pb-4 pl-12 pr-1 pt-1">
             <div className="space-y-3">
               {state.projectEntries.length > 0 ? (
-                <p className="text-xs text-muted-foreground">
+                <p className="typography-micro text-muted-foreground">
                   {t('settings.integrations.thirdParty.status.projectInstalled')}
                 </p>
               ) : null}

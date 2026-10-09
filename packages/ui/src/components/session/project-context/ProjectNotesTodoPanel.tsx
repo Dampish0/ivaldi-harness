@@ -372,15 +372,17 @@ export const ProjectNotesTodoPanel: React.FC<ProjectNotesTodoPanelProps> = ({
             editor: PlanView already titles the plan, and a second title row
             said the same thing twice. */}
         {openPlan ? (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-xs"
             onClick={() => setOpenPlan(null)}
-            className="inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-interactive-hover/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--interactive-focus-ring)]"
+            className="flex-shrink-0 text-muted-foreground"
             aria-label={t('rightSidebar.contextNotesTodo.plans.actions.back')}
             title={t('rightSidebar.contextNotesTodo.plans.actions.back')}
           >
             <Icon name="arrow-left-s" className="h-4 w-4" />
-          </button>
+          </Button>
         ) : null}
         <h3
           className="min-w-0 flex-1 truncate typography-meta font-medium text-muted-foreground"

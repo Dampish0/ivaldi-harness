@@ -489,7 +489,7 @@ export const IntegrateCommitsSection: React.FC<{
                   </span>
                 ))}
                 {ui.details.unmergedFiles.length > 6 && (
-                  <span className="text-xs text-muted-foreground">{t('gitView.integrate.moreFiles', { count: ui.details.unmergedFiles.length - 6 })}</span>
+                  <span className="typography-micro text-muted-foreground">{t('gitView.integrate.moreFiles', { count: ui.details.unmergedFiles.length - 6 })}</span>
                 )}
               </div>
               <div className="flex items-center gap-2 pt-1">

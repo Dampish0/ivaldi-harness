@@ -56,7 +56,8 @@ export const Radio = React.memo<RadioProps>(function Radio({
         // fill driven from props so first paint is correct
         checked
           ? 'bg-[color-mix(in_srgb,var(--primary-base)_80%,transparent)] shadow-none hover:bg-[var(--primary-base)]'
-          : 'bg-[var(--surface-muted)] shadow-[inset_0_0_0_1px_var(--interactive-border)] hover:bg-[var(--interactive-hover)]',
+          // An unselected option keeps a readable ring so it does not look disabled.
+          : 'bg-transparent shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--muted-foreground)_55%,transparent)] hover:bg-[var(--interactive-hover)] hover:shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--muted-foreground)_80%,transparent)]',
         'focus-visible:ring-2 focus-visible:ring-[var(--interactive-focus-ring)] focus-visible:ring-offset-1 focus-visible:ring-offset-background',
         'disabled:cursor-not-allowed disabled:opacity-50',
         className,

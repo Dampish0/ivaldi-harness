@@ -43,7 +43,8 @@ export const Checkbox = React.memo<CheckboxProps>(function Checkbox({
         // the final state without waiting for Base UI to hydrate data attrs.
         isOn
           ? 'border-[color:color-mix(in_srgb,var(--primary-base)_65%,var(--interactive-border))] bg-transparent shadow-none hover:bg-[var(--interactive-hover)] hover:border-[color:color-mix(in_srgb,var(--primary-base)_75%,var(--interactive-border))]'
-          : 'border-[var(--interactive-border)] bg-transparent shadow-none hover:bg-[var(--interactive-hover)] hover:border-[var(--interactive-border)]',
+          // An unchecked box keeps a readable outline so it does not look disabled.
+          : 'border-[color:color-mix(in_srgb,var(--muted-foreground)_55%,transparent)] bg-transparent shadow-none hover:bg-[var(--interactive-hover)] hover:border-[color:color-mix(in_srgb,var(--muted-foreground)_80%,transparent)]',
         // focus: transparent offset so parent bg (e.g. sidebar) doesn't create a visible gap
         'focus-visible:ring-2 focus-visible:ring-[var(--interactive-focus-ring)] focus-visible:ring-offset-1 focus-visible:ring-offset-transparent',
         // disabled

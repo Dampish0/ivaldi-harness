@@ -215,7 +215,7 @@ export function SidebarActivitySections(props: Props): React.ReactNode {
                 <button
                   type="button"
                   onClick={() => showMoreSessions(section.key, visibleItems.length, section.items.length)}
-                  className="mt-0.5 flex items-center justify-start rounded-md pl-[26px] pr-1.5 py-0.5 text-left text-xs text-muted-foreground/70 leading-tight hover:text-foreground hover:underline"
+                  className="mt-0.5 flex items-center justify-start rounded-md pl-[26px] pr-1.5 py-0.5 text-left typography-micro text-muted-foreground/70 leading-tight hover:text-foreground hover:underline"
                 >
                   {t('sessions.sidebar.group.showMore')}
                 </button>
@@ -240,11 +240,16 @@ export function SidebarActivitySections(props: Props): React.ReactNode {
                 )}
                 aria-expanded={!isCollapsed}
               >
+                {/* The chevron follows the label so section titles line up
+                    with the "Projects" header, which has no chevron. */}
+                <span className="typography-micro font-medium uppercase tracking-[0.1em] text-muted-foreground/60">{section.title}</span>
                 <Icon
                   name={isCollapsed ? 'arrow-right-s' : 'arrow-down-s'}
-                  className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground/60"
+                  className={cn(
+                    'h-3.5 w-3.5 flex-shrink-0 text-muted-foreground/60 transition-opacity',
+                    !isCollapsed && 'opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100',
+                  )}
                 />
-                <span className="typography-micro font-medium uppercase tracking-[0.1em] text-muted-foreground/60">{section.title}</span>
               </button>
               {section.key === 'chats' && props.onNewChat ? (
                 <div className="absolute right-0.5 top-1/2 z-10 -translate-y-1/2">
@@ -281,7 +286,7 @@ export function SidebarActivitySections(props: Props): React.ReactNode {
                   <button
                     type="button"
                     onClick={() => showMoreSessions(section.key, visibleItems.length, section.items.length)}
-                    className="mt-0.5 flex items-center justify-start rounded-md pl-[26px] pr-1.5 py-0.5 text-left text-xs text-muted-foreground/70 leading-tight hover:text-foreground hover:underline"
+                    className="mt-0.5 flex items-center justify-start rounded-md pl-[26px] pr-1.5 py-0.5 text-left typography-micro text-muted-foreground/70 leading-tight hover:text-foreground hover:underline"
                   >
                     {t('sessions.sidebar.group.showMore')}
                   </button>
@@ -290,7 +295,7 @@ export function SidebarActivitySections(props: Props): React.ReactNode {
                   <button
                     type="button"
                     onClick={() => resetSectionLimit(section.key)}
-                    className="mt-0.5 flex items-center justify-start rounded-md pl-[26px] pr-1.5 py-0.5 text-left text-xs text-muted-foreground/70 leading-tight hover:text-foreground hover:underline"
+                    className="mt-0.5 flex items-center justify-start rounded-md pl-[26px] pr-1.5 py-0.5 text-left typography-micro text-muted-foreground/70 leading-tight hover:text-foreground hover:underline"
                   >
                     {t('sessions.sidebar.group.showFewer')}
                   </button>

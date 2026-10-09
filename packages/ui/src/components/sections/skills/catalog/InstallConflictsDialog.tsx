@@ -74,8 +74,8 @@ export const InstallConflictsDialog: React.FC<InstallConflictsDialogProps> = ({
           <div className="flex items-center justify-between gap-2">
             <span className="typography-meta text-muted-foreground">{t('settings.skills.catalog.conflicts.count', { count: conflicts.length })}</span>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="xs" className="!font-normal" onClick={() => setAll('skip')}>{t('settings.skills.catalog.conflicts.actions.skipAll')}</Button>
-              <Button variant="outline" size="xs" className="!font-normal" onClick={() => setAll('overwrite')}>{t('settings.skills.catalog.conflicts.actions.overwriteAll')}</Button>
+              <Button variant="outline" size="xs" onClick={() => setAll('skip')}>{t('settings.skills.catalog.conflicts.actions.skipAll')}</Button>
+              <Button variant="outline" size="xs" onClick={() => setAll('overwrite')}>{t('settings.skills.catalog.conflicts.actions.overwriteAll')}</Button>
             </div>
           </div>
 

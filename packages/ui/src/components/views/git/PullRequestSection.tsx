@@ -1511,8 +1511,8 @@ export const PullRequestSection: React.FC<{
               {showWalkthroughAction ? (
                 <Button
                   variant="outline"
-                  size="sm"
-                  className={cn('pr-actions__walkthrough-button h-7 shrink-0 gap-1.5 px-2', WALKTHROUGH_ACTION_CLASS)}
+                  size="compact"
+                  className={cn('pr-actions__walkthrough-button shrink-0 gap-1.5 px-2', WALKTHROUGH_ACTION_CLASS)}
                   onClick={() => {
                     requestWalkthroughSource(directory, { kind: 'pr', number: pr.number });
                     openContextSurface(directory, 'walkthrough');
@@ -1530,8 +1530,7 @@ export const PullRequestSection: React.FC<{
                   <TooltipTrigger asChild>
                     <Button
                       variant="outline"
-                      size="sm"
-                      className="h-7 w-7 px-0"
+                      size="icon-compact"
                       onClick={() => markReady(pr)}
                       disabled={isMarkingReady || isMerging || isUpdating || isEditingPr}
                       aria-label={t('gitView.pr.actions.markReadyAria')}
@@ -1561,8 +1560,7 @@ export const PullRequestSection: React.FC<{
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
-                        size="sm"
-                        className="h-7 w-7 px-0"
+                        size="icon-compact"
                         onClick={() => mergePr(pr)}
                         disabled={isMerging || isMarkingReady || pr.state !== 'open' || pr.draft || isUpdating || isEditingPr}
                         aria-label={t('gitView.pr.actions.mergePrAria')}
@@ -1675,8 +1673,7 @@ export const PullRequestSection: React.FC<{
                                 <TooltipTrigger asChild>
                                   <Button
                                     variant="outline"
-                                    size="sm"
-                                    className="h-9 w-9 px-0"
+                                    size="icon"
                                     onClick={() => {
                                       setIsEditingPr(false);
                                       setEditTitle(pr.title || '');
@@ -1693,8 +1690,7 @@ export const PullRequestSection: React.FC<{
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button
-                                    size="sm"
-                                    className="h-9 w-9 px-0"
+                                    size="icon"
                                     onClick={() => updatePr(pr)}
                                     disabled={isUpdating || !editTitle.trim()}
                                     aria-label={t('gitView.pr.actions.savePrAria')}
@@ -1710,8 +1706,7 @@ export const PullRequestSection: React.FC<{
                               <TooltipTrigger asChild>
                                 <Button
                                   variant="outline"
-                                  size="sm"
-                                  className="h-7 w-7 px-0"
+                                  size="icon-compact"
                                   onClick={() => setIsEditingPr(true)}
                                   aria-label={t('gitView.pr.actions.editPrAria')}
                                 >
@@ -1877,8 +1872,8 @@ export const PullRequestSection: React.FC<{
                       <div className="flex items-center justify-end">
                         <Button
                           variant="ghost"
-                          size="sm"
-                          className="h-7 gap-1.5 text-[var(--status-success)] hover:bg-[var(--status-success-background)] hover:text-[var(--status-success)]"
+                          size="compact"
+                          className="gap-1.5 text-[var(--status-success)] hover:bg-[var(--status-success-background)] hover:text-[var(--status-success)]"
                           onClick={sendCommentsToChat}
                           disabled={isAttachingComments}
                           aria-label={t('gitView.pr.actions.shareCommentsAria')}
@@ -1900,7 +1895,7 @@ export const PullRequestSection: React.FC<{
                             return (
                               <div key={comment.id} className="relative pl-10 pb-5 last:pb-0">
                                 {!isLast ? <div className="absolute left-4 top-[2.375rem] bottom-[0.375rem] w-px bg-border/60" /> : null}
-                                <div className="absolute left-0 top-0 z-10 flex size-8 items-center justify-center overflow-hidden rounded-full border border-border/60 bg-surface-elevated text-xs text-muted-foreground">
+                                <div className="absolute left-0 top-0 z-10 flex size-8 items-center justify-center overflow-hidden rounded-full border border-border/60 bg-surface-elevated typography-micro text-muted-foreground">
                                   {comment.avatarUrl ? (
                                     <img src={comment.avatarUrl} alt={comment.authorName} className="h-full w-full object-cover" />
                                   ) : (
@@ -2091,7 +2086,7 @@ export const PullRequestSection: React.FC<{
                     </div>
                     {additionalContext.trim() && (
                       <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center rounded-full bg-[var(--interactive-selection)] px-2 py-0.5 text-xs text-[var(--interactive-selection-foreground)]">
+                        <span className="inline-flex items-center rounded-full bg-[var(--interactive-selection)] px-2 py-0.5 typography-micro text-[var(--interactive-selection-foreground)]">
                           {t('gitView.pr.additionalContext.added')}
                         </span>
                       </div>

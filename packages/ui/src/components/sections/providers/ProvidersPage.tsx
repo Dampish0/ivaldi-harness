@@ -725,7 +725,7 @@ export const ProvidersPage: React.FC = () => {
                               />
                               <Button
                                 size="xs"
-                                className="!font-normal shrink-0"
+                                className="shrink-0"
                                 onClick={() => handleSaveApiKey(candidateProviderId)}
                                 disabled={authBusyKey === `api:${candidateProviderId}`}
                               >
@@ -842,7 +842,6 @@ export const ProvidersPage: React.FC = () => {
               <Button
                 variant="outline"
                 size="xs"
-                className="!font-normal"
                 onClick={() => {
                   setCustomAuthFailureHint(null);
                   setEditingCustomFormInitial(providerToCustomFormState(selectedProvider));
@@ -856,7 +855,6 @@ export const ProvidersPage: React.FC = () => {
             <Button
               variant="outline"
               size="xs"
-              className="!font-normal"
               onClick={() => setShowAuthPanel((prev) => !prev)}
             >
               {showAuthPanel ? t('settings.providers.page.actions.hide') : t('settings.providers.page.actions.reconnect')}
@@ -904,7 +902,7 @@ export const ProvidersPage: React.FC = () => {
                       />
                       <Button
                         size="xs"
-                        className="!font-normal shrink-0"
+                        className="shrink-0"
                         onClick={() => handleSaveApiKey(selectedProvider.id)}
                         disabled={authBusyKey === `api:${selectedProvider.id}`}
                       >
@@ -958,7 +956,7 @@ export const ProvidersPage: React.FC = () => {
                 <Button
                   variant="ghost"
                   size="xs"
-                  className="!font-normal text-[var(--status-error)] hover:text-[var(--status-error)]"
+                  className="text-[var(--status-error)] hover:text-[var(--status-error)]"
                   onClick={() => handleDisconnectProvider(selectedProvider.id)}
                   disabled={authBusyKey === `disconnect:${selectedProvider.id}`}
                 >
@@ -981,7 +979,6 @@ export const ProvidersPage: React.FC = () => {
             <Button
               variant="outline"
               size="xs"
-              className="!font-normal"
               onClick={() => {
                 const allIds = providerModels
                   .map((model) => (typeof model?.id === 'string' ? model.id : ''))
@@ -994,7 +991,6 @@ export const ProvidersPage: React.FC = () => {
             <Button
               variant="outline"
               size="xs"
-              className="!font-normal"
               onClick={() => showAllModels(selectedProvider.id)}
             >
               {t('settings.providers.page.actions.showAll')}
@@ -1066,15 +1062,16 @@ export const ProvidersPage: React.FC = () => {
                             ))}
                           </div>
                         )}
-                        <button
-                          type="button"
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
                           onClick={() => toggleHiddenModel(selectedProvider.id, modelId)}
-                          className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-[var(--interactive-hover)]/50"
+                          className="text-muted-foreground hover:bg-[var(--interactive-hover)]/50"
                           title={isHidden ? t('settings.providers.page.models.actions.showModelInSelectors') : t('settings.providers.page.models.actions.hideModelFromSelectors')}
                           aria-label={isHidden ? t('settings.providers.page.models.actions.showModel') : t('settings.providers.page.models.actions.hideModel')}
                         >
                           {isHidden ? <Icon name="eye-off" className="h-3.5 w-3.5" /> : <Icon name="eye" className="h-3.5 w-3.5" />}
-                        </button>
+                        </Button>
                       </div>
                       </div>
                     </div>

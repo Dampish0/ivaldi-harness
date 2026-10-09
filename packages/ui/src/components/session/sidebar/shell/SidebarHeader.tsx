@@ -341,14 +341,16 @@ export function SidebarHeader(props: Props): React.ReactNode {
                 }}
               />
               {sessionSearchQuery.length > 0 ? (
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon-xs"
                   onClick={() => setSessionSearchQuery('')}
-                  className="absolute right-1 top-1/2 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground hover:bg-interactive-hover/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--interactive-focus-ring)]"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground"
                   aria-label={t('sessions.sidebar.header.search.clear')}
                 >
-                  <Icon name="close" className="h-3.5 w-3.5" />
-                </button>
+                  <Icon name="close" className="size-3.5" />
+                </Button>
               ) : null}
             </div>
           </div>

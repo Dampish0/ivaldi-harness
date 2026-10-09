@@ -42,7 +42,7 @@ export function LinkedReferenceRow(props: LinkedReferenceRowProps) {
 
     return (
         <div className="pb-2 w-full px-1">
-            <div className="flex w-full items-center gap-1.5 text-sm h-5 px-1">
+            <div className="flex w-full items-center gap-1.5 typography-ui-label h-5 px-1">
                 <button
                     type="button"
                     onClick={onReopenPicker}

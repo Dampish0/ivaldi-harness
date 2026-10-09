@@ -252,7 +252,7 @@ export const ModelMultiSelect: React.FC<ModelMultiSelectProps> = ({
           {isOpen ? (
             <div
               className={cn(
-                'absolute left-0 z-50 w-[min(420px,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] flex flex-col overflow-hidden rounded-xl border border-border/50 shadow-lg',
+                'absolute left-0 z-50 w-[min(420px,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] flex flex-col overflow-hidden rounded-xl border border-border/50 shadow-float',
                 dropdownSide === 'top' ? 'bottom-full mb-1' : 'top-full mt-1',
                 dropdownClassName,
               )}

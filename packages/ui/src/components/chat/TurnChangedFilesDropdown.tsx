@@ -15,6 +15,7 @@ import { ChangedFilesList } from './ChangedFilesList';
 import { changedFilesPopoverClassName, changedFilesPopoverStyle } from './changedFilesPopover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Icon } from "@/components/icon/Icon";
+import { useI18n } from '@/lib/i18n';
 import type { TurnActivityRecord } from './lib/turns/types';
 
 interface TurnChangedFilesDropdownProps {
@@ -22,6 +23,7 @@ interface TurnChangedFilesDropdownProps {
 }
 
 export const TurnChangedFilesDropdown: React.FC<TurnChangedFilesDropdownProps> = React.memo(({ activityParts }) => {
+    const { t } = useI18n();
     const [isExpanded, setIsExpanded] = React.useState(false);
     const [portalContainer, setPortalContainer] = React.useState<HTMLElement | null>(null);
     const triggerButtonRef = React.useRef<HTMLButtonElement | null>(null);
@@ -66,7 +68,10 @@ export const TurnChangedFilesDropdown: React.FC<TurnChangedFilesDropdownProps> =
     };
 
     const fileCount = changedFiles.length;
-    const label = `${fileCount} file${fileCount !== 1 ? 's' : ''}`;
+    const label = fileCount === 1
+        ? t('chat.pendingChanges.fileCountSingle', { count: fileCount })
+        : t('chat.pendingChanges.fileCountPlural', { count: fileCount });
+    const summary = t('chat.changedFiles.changedInReply', { files: label });
 
     return (
         <Popover.Root open={isExpanded} onOpenChange={setIsExpanded}>
@@ -77,8 +82,8 @@ export const TurnChangedFilesDropdown: React.FC<TurnChangedFilesDropdownProps> =
                             <button
                                 ref={triggerButtonRef}
                                 type="button"
-                                className="flex items-center gap-1 text-sm text-muted-foreground/60 hover:text-muted-foreground tabular-nums"
-                                aria-label={`${label} changed in this turn`}
+                                className="flex items-center gap-1 typography-ui-label text-muted-foreground/60 hover:text-muted-foreground tabular-nums"
+                                aria-label={summary}
                                 onPointerDownCapture={syncPortalContainer}
                                 onFocusCapture={syncPortalContainer}
                             >
@@ -93,7 +98,7 @@ export const TurnChangedFilesDropdown: React.FC<TurnChangedFilesDropdownProps> =
                         }
                     />
                 </TooltipTrigger>
-                <TooltipContent>{label} changed in this turn</TooltipContent>
+                <TooltipContent>{summary}</TooltipContent>
             </Tooltip>
             <Popover.Portal container={portalContainer || undefined}>
                 <Popover.Positioner side="top" align="start" sideOffset={4} collisionPadding={8}>

@@ -153,7 +153,7 @@ export function InlineCommentInput({
     >
       <div className="oc-glass-popover rounded-xl border border-[var(--interactive-border)] shadow-float">
         {(fileLabel || displayRange) ? (
-          <div className="flex items-center gap-2 px-3 pt-2 text-xs font-medium text-[var(--surface-mutedForeground)] opacity-60">
+          <div className="flex items-center gap-2 px-3 pt-2 typography-micro font-medium text-[var(--surface-mutedForeground)] opacity-60">
             {fileLabel ? <span className="max-w-[200px] truncate">{fileLabel}</span> : null}
             {fileLabel && displayRange ? <span>•</span> : null}
             {displayRange ? (
@@ -172,7 +172,7 @@ export function InlineCommentInput({
             ? t('inlineComment.input.placeholderShort')
             : t('inlineComment.input.placeholder', { shortcut: saveShortcut })}
           className={cn(
-            'min-w-0 flex-1 resize-none bg-transparent text-sm leading-5 text-[var(--surface-foreground)] outline-none placeholder:text-[var(--surface-mutedForeground)] placeholder:opacity-60',
+            'min-w-0 flex-1 resize-none bg-transparent typography-ui-label leading-5 text-[var(--surface-foreground)] outline-none placeholder:text-[var(--surface-mutedForeground)] placeholder:opacity-60',
             isMobile ? 'py-1.5 text-base leading-6' : 'py-1.5'
           )}
           style={{ minHeight: 0, height: 'auto' }}

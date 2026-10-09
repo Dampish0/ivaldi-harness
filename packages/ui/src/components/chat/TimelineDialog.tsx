@@ -227,7 +227,7 @@ export const TimelineDialog: React.FC<TimelineDialogProps> = ({
         <>
             <button
                 type="button"
-                className="text-[11px] uppercase tracking-wide text-muted-foreground/90 hover:text-foreground"
+                className="typography-micro uppercase tracking-wide text-muted-foreground/90 hover:text-foreground"
                 onClick={() => {
                     void onScrollByTurnOffset?.(-1);
                     onOpenChange(false);
@@ -238,7 +238,7 @@ export const TimelineDialog: React.FC<TimelineDialogProps> = ({
             <span className="text-muted-foreground/50">/</span>
             <button
                 type="button"
-                className="text-[11px] uppercase tracking-wide text-muted-foreground/90 hover:text-foreground"
+                className="typography-micro uppercase tracking-wide text-muted-foreground/90 hover:text-foreground"
                 onClick={() => {
                     onResumeToLatest?.();
                     onOpenChange(false);
@@ -376,6 +376,7 @@ export const TimelineDialog: React.FC<TimelineDialogProps> = ({
                                                 <Tooltip>
                                                     <TooltipTrigger asChild>
                                                         <button
+                                                            aria-label={t('chat.timeline.actions.forkFromHere')}
                                                             type="button"
                                                             className="h-5 w-5 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
                                                             onClick={(e) => {

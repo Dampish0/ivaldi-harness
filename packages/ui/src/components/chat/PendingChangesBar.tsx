@@ -110,7 +110,7 @@ export const PendingChangesBar: React.FC = React.memo(() => {
                 <span className="composer-status-bar__changed-label min-w-0 typography-ui-label text-foreground truncate">
                     {t('chat.pendingChanges.changedInWorkspace')}
                 </span>
-                <span className="text-[0.75rem] tabular-nums inline-flex items-baseline gap-1 flex-shrink-0">
+                <span className="typography-micro tabular-nums inline-flex items-baseline gap-1 flex-shrink-0">
                     {totalAdded > 0 ? <span style={{ color: 'var(--status-success)' }}>+{totalAdded}</span> : null}
                     {totalRemoved > 0 ? <span style={{ color: 'var(--status-error)' }}>-{totalRemoved}</span> : null}
                 </span>

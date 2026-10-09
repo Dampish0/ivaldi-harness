@@ -75,7 +75,7 @@ export function DesktopConnectionRecovery({
           <h1 className="typography-ui-header text-xl font-semibold text-foreground">
             {t(config.titleKey as Parameters<typeof t>[0])}
           </h1>
-          <p className="text-muted-foreground text-sm max-w-sm">
+          <p className="text-muted-foreground typography-ui-label max-w-sm">
             {t(
               config.descriptionKey as Parameters<typeof t>[0],
               descriptionParams
@@ -86,7 +86,7 @@ export function DesktopConnectionRecovery({
         {/* Host info if available */}
         {hostUrl && (variant === 'remote-unreachable' || variant === 'remote-wrong-service' || variant === 'remote-incompatible') && (
           <div className="rounded-lg border border-border bg-background/50 p-3">
-            <div className="text-xs text-muted-foreground mb-1">{t('onboarding.remoteConnection.field.serverAddress')}</div>
+            <div className="typography-micro text-muted-foreground mb-1">{t('onboarding.remoteConnection.field.serverAddress')}</div>
             <div className="font-mono text-sm text-foreground truncate">{redactSensitiveUrl(hostUrl)}</div>
           </div>
         )}

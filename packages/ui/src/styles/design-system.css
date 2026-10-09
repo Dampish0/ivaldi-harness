@@ -293,6 +293,8 @@
 
   /* Small floating surfaces such as selection menus and composer popups. Large menus use .oc-glass-floating. */
   --shadow-float: 0 4px 16px -4px rgb(0 0 0 / 0.12);
+  /* Dialogs and the settings window, so they lift off the dimmed page. */
+  --shadow-dialog: 0 24px 64px -16px rgb(0 0 0 / 0.28), 0 2px 8px -2px rgb(0 0 0 / 0.08);
 
   /* Semantic spacing aliases (4/8px grid) */
   --space-1: var(--spacing-1); /* 4px */

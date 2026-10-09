@@ -122,7 +122,7 @@ export const RevertedMessageDock: React.FC<RevertedMessageDockProps> = React.mem
         <div className="pb-2 w-full px-1">
             <div className={cn(
                 'overflow-hidden border border-border/60 bg-[var(--surface-elevated)] text-[var(--surface-elevated-foreground)]',
-                isMobile ? 'rounded-md shadow-none' : 'rounded-xl shadow-sm',
+                isMobile ? 'rounded-md shadow-none' : 'rounded-xl',
             )}>
                 <button
                     type="button"

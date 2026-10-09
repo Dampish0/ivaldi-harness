@@ -39,6 +39,7 @@ function BashCommand({ onCopy, copyTitle }: { onCopy: () => void; copyTitle: str
         onClick={onCopy}
         className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors"
         title={copyTitle}
+        aria-label={copyTitle}
       >
         <Icon name="file-copy" className="h-4 w-4" />
       </button>
@@ -236,8 +237,8 @@ export function LocalSetupScreen({
 
         {platform === 'windows' && (
           <div className="mx-auto max-w-2xl rounded-lg border border-border bg-background/50 p-4 text-left">
-            <div className="text-sm text-foreground">{t('onboarding.localSetup.windows.title')}</div>
-            <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
+            <div className="typography-ui-label text-foreground">{t('onboarding.localSetup.windows.title')}</div>
+            <ol className="mt-2 list-decimal space-y-1 pl-5 typography-ui-label text-muted-foreground">
               <li>{t('onboarding.localSetup.windows.stepRunInstallInWsl')}</li>
               <li>{t('onboarding.localSetup.windows.stepSetBinaryPath')}</li>
             </ol>
@@ -261,14 +262,14 @@ export function LocalSetupScreen({
           href={docsUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1 justify-center"
+          className="typography-ui-label text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1 justify-center"
         >
           {platform === 'windows' ? t('onboarding.localSetup.docs.windows') : t('onboarding.localSetup.docs.default')}
           <Icon name="external-link" className="h-3 w-3" />
         </a>
 
         {checkError && (
-          <div className="mx-auto max-w-md rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+          <div className="mx-auto max-w-md rounded-lg border border-destructive/50 bg-destructive/10 p-3 typography-ui-label text-destructive">
             {checkError}
           </div>
         )}
@@ -284,14 +285,14 @@ export function LocalSetupScreen({
             {isChecking ? t('onboarding.localSetup.actions.checking') : t('onboarding.localSetup.actions.checkAndContinue')}
           </Button>
 
-          <p className="text-xs text-muted-foreground">
+          <p className="typography-micro text-muted-foreground">
             {t('onboarding.localSetup.helper.checkAndContinue')}
           </p>
         </div>
 
         <div className="mx-auto w-full max-w-xl pt-4">
           <div className="space-y-2">
-            <div className="text-sm text-muted-foreground">{t('onboarding.localSetup.field.alreadyInstalled')}</div>
+            <div className="typography-ui-label text-muted-foreground">{t('onboarding.localSetup.field.alreadyInstalled')}</div>
             <div className="flex gap-2">
               <Input
                 value={opencodeBinary}
@@ -316,13 +317,13 @@ export function LocalSetupScreen({
                 {t('onboarding.localSetup.actions.apply')}
               </Button>
             </div>
-            <div className="text-xs text-muted-foreground/70">{t('onboarding.localSetup.helper.saveAndReload')}</div>
+            <div className="typography-micro text-muted-foreground/70">{t('onboarding.localSetup.helper.saveAndReload')}</div>
           </div>
         </div>
 
         {isFromRecovery && onSwitchToRemote && (
           <div className="text-center pt-4">
-            <p className="text-sm text-muted-foreground mb-2">
+            <p className="typography-ui-label text-muted-foreground mb-2">
               {t('onboarding.localSetup.remotePreference')}
             </p>
             <Button
@@ -339,19 +340,19 @@ export function LocalSetupScreen({
         <div className="absolute bottom-8 left-0 right-0 text-center space-y-1">
           {platform === 'windows' ? (
             <>
-              <p className="text-sm text-muted-foreground/70">
+              <p className="typography-ui-label text-muted-foreground/70">
                 {t('onboarding.localSetup.windows.hintDetectionFailed')}
               </p>
             </>
           ) : (
             <>
-              <p className="text-sm text-muted-foreground/70">
+              <p className="typography-ui-label text-muted-foreground/70">
                 {t('onboarding.localSetup.hint.ensurePath')}
               </p>
-              <p className="text-sm text-muted-foreground/70">
+              <p className="typography-ui-label text-muted-foreground/70">
                 {t('onboarding.localSetup.hint.setEnv')}
               </p>
-              <p className="text-sm text-muted-foreground/70">
+              <p className="typography-ui-label text-muted-foreground/70">
                 {t('onboarding.localSetup.hint.missingRuntime')}
               </p>
             </>

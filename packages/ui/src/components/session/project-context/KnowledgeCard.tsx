@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { Icon } from '@/components/icon/Icon';
+import { Button } from '@/components/ui/button';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 
@@ -62,15 +63,17 @@ export const KnowledgeCard: React.FC<{
           onKeyDown={(event) => event.stopPropagation()}
         >
           {expanded ? (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-xs"
               onClick={onToggleExpanded}
-              className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-interactive-hover/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--interactive-focus-ring)]"
+              className="text-muted-foreground"
               aria-label={t('rightSidebar.contextNotesTodo.notes.actions.collapse')}
               title={t('rightSidebar.contextNotesTodo.notes.actions.collapse')}
             >
-              <Icon name="arrow-up-s" className="h-3.5 w-3.5" />
-            </button>
+              <Icon name="arrow-up-s" className="size-3.5" />
+            </Button>
           ) : null}
           {actions}
         </div>

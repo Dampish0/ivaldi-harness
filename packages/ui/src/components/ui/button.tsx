@@ -91,11 +91,14 @@ const buttonVariants = cva(
       size: {
         default: "h-9 px-3.5 has-[>svg]:px-3",
         sm: "h-8 gap-1.5 px-2.5 has-[>svg]:px-2 rounded-md",
+        // Dense toolbars, panel headers and settings rows.
+        compact: "h-7 gap-1.5 px-2 has-[>svg]:px-1.5 rounded-md",
         xs: "h-6 gap-1 px-2 typography-micro has-[>svg]:px-1.5 rounded-md",
         lg: "h-10 px-4 has-[>svg]:px-3.5 rounded-lg",
         icon: "size-9",
-        // Icon-only squares that line up with the sm and xs text buttons.
+        // Icon-only squares that line up with the sm, compact and xs text buttons.
         "icon-sm": "size-8 rounded-md",
+        "icon-compact": "size-7 rounded-md",
         "icon-xs": "size-6 rounded-md",
       },
     },

@@ -234,7 +234,7 @@ const formatDiffTotals = (
     return (
         <span
             className={cn(
-                'typography-meta flex items-center gap-1 text-xs whitespace-nowrap',
+                'typography-micro flex items-center gap-1 whitespace-nowrap',
                 options?.shrink ? 'min-w-0 overflow-hidden' : 'flex-shrink-0',
                 options?.className,
             )}
@@ -457,7 +457,7 @@ const FileDiffActions = React.memo<FileDiffActionsProps>(({
 }) => {
     const { t } = useI18n();
     return (
-        <div className="flex items-center gap-0.5 rounded-full border border-[var(--interactive-border)]/45 bg-[var(--surface-background)]/95 px-1 py-0.5 shadow-sm backdrop-blur-md">
+        <div className="flex items-center gap-0.5 rounded-full border border-[var(--interactive-border)]/45 bg-[var(--surface-background)]/95 px-1 py-0.5 shadow-float backdrop-blur-md">
             {staged ? (
                 <FileDiffActionButton
                     label={t('gitView.changes.unstageFileAria', { path: filePath })}
@@ -509,9 +509,9 @@ const FileDiffActionButton: React.FC<FileDiffActionButtonProps> = ({
 }) => (
     <Button
         variant="ghost"
-        size="sm"
+        size="icon-xs"
         className={cn(
-            'h-6 w-6 rounded-none bg-transparent p-0 text-muted-foreground opacity-70 hover:bg-transparent hover:text-foreground hover:opacity-100',
+            'rounded-none bg-transparent text-muted-foreground opacity-70 hover:bg-transparent hover:text-foreground hover:opacity-100',
             tone === 'failure' && 'text-[var(--status-error)] hover:text-[var(--status-error)]',
             tone === 'success' && 'text-[var(--status-success)] hover:text-[var(--status-success)]'
         )}
@@ -819,6 +819,7 @@ const MultiFileDiffEntry = React.memo<MultiFileDiffEntryProps>(({
                                 size="sm"
                                 className="h-5 w-5 p-0 opacity-70 hover:opacity-100"
                                 title={t('diffView.actions.openFileInEditorAtChange')}
+                                aria-label={t('diffView.actions.openFileInEditorAtChange')}
                                 onClick={(event) => {
                                     event.stopPropagation();
                                     onOpenInEditor(file.path, diffData);
@@ -850,7 +851,7 @@ const MultiFileDiffEntry = React.memo<MultiFileDiffEntryProps>(({
                         <div className="h-40 border border-border/40 bg-background/40" />
                     ) : null}
                     {diffLoadError ? (
-                        <div className="flex flex-col items-center gap-2 px-4 py-8 text-sm text-muted-foreground">
+                        <div className="flex flex-col items-center gap-2 px-4 py-8 typography-ui-label text-muted-foreground">
                             <div className="typography-ui-label font-semibold text-foreground">
                                 {t('diffView.state.failedToLoadDiff')}
                             </div>
@@ -867,13 +868,13 @@ const MultiFileDiffEntry = React.memo<MultiFileDiffEntryProps>(({
                         </div>
                     ) : null}
                     {isMounted && isLoading && !diffData && !diffLoadError ? (
-                        <div className="flex items-center justify-center gap-2 px-4 py-8 text-sm text-muted-foreground">
+                        <div className="flex items-center justify-center gap-2 px-4 py-8 typography-ui-label text-muted-foreground">
                             <Icon name="loader-4" className="size-4 animate-spin" />
                             {t('diffView.state.loadingDiff')}
                         </div>
                     ) : null}
                     {isMounted && diffData && !forceRenderLarge && (file.insertions + file.deletions) > LARGE_DIFF_CHANGED_LINES ? (
-                        <div className="flex flex-col items-center gap-2 px-4 py-8 text-sm text-muted-foreground">
+                        <div className="flex flex-col items-center gap-2 px-4 py-8 typography-ui-label text-muted-foreground">
                             <div className="typography-ui-label font-semibold text-foreground">
                                 {t('diffView.state.largeDiff', { count: file.insertions + file.deletions })}
                             </div>
@@ -1896,7 +1897,7 @@ export const DiffView: React.FC<DiffViewProps> = ({
 
         if (!effectiveDirectory) {
             return (
-                <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+                <div className="flex flex-1 items-center justify-center typography-ui-label text-muted-foreground">
                     {t('diffView.state.selectSessionDirectory')}
                 </div>
             );
@@ -1904,7 +1905,7 @@ export const DiffView: React.FC<DiffViewProps> = ({
 
         if (activeDiffScope !== 'turn' && isLoadingStatus && !status) {
             return (
-                <div className="flex flex-1 items-center justify-center gap-2 text-sm text-muted-foreground">
+                <div className="flex flex-1 items-center justify-center gap-2 typography-ui-label text-muted-foreground">
                     <Icon name="loader-4" className="size-4 animate-spin" />
                     {t('diffView.state.loadingRepositoryStatus')}
                 </div>
@@ -1913,7 +1914,7 @@ export const DiffView: React.FC<DiffViewProps> = ({
 
         if (activeDiffScope !== 'turn' && isGitRepo === false) {
             return (
-                <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+                <div className="flex flex-1 items-center justify-center typography-ui-label text-muted-foreground">
                     {t('diffView.state.notGitRepository')}
                 </div>
             );
@@ -1922,7 +1923,7 @@ export const DiffView: React.FC<DiffViewProps> = ({
         if (activeDiffScope === 'branch') {
             if (!isBranchBaseResolved) {
                 return (
-                    <div className="flex flex-1 items-center justify-center gap-2 text-sm text-muted-foreground">
+                    <div className="flex flex-1 items-center justify-center gap-2 typography-ui-label text-muted-foreground">
                         <Icon name="loader-4" className="size-4 animate-spin" />
                         {t('diffView.branch.resolvingBase')}
                     </div>
@@ -1991,7 +1992,7 @@ export const DiffView: React.FC<DiffViewProps> = ({
 
             if (branchFiles === null) {
                 return (
-                    <div className="flex flex-1 items-center justify-center gap-2 text-sm text-muted-foreground">
+                    <div className="flex flex-1 items-center justify-center gap-2 typography-ui-label text-muted-foreground">
                         <Icon name="loader-4" className="size-4 animate-spin" />
                         {t('diffView.branch.loadingFiles')}
                     </div>
@@ -2001,7 +2002,7 @@ export const DiffView: React.FC<DiffViewProps> = ({
 
         if (changedFiles.length === 0) {
             return (
-                <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+                <div className="flex flex-1 items-center justify-center typography-ui-label text-muted-foreground">
                     {activeDiffScope === 'turn' ? t('diffView.state.noLastTurnChanges')
                         : activeDiffScope === 'branch' && branchBase ? t('diffView.branch.empty', { base: branchBase })
                         : t('diffView.state.cleanWorkingTree')}
@@ -2044,10 +2045,10 @@ export const DiffView: React.FC<DiffViewProps> = ({
                 {changedFiles.length > 0 && (
                     <Button
                         variant="ghost"
-                        size="sm"
+                        size="compact"
                         onClick={handleExpandOrCollapseAll}
                         className={cn(
-                            'diff-toolbar__expand-button h-7 flex-shrink-0 gap-1 px-1.5 text-muted-foreground hover:text-foreground',
+                            'diff-toolbar__expand-button flex-shrink-0 gap-1 px-1.5 text-muted-foreground hover:text-foreground',
                             'ml-auto',
                         )}
                         title={expandedFiles.size > 0 ? t('diffView.actions.collapseAll') : t('diffView.actions.expandAll')}
@@ -2064,10 +2065,10 @@ export const DiffView: React.FC<DiffViewProps> = ({
                 {changedFiles.length > 0 && showReviewAction && (
                     <Button
                         variant="default"
-                        size="sm"
+                        size="compact"
                         onClick={() => setReviewDialogOpen(true)}
                         disabled={reviewFlowSubmitting}
-                        className="diff-toolbar__review-button h-7 flex-shrink-0 gap-1.5 px-2"
+                        className="diff-toolbar__review-button flex-shrink-0 gap-1.5 px-2"
                         aria-label={t('diffView.actions.reviewAria')}
                     >
                         {reviewFlowSubmitting ? (
@@ -2083,7 +2084,7 @@ export const DiffView: React.FC<DiffViewProps> = ({
                 {changedFiles.length > 0 && showWalkthroughAction && (
                     <Button
                         variant="outline"
-                        size="sm"
+                        size="compact"
                         onClick={() => {
                             // Carry the scope across: opening the walkthrough
                             // while looking at staged changes should review
@@ -2097,7 +2098,7 @@ export const DiffView: React.FC<DiffViewProps> = ({
                             });
                             openContextSurface(directory, 'walkthrough');
                         }}
-                        className={cn('diff-toolbar__walkthrough-button h-7 flex-shrink-0 gap-1.5 px-2', WALKTHROUGH_ACTION_CLASS)}
+                        className={cn('diff-toolbar__walkthrough-button flex-shrink-0 gap-1.5 px-2', WALKTHROUGH_ACTION_CLASS)}
                         aria-label={t('walkthrough.action.open')}
                     >
                         <Icon name="route" className="size-4" />
@@ -2111,12 +2112,12 @@ export const DiffView: React.FC<DiffViewProps> = ({
                         <TooltipTrigger asChild>
                             <Button
                                 variant="ghost"
-                                size="sm"
+                                size="icon-compact"
                                 onClick={() => setLoadFullFiles((value) => !value)}
                                 aria-pressed={loadFullFiles}
                                 aria-label={loadFullFiles ? t('diffView.actions.disableFullFiles') : t('diffView.actions.loadFullFiles')}
                                 className={cn(
-                                    'h-7 w-7 flex-shrink-0 p-0 text-muted-foreground hover:text-foreground',
+                                    'flex-shrink-0 text-muted-foreground hover:text-foreground',
                                     loadFullFiles && 'bg-interactive-selection text-interactive-selection-foreground',
                                 )}
                             >
@@ -2138,6 +2139,7 @@ export const DiffView: React.FC<DiffViewProps> = ({
                             diffWrapLines ? 'text-foreground opacity-100' : 'text-muted-foreground opacity-60 hover:opacity-100'
                         )}
                         title={diffWrapLines ? t('diffView.actions.disableLineWrap') : t('diffView.actions.enableLineWrap')}
+                        aria-label={diffWrapLines ? t('diffView.actions.disableLineWrap') : t('diffView.actions.enableLineWrap')}
                     >
                         <Icon name="text-wrap" className="size-4" />
                     </Button>

@@ -242,8 +242,8 @@ const LocalModelPicker = ({
                                     <>
                                         <Button
                                             variant="ghost"
-                                            size="xs"
-                                            className="h-6 w-6 p-0 text-muted-foreground hover:text-[var(--status-error)]"
+                                            size="icon-xs"
+                                            className="text-muted-foreground hover:text-[var(--status-error)]"
                                             disabled={requestingId === entry.id}
                                             onClick={() => { void handleDelete(entry.id); }}
                                             title={t('settings.voice.page.stt.modelDelete')}
@@ -267,8 +267,7 @@ const LocalModelPicker = ({
                                 ) : (
                                     <Button
                                         variant="ghost"
-                                        size="xs"
-                                        className="h-6 w-6 p-0"
+                                        size="icon-xs"
                                         disabled={requestingId === entry.id}
                                         onClick={() => { void handleDownload(entry.id); }}
                                         title={t('settings.voice.page.stt.modelDownload')}
@@ -372,8 +371,8 @@ const LocalTtsModelStatus = () => {
                     />
                     <Button
                         variant="ghost"
-                        size="xs"
-                        className="h-6 w-6 p-0 text-muted-foreground hover:text-[var(--status-error)]"
+                        size="icon-xs"
+                        className="text-muted-foreground hover:text-[var(--status-error)]"
                         disabled={requesting}
                         onClick={() => { void request('DELETE'); }}
                         title={t('settings.voice.page.stt.modelDelete')}
@@ -392,8 +391,7 @@ const LocalTtsModelStatus = () => {
             ) : (
                 <Button
                     variant="ghost"
-                    size="xs"
-                    className="h-6 w-6 p-0"
+                    size="icon-xs"
                     disabled={requesting}
                     onClick={() => { void request('POST'); }}
                     title={t('settings.voice.page.stt.modelDownload')}
@@ -971,7 +969,7 @@ export const VoiceSettings: React.FC = () => {
                                                     className="h-8 rounded-md bg-transparent px-3 typography-ui-label"
                                                 />
                                             </div>
-                                            <Button size="xs" variant="ghost" onClick={previewCompatibleVoice} title={t('settings.voice.page.actions.preview')} disabled={!openaiCompatibleUrl.trim()}>
+                                            <Button size="xs" variant="ghost" onClick={previewCompatibleVoice} title={t('settings.voice.page.actions.preview')} aria-label={t('settings.voice.page.actions.preview')} disabled={!openaiCompatibleUrl.trim()}>
                                                 {isCompatiblePreviewPlaying ? <Icon name="stop" className="w-3.5 h-3.5" /> : <Icon name="play" className="w-3.5 h-3.5" />}
                                             </Button>
                                         </div>
@@ -1001,7 +999,7 @@ export const VoiceSettings: React.FC = () => {
                                                     ))}
                                                 </SelectContent>
                                             </Select>
-                                            <Button size="xs" variant="ghost" onClick={previewLocalVoice} title={t('settings.voice.page.actions.preview')}>
+                                            <Button size="xs" variant="ghost" onClick={previewLocalVoice} title={t('settings.voice.page.actions.preview')} aria-label={t('settings.voice.page.actions.preview')}>
                                                 {isLocalTtsPlaying ? <Icon name="stop" className="w-3.5 h-3.5" /> : <Icon name="play" className="w-3.5 h-3.5" />}
                                             </Button>
                                             {localTtsError ? (
@@ -1022,7 +1020,7 @@ export const VoiceSettings: React.FC = () => {
                                                     ))}
                                                 </SelectContent>
                                             </Select>
-                                            <Button size="xs" variant="ghost" onClick={previewOpenAIVoice} title={t('settings.voice.page.actions.preview')}>
+                                            <Button size="xs" variant="ghost" onClick={previewOpenAIVoice} title={t('settings.voice.page.actions.preview')} aria-label={t('settings.voice.page.actions.preview')}>
                                                 {isOpenAIPreviewPlaying ? <Icon name="stop" className="w-3.5 h-3.5" /> : <Icon name="play" className="w-3.5 h-3.5" />}
                                             </Button>
                                         </>
@@ -1044,7 +1042,7 @@ export const VoiceSettings: React.FC = () => {
                                                     ))}
                                                 </SelectContent>
                                             </Select>
-                                            <Button size="xs" variant="ghost" onClick={previewVoice} title={t('settings.voice.page.actions.preview')}>
+                                            <Button size="xs" variant="ghost" onClick={previewVoice} title={t('settings.voice.page.actions.preview')} aria-label={t('settings.voice.page.actions.preview')}>
                                                 {isPreviewPlaying ? <Icon name="stop" className="w-3.5 h-3.5" /> : <Icon name="play" className="w-3.5 h-3.5" />}
                                             </Button>
                                         </>
@@ -1063,7 +1061,7 @@ export const VoiceSettings: React.FC = () => {
                                                     ))}
                                                 </SelectContent>
                                             </Select>
-                                            <Button size="xs" variant="ghost" onClick={previewBrowserVoice} title={t('settings.voice.page.actions.preview')}>
+                                            <Button size="xs" variant="ghost" onClick={previewBrowserVoice} title={t('settings.voice.page.actions.preview')} aria-label={t('settings.voice.page.actions.preview')}>
                                                 {isBrowserPreviewPlaying ? <Icon name="stop" className="w-3.5 h-3.5" /> : <Icon name="play" className="w-3.5 h-3.5" />}
                                             </Button>
                                         </>

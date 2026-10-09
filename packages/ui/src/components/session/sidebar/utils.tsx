@@ -110,10 +110,25 @@ export const isLegacyDefaultSessionTitle = (value?: string | null): boolean => {
   return Boolean(title && LEGACY_DEFAULT_SESSION_TITLE_PATTERN.test(title));
 };
 
+// Models sometimes title a chat with Markdown, such as "## Summary",
+// "**Plan**" or "A plan for the **report**". Work mode shows the plain words.
+const TITLE_HEADING_PATTERN = /^#{1,6}\s+/;
+// Only ** inside a title: underscores are common in file names.
+const TITLE_INLINE_BOLD_PATTERN = /\*\*(\S(?:.*?\S)?)\*\*/g;
+const TITLE_WRAPPING_EMPHASIS_PATTERN = /^(\*\*|__|\*|_|`)(.+)\1$/;
+
+const stripTitleMarkdown = (title: string): string => {
+  return title
+    .replace(TITLE_HEADING_PATTERN, '')
+    .replace(TITLE_INLINE_BOLD_PATTERN, '$1')
+    .replace(TITLE_WRAPPING_EMPHASIS_PATTERN, '$2')
+    .trim();
+};
+
 export const resolveWorkChatTitle = (value: string | null | undefined, fallback: string): string => {
   const title = value?.trim();
   if (!title || isLegacyDefaultSessionTitle(title)) return fallback;
-  return title;
+  return stripTitleMarkdown(title) || fallback;
 };
 
 export const isPathWithinProject = (directory?: string | null, projectPath?: string | null): boolean => {
