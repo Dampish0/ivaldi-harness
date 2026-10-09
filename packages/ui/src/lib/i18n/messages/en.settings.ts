@@ -1217,7 +1217,7 @@ export const settingsDict = {
   'settings.openchamber.keyboardShortcuts.action.toggle_dictation.label': 'Voice input',
   'settings.projects.sidebar.total': 'Total {count}',
   'settings.projects.sidebar.actions.addProject': 'Add project',
-  'settings.projects.page.empty.noProjects': 'No projects available.',
+  'settings.projects.page.empty.noProjects': 'No projects yet. Click + to add a folder.',
   'settings.projects.page.title.default': 'Project settings',
   'settings.projects.page.section.worktree': 'Worktree',
   'settings.projects.page.field.projectName': 'Project name',

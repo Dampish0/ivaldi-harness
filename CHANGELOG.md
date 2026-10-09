@@ -46,6 +46,7 @@ All notable changes to this project will be documented in this file.
 - Composer: the thinking level button reads "Thinking: Default" in Work mode, and its tooltip and screen reader label are translated.
 - Settings: dropdowns show the picked option's name instead of its stored value, so Usage shows "Usage" rather than "usage" and project pickers no longer show internal ids.
 - Work mode settings: the AI page shows "Automatic" for an unset model or assistant, Integrations talks about AI services instead of providers and plugins, and Extensions says "Online extension" and "Extension folder".
+- Work mode settings: Voice offers "This computer" or "Online service", and Remote connections is titled "Use Ivaldi from another device". An empty Projects page says how to add one.
 
 ## [1.21.0] - 2026-08-26
 
