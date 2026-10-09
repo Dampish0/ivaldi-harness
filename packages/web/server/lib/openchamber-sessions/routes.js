@@ -33,7 +33,7 @@ const resolveRequestedModel = (payload) => {
 };
 
 const FALLBACK_PROVIDER_ID = 'opencode';
-const FALLBACK_MODEL_ID = 'mimo-v2.6-flash-free';
+const FALLBACK_MODEL_ID = 'ling-3.1-flash-free';
 const MIN_GOAL_TOKEN_BUDGET = 1_000;
 const MAX_GOAL_TOKEN_BUDGET = 100_000_000;
 

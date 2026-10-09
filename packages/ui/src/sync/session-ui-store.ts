@@ -1186,7 +1186,7 @@ export const useSessionUIStore = create<SessionUIState>()((set, get) => ({
     // Config (providers/agents/default model+agent) lives at the PROJECT level. When the user
     // came from a worktree session, `directory` is the worktree path, whose provider list does
     // not include project/global-scoped providers (e.g. the default agent's non-opencode model)
-    // — resolving defaults against it would wrongly fall back to opencode/mimo-v2.6-flash-free. Activate
+    // — resolving defaults against it would wrongly fall back to opencode/ling-3.1-flash-free. Activate
     // the project's config instead so the default cascade matches app startup, then re-apply it
     // (a fresh draft must start from defaults, not inherit the previous session's selection).
     const configDirectory = normalizePath(selectedProject?.path ?? null) ?? directory

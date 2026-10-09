@@ -27,7 +27,7 @@ const MODELS_DEV_API_URL = "https://models.dev/api.json";
 const MODELS_DEV_PROXY_URL = "/api/openchamber/models-metadata";
 
 const FALLBACK_PROVIDER_ID = "opencode";
-const FALLBACK_MODEL_ID = "mimo-v2.6-flash-free";
+const FALLBACK_MODEL_ID = "ling-3.1-flash-free";
 // Sentinel selectedProviderId used by the providers UI while the "Add provider"
 // form is open. It is intentionally not a real provider id and must not be
 // persisted as a stable provider selection.
@@ -280,7 +280,7 @@ type DefaultAgentModelSelection = {
 //
 //   Agent: settings.defaultAgent → opencode default_agent → build → first primary → first
 //   Model: project.defaultModel → settings.defaultModel → resolved agent's pinned model+variant → opencode config.model
-//          → opencode/mimo-v2.6-flash-free → first
+//          → opencode/ling-3.1-flash-free → first
 //
 // The opencode default_agent / default model (config fields on the OpenCode server) are honored
 // only when our own settings have no valid default. OpenCode itself resolves a model the same way:
@@ -2249,7 +2249,7 @@ export const useConfigStore = create<ConfigStore>()(
 
                             // Resolve agent + model via the shared cascade:
                             //   settings.defaultAgent → opencode default_agent → build → first primary → first
-                            //   settings.defaultModel → resolved agent's model+variant → opencode/mimo-v2.6-flash-free → first
+                            //   settings.defaultModel → resolved agent's model+variant → opencode/ling-3.1-flash-free → first
                             const resolvedDefault = resolveDefaultAgentModelSelection({
                                 agents: safeAgents,
                                 providers,
@@ -2602,7 +2602,7 @@ export const useConfigStore = create<ConfigStore>()(
 
                 // Re-applies the same priority cascade used at app startup (see loadAgents):
                 //   agent: settings.defaultAgent → build → first primary → first agent
-                //   model: project.defaultModel → settings.defaultModel → agent's preferred model → opencode/mimo-v2.6-flash-free → first
+                //   model: project.defaultModel → settings.defaultModel → agent's preferred model → opencode/ling-3.1-flash-free → first
                 // Used when entering a fresh draft session so model/agent reset to defaults
                 // instead of sticking to the previously open session's selection.
                 applyDefaultModelAgentSelection: (options) => {

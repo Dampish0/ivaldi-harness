@@ -283,13 +283,13 @@ describe('openchamber session routes', () => {
     }
   });
 
-  it('uses MiMo V2.6 Flash Free when no model default is configured', async () => {
+  it('uses Ling 3.1 Flash Free when no model default is configured', async () => {
     const originalFetch = globalThis.fetch;
     const fetchMock = vi.fn(async (url) => {
       const text = String(url);
       if (text.includes('/prompt_async')) return { ok: true, text: async () => '' };
       if (text.includes('/config/providers')) {
-        return { ok: true, json: async () => ({ providers: [{ id: 'opencode', models: { 'mimo-v2.6-flash-free': { id: 'mimo-v2.6-flash-free' } } }] }) };
+        return { ok: true, json: async () => ({ providers: [{ id: 'opencode', models: { 'ling-3.1-flash-free': { id: 'ling-3.1-flash-free' } } }] }) };
       }
       if (text.includes('/agent')) return { ok: true, json: async () => [{ name: 'build', mode: 'primary' }] };
       if (text.includes('/config')) return { ok: true, json: async () => ({}) };
@@ -305,7 +305,7 @@ describe('openchamber session routes', () => {
         .send({ directory: '/repo/app', prompt: 'Run this' })
         .expect(200);
 
-      expect(response.body.model).toEqual({ providerID: 'opencode', modelID: 'mimo-v2.6-flash-free' });
+      expect(response.body.model).toEqual({ providerID: 'opencode', modelID: 'ling-3.1-flash-free' });
     } finally {
       globalThis.fetch = originalFetch;
     }
