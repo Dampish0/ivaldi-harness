@@ -1,6 +1,6 @@
 {
   "name": "@ivaldi/web",
-  "version": "1.20.6",
+  "version": "1.20.7",
   "private": false,
   "type": "module",
   "main": "./server/index.js",
