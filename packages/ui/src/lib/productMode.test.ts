@@ -1,7 +1,9 @@
 import { describe, expect, test } from 'bun:test';
 
 import {
+  DEFAULT_PRODUCT_MODE,
   getSettingsPageKeywordsInProductMode,
+  isModelVisibleInProductMode,
   isComposerCommandVisibleInProductMode,
   isComposerSkillVisibleInProductMode,
   isShortcutVisibleInProductMode,
@@ -10,6 +12,46 @@ import {
   isSettingsPageVisibleInProductMode,
   isWorkAdvancedSettingsDetailPage,
 } from './productMode';
+
+describe('default product mode', () => {
+  test('starts new profiles in Work mode', () => {
+    expect(DEFAULT_PRODUCT_MODE).toBe('work');
+  });
+});
+
+describe('isModelVisibleInProductMode', () => {
+  test('shows OpenCode free models in Work mode by name or zero price', () => {
+    expect(isModelVisibleInProductMode('work', 'opencode', 'ling-3.1-flash-free')).toBe(true);
+    expect(isModelVisibleInProductMode('work', 'opencode', 'big-pickle', {
+      input: 0,
+      output: 0,
+    })).toBe(true);
+  });
+
+  test('hides paid, unknown, and non-OpenCode models in Work mode', () => {
+    expect(isModelVisibleInProductMode('work', 'opencode', 'gpt-6-sol', {
+      input: 1,
+      output: 2,
+    })).toBe(false);
+    expect(isModelVisibleInProductMode('work', 'opencode', 'gpt-6-sol')).toBe(false);
+    expect(isModelVisibleInProductMode('work', 'openai', 'gpt-6-sol', {
+      input: 0,
+      output: 0,
+    })).toBe(false);
+    expect(isModelVisibleInProductMode('work', 'opencode', 'ling-3.1-flash-free', {
+      input: 0,
+      output: 0,
+      cache_read: 0.01,
+    })).toBe(false);
+  });
+
+  test('keeps the complete model list in Developer mode', () => {
+    expect(isModelVisibleInProductMode('developer', 'openai', 'gpt-6-sol', {
+      input: 1,
+      output: 2,
+    })).toBe(true);
+  });
+});
 
 describe('isSettingsPageVisibleInProductMode', () => {
   test('keeps the curated work settings navigation visible', () => {

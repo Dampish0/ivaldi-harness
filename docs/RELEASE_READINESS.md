@@ -19,6 +19,27 @@ build each platform from that same commit. Use `bun run electron:build` on the
 target platform. See the [desktop prerequisites](../packages/electron/README.md#platform-notes).
 No branch or tag push automatically builds or publishes artifacts.
 
+## 1.20.2 updater bridge — Windows x64, 2026-10-08
+
+This release sets Work, MiMo V2.6 Flash Free, and Full access as new-chat
+defaults, opens browser popups in isolated desktop windows, and enables checks
+against the Ivaldi stable release feed. It includes Windows x64 only. Earlier
+builds have update checks disabled and must install this bridge release once
+manually before they can receive later in-app updates.
+
+| Check | Result |
+| --- | --- |
+| Version and tag | 1.20.2, `v1.20.2` |
+| Artifact and SHA-256 | `Ivaldi-1.20.2-win-x64.exe`; `80BA56E571A64D68E9BE9E22B8E067FC478D4E1ACB2BF1F14E10913EB11F154D` |
+| Signing | Unsigned Windows installer |
+| Updater metadata | `latest.yml` generated for 1.20.2; packaged feed points to `Dampish0/ivaldi-harness` |
+| Packaged CLI | OpenCode 1.18.23 verified |
+| Packaged startup | `win-unpacked/Ivaldi.exe` stayed running in background with isolated app data; log confirmed updater feed setup. No user profile or existing install was used. |
+| Focused tests | 49 UI tests, 23 session-route tests, 18 updater tests, and 2 popup tests passed; UI and Electron type/syntax checks passed. |
+| Static review | Popup module passed oxlint. The full session-route files reported existing anti-slop findings outside the changed lines. Dead-code report showed the existing unused-code baseline with no new popup file warning. |
+| Installer and upgrade journey | Not run; the existing user installation was left untouched. In-place upgrade and data retention remain unverified. |
+| Other desktop platforms | macOS and Linux artifacts were not built on this Windows host. |
+
 ## Candidate record
 
 Android preview 2, tag `v1.20.1-preview.2`, distributes the mobile redesign with

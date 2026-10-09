@@ -778,6 +778,27 @@ describe('useConfigStore provider persistence', () => {
     expect(state.directoryScoped[DIRECTORY]?.currentVariant).toBe('high');
   });
 
+  test('a fresh session falls back to Ling 3.1 Flash Free when no model is configured', () => {
+    useConfigStore.setState({
+      activeDirectoryKey: DIRECTORY,
+      providers: [provider('opencode', 'ling-3.1-flash-free'), provider('openai', 'gpt-5.5')],
+      agents: [testAgent('build')],
+      currentProviderId: '',
+      currentModelId: '',
+      currentAgentName: undefined,
+      settingsDefaultModel: undefined,
+      opencodeDefaultModel: undefined,
+      selectionSource: 'auto',
+      directoryScoped: {},
+    });
+
+    useConfigStore.getState().applyDefaultModelAgentSelection();
+
+    const state = useConfigStore.getState();
+    expect(state.currentProviderId).toBe('opencode');
+    expect(state.currentModelId).toBe('ling-3.1-flash-free');
+  });
+
   test('a thinking level the project model does not offer is ignored', async () => {
     useConfigStore.setState({
       activeDirectoryKey: DIRECTORY,

@@ -546,18 +546,6 @@ const WebviewBrowser: React.FC<BrowserPaneProps> = ({ initialUrl, directory, tab
     };
   }, [loadUrl, webviewElement]);
 
-  // Popups open in place; a detached window would escape the panel entirely.
-  React.useEffect(() => {
-    if (!webviewElement) return;
-    const onNewWindow = (event: Event) => {
-      const detail = (event as CustomEvent<{ url?: string }>).detail;
-      event.preventDefault();
-      if (detail?.url) loadUrl(detail.url);
-    };
-    webviewElement.addEventListener('new-window', onNewWindow);
-    return () => webviewElement.removeEventListener('new-window', onNewWindow);
-  }, [loadUrl, webviewElement]);
-
   const applyZoom = React.useCallback((level: number) => {
     const next = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, level));
     setZoomLevel(next);

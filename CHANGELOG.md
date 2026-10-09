@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 - Updates: the desktop app checks Ivaldi's GitHub releases for updates. The VS Code extension no longer sends its version and install ID to OpenChamber's update service.
 - The desktop Help menu links to Ivaldi's repository, and the Join Discord item and the walkthrough guide button are gone.
 - Only English is kept up to date, and Swedish is planned. Other languages show English for new text.
+- Chat: Work mode's model picker now lists only free models from the OpenCode provider.
 
 ## [1.21.0] - 2026-08-26
 

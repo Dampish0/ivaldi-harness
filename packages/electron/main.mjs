@@ -34,6 +34,7 @@ import {
 } from './linux-autostart.mjs';
 import { unsupportedAppSpecificOpenError, validateLocalPath } from './path-open-utils.mjs';
 import { shouldAllowBrowserPanelCertificateError } from './browser-panel-security.mjs';
+import { resolveBrowserPopupWindowOpen } from './browser-popup.mjs';
 import { isOpenableExternalUrl, isSafeExternalUrl } from './external-url.mjs';
 import { createWindowsComputerUse } from './computer-use.mjs';
 import { mintOutsideFileGrant } from '@ivaldi/web/server/lib/fs/routes.js';
@@ -5006,27 +5007,10 @@ contextMenu({
   showCopyLink: true,
 });
 
-const loadUrlInsideWebContents = (contents, rawUrl) => {
-  try {
-    const url = new URL(rawUrl);
-    if (url.protocol !== 'http:' && url.protocol !== 'https:') return false;
-    if (contents.isDestroyed()) return false;
-    void contents.loadURL(url.toString()).catch((error) => {
-      log.warn('[webview] failed to load popup URL in place:', error);
-    });
-    return true;
-  } catch {
-    return false;
-  }
-};
-
 app.on('web-contents-created', (_event, contents) => {
   if (contents.getType() !== 'webview') return;
 
-  contents.setWindowOpenHandler(({ url }) => {
-    loadUrlInsideWebContents(contents, url);
-    return { action: 'deny' };
-  });
+  contents.setWindowOpenHandler(({ url }) => resolveBrowserPopupWindowOpen(url));
 });
 
 // All desktop_* IPC and dialog:open run with full Electron main privileges
