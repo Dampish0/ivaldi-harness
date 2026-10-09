@@ -37,6 +37,7 @@ import { useSessionMessages, useSessionRenderable } from '@/sync/sync-context';
 import { useSync } from '@/sync/use-sync';
 import { useUIStore } from '@/stores/useUIStore';
 import { useProductModeStore } from '@/stores/useProductModeStore';
+import { isModelVisibleInProductMode } from '@/lib/productMode';
 import { useModelLists } from '@/hooks/useModelLists';
 import { useIsTextTruncated } from '@/hooks/useIsTextTruncated';
 import { formatEffortLabel, getCycledPrimaryAgentName, isPrimaryMode, type MobileControlsPanel } from './mobileControlsUtils';
@@ -52,7 +53,7 @@ import { getSyncParts } from '@/sync/sync-refs';
 
 type IconComponent = IconName;
 
-type ProviderModel = Record<string, unknown> & { id?: string; name?: string };
+type ProviderModel = Record<string, unknown> & { id?: string; name?: string; cost?: ModelMetadata['cost'] };
 
 type PermissionAction = 'allow' | 'ask' | 'deny';
 type PermissionRule = { permission: string; pattern: string; action: PermissionAction };
@@ -326,6 +327,7 @@ export const ModelControls: React.FC<ModelControlsProps> = ({
     const { isReady, isUnavailable } = useOpenCodeReadiness();
     const readinessLabel = isUnavailable ? t('common.unavailable') : t('common.loading');
     const providers = useConfigStore((state) => state.providers);
+    const modelsMetadata = useConfigStore((state) => state.modelsMetadata);
     const [retryingModels, setRetryingModels] = React.useState(false);
     const retryModels = async () => {
         setRetryingModels(true);
@@ -586,22 +588,35 @@ export const ModelControls: React.FC<ModelControlsProps> = ({
     const currentProvider = getCurrentProvider();
     const models = Array.isArray(currentProvider?.models) ? currentProvider.models : [];
 
-    const visibleProviders = React.useMemo(() => {
+    const { visibleProviders, visibleModelKeys } = React.useMemo(() => {
         const result: typeof providers = [];
+        const modelKeys = new Set<string>();
+        const productMode = isDeveloperMode ? 'developer' : 'work';
         for (const provider of providers) {
             const providerModels = Array.isArray(provider.models) ? provider.models : [];
             const visibleModels = providerModels.filter((model: ProviderModel) => {
                 const modelId = typeof model?.id === 'string' ? model.id : '';
-                return !hiddenModels.some(
+                if (!modelId || hiddenModels.some(
                     (item) => item.providerID === String(provider.id) && item.modelID === modelId
-                );
+                )) return false;
+
+                const metadata = modelsMetadata.get(`${provider.id}/${modelId}`);
+                const cost = metadata?.cost ?? model.cost;
+                const isVisible = isModelVisibleInProductMode(productMode, provider.id, modelId, cost);
+                if (isVisible) modelKeys.add(buildModelRefKey(provider.id, modelId));
+                return isVisible;
             });
             if (visibleModels.length > 0) {
                 result.push({ ...provider, models: visibleModels });
             }
         }
-        return result;
-    }, [providers, hiddenModels]);
+        return { visibleProviders: result, visibleModelKeys: modelKeys };
+    }, [hiddenModels, isDeveloperMode, modelsMetadata, providers]);
+
+    const isWorkModelVisible = React.useCallback(
+        (providerId: string, modelId: string) => visibleModelKeys.has(buildModelRefKey(providerId, modelId)),
+        [visibleModelKeys],
+    );
 
     const matchesModelSearch = React.useCallback(
         (candidate: string, query: string) => matchesRankQuery([candidate], query),
@@ -2433,7 +2448,7 @@ export const ModelControls: React.FC<ModelControlsProps> = ({
                                 </div>
                             ) : null}
                             <ModelPickerList
-                                providers={providers as ModelPickerProvider[]}
+                                providers={visibleProviders as ModelPickerProvider[]}
                                 favoriteModels={favoriteModelsList}
                                 recentModels={recentModelsList}
                                 modelsMetadata={useConfigStore.getState().modelsMetadata}
@@ -2443,6 +2458,7 @@ export const ModelControls: React.FC<ModelControlsProps> = ({
                                 labels={modelPickerLabels}
                                 selectedModel={currentProviderId && currentModelId ? { providerID: currentProviderId, modelID: currentModelId } : null}
                                 hiddenModels={hiddenModels}
+                                isModelAllowed={isDeveloperMode ? undefined : isWorkModelVisible}
                                 showProviderIdentity
                                 emptyContent={!isDeveloperMode && desktopModelQuery.trim().length === 0 ? (
                                     <div className="flex flex-col items-center gap-2">

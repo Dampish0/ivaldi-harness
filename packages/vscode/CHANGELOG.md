@@ -1,6 +1,7 @@
 ## [Unreleased]
 
-- **Chat: New chats start in Work mode with MiMo V2.6 Flash Free and Full access selected by default.**
+- **Chat: New chats start in Work mode with Ling 3.1 Flash Free and Full access selected by default.**
+- Chat: Work mode's model picker now lists only free models from the OpenCode provider.
 
 ## [1.21.0] - 2026-08-26
 

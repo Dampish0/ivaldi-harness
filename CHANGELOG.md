@@ -4,9 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-- **Chat: New chats start in Work mode with MiMo V2.6 Flash Free and Full access selected by default.**
-- **Desktop: Agent-opened browser popups now open in a separate window.**
-- **Desktop: Ivaldi checks for app updates on launch and offers available releases in the app.**
+- Chat: Work mode's model picker now lists only free models from the OpenCode provider.
 
 ## [1.21.0] - 2026-08-26
 

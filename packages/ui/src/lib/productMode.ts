@@ -1,9 +1,26 @@
 import type { ContextPanelMode } from '@/stores/useUIStore';
 import type { SettingsPageSlug } from '@/lib/settings/metadata';
+import type { ModelMetadata } from '@/types';
 
 export type ProductMode = 'work' | 'developer';
 
 export const DEFAULT_PRODUCT_MODE: ProductMode = 'work';
+
+export const isModelVisibleInProductMode = (
+  mode: ProductMode,
+  providerId: string,
+  modelId: string,
+  cost?: ModelMetadata['cost'],
+): boolean => {
+  if (mode === 'developer') return true;
+  if (providerId !== 'opencode') return false;
+
+  const prices = [cost?.input, cost?.output, cost?.cache_read, cost?.cache_write];
+  if (prices.some((price) => typeof price === 'number' && price > 0)) return false;
+
+  return modelId.toLowerCase().endsWith('-free')
+    || (cost?.input === 0 && cost.output === 0);
+};
 
 const DEVELOPER_ONLY_CONTEXT_MODES = new Set<ContextPanelMode>([
   'git',
