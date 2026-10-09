@@ -29,7 +29,7 @@ import { useGlobalSessionsStore } from '@/stores/useGlobalSessionsStore';
 import { streamPerfCount } from '@/stores/utils/streamDebug';
 import { useFeatureFlagsStore } from '@/stores/useFeatureFlagsStore';
 import { useProductModeStore } from '@/stores/useProductModeStore';
-import { resolveWorkChatTitle } from '@/components/session/sidebar/utils';
+import { isLegacyDefaultSessionTitle, resolveWorkChatTitle } from '@/components/session/sidebar/utils';
 
 import { useDesktopWindowControlsLayout } from '@/hooks/useDesktopWindowControlsLayout';
 import { ContextUsageDisplay } from '@/components/ui/ContextUsageDisplay';
@@ -607,9 +607,14 @@ export const Header: React.FC = () => {
 
   const beginHeaderSessionRename = React.useCallback(() => {
     if (!currentSessionId) return;
-    setHeaderSessionTitleDraft(currentSession?.title?.trim() || currentSessionTitle);
+    const rawTitle = currentSession?.title?.trim() ?? '';
+    // A default title is a raw timestamp to a Work mode user, so they start
+    // from an empty box; saving it empty leaves the title alone.
+    setHeaderSessionTitleDraft(!isDeveloperMode && isLegacyDefaultSessionTitle(rawTitle)
+      ? ''
+      : rawTitle || currentSessionTitle);
     setIsRenamingHeaderSession(true);
-  }, [currentSession?.title, currentSessionId, currentSessionTitle]);
+  }, [currentSession?.title, currentSessionId, currentSessionTitle, isDeveloperMode]);
 
   const beginHeaderSessionRenameRef = React.useRef(beginHeaderSessionRename);
   beginHeaderSessionRenameRef.current = beginHeaderSessionRename;

@@ -31,7 +31,7 @@ All notable changes to this project will be documented in this file.
 - Browser: the agent can show you a page. A new `browser.show` action brings the browser panel to the front, opening a page first if the agent passes one. Other browser actions still run in the background without opening the panel.
 - Browser: the agent can open a page before you have opened the side panel. Before, it waited 45 seconds and failed.
 - Chat: the working status line names tools in plain words. It says "using the browser" instead of "using openchamber_web", and Work mode uses everyday phrases such as "searching your files" and "waiting for your approval".
-- Work mode: chat tabs and the header show "Untitled chat" instead of a raw "New session - 2026-…" timestamp, matching the sidebar.
+- Work mode: chat tabs and the header show "Untitled chat" instead of a raw "New session - 2026-…" timestamp, matching the sidebar. Renaming such a chat starts from an empty box.
 
 ## [1.21.0] - 2026-08-26
 
