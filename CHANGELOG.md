@@ -24,6 +24,10 @@ All notable changes to this project will be documented in this file.
 - The desktop Help menu links to Ivaldi's repository, and the Join Discord item and the walkthrough guide button are gone.
 - Only English is kept up to date, and Swedish is planned. Other languages show English for new text.
 - Chat: Work mode's model picker now lists only free models from the OpenCode provider.
+- Chat: a failed reply shows a red error card with plain wording instead of a blue tip box, while a retry keeps the blue style. The queued messages card uses the same header and corners as the question card, with "Edit" and "Send now" buttons.
+- Chat: the to-do step says how far along the list is, for example "1 of 3 done", and high-priority items use orange instead of the error red. A helper step's links are no longer bold.
+- Work mode: the model picker hides context sizes and the capabilities and cost card, the sidebar menu no longer offers multi-run, and the raw context view is gone from the side panel and the command palette. The side panel opens Files by default. The pin buttons say "Make the assistant remember this", and a helper step links to "Open helper chat".
+- Sidebar: the home folder shows its name instead of "~", and the account menu uses the same spacing as other menus.
 
 ## [1.21.0] - 2026-08-26
 

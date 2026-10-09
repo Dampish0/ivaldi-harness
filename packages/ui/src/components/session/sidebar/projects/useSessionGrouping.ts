@@ -240,7 +240,7 @@ export const useSessionGrouping = (args: Args) => {
         );
         const label = shouldSyncLabelWithBranch
           ? currentBranch!
-          : (meta.label || meta.name || formatDirectoryName(directory, args.homeDirectory) || directory);
+          : (meta.label || meta.name || formatDirectoryName(directory) || directory);
 
         groups.push({
           id: `worktree:${directory}`,

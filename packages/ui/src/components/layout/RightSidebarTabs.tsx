@@ -3,7 +3,6 @@ import React from 'react';
 import { ProjectNotesTodoPanel } from '@/components/session/project-context/ProjectNotesTodoPanel';
 import { useGitStore } from '@/stores/useGitStore';
 import { useProjectsStore } from '@/stores/useProjectsStore';
-import { useDirectoryStore } from '@/stores/useDirectoryStore';
 import { formatDirectoryName } from '@/lib/utils';
 import { useSessionUIStore } from '@/sync/session-ui-store';
 import { CHAT_DRAFT_PROJECT_ID, getChatsRootDirectory, getChatsRootFromDirectory, isChatDirectoryPath } from '@/lib/chatDirectories';
@@ -16,7 +15,6 @@ export const ProjectContextPanel: React.FC<{
 }> = ({ onActionComplete, onOpenPlan }) => {
   const activeProjectId = useProjectsStore((state) => state.activeProjectId);
   const projects = useProjectsStore((state) => state.projects);
-  const homeDirectory = useDirectoryStore((state) => state.homeDirectory);
   const { t } = useI18n();
   const gitDirectories = useGitStore((state) => state.directories);
   const isChatContext = useSessionUIStore((state) => (
@@ -68,9 +66,9 @@ export const ProjectContextPanel: React.FC<{
       return null;
     }
     return activeProject.label?.trim()
-      || formatDirectoryName(activeProject.path, homeDirectory)
+      || formatDirectoryName(activeProject.path)
       || activeProject.path;
-  }, [activeProject, homeDirectory, isChatContext, t]);
+  }, [activeProject, isChatContext, t]);
 
   const canCreateWorktree = React.useMemo(() => {
     if (!activeProject) {

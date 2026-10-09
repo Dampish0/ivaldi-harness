@@ -222,7 +222,7 @@ export const WorkStatusPrimaryGroup: React.FC<Props> = ({ sessionId, directory, 
             <>
               <WorkStatusRow
                 icon="donut-chart"
-                onClick={directory ? openContext : undefined}
+                onClick={directory && isDeveloperMode ? openContext : undefined}
                 ariaLabel={t('chat.workStatus.action.openContext')}
                 label={t('chat.workStatus.context.label')}
                 value={(

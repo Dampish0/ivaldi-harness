@@ -158,10 +158,12 @@ export function SidebarHeader(props: Props): React.ReactNode {
                   <Icon name="calendar-schedule" className="h-4 w-4" />
                   <span>{t('sessions.sidebar.header.actions.scheduledTasks')}</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={onOpenMultiRun} disabled={!canOpenMultiRun} className="flex items-center gap-2">
-                  <ArrowsMerge className="h-4 w-4" />
-                  <span>{t('sessions.sidebar.header.actions.newMultiRun')}</span>
-                </DropdownMenuItem>
+                {productMode !== 'work' ? (
+                  <DropdownMenuItem onClick={onOpenMultiRun} disabled={!canOpenMultiRun} className="flex items-center gap-2">
+                    <ArrowsMerge className="h-4 w-4" />
+                    <span>{t('sessions.sidebar.header.actions.newMultiRun')}</span>
+                  </DropdownMenuItem>
+                ) : null}
                 <DropdownMenuItem onClick={onOpenArchive} className="flex items-center gap-2">
                   <Icon name="archive" className="h-4 w-4" />
                   <span>{t('sessions.sidebar.nav.archive')}</span>

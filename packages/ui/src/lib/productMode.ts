@@ -22,7 +22,9 @@ export const isModelVisibleInProductMode = (
     || (cost?.input === 0 && cost.output === 0);
 };
 
+// The context view is a raw token and cache inspector, so Work mode leaves it out.
 const DEVELOPER_ONLY_CONTEXT_MODES = new Set<ContextPanelMode>([
+  'context',
   'git',
   'pr',
   'diff',

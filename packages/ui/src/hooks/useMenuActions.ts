@@ -225,12 +225,12 @@ export const useMenuActions = (
           } else if (panelState?.activeTabId) {
             const activeTab = panelState.tabs.find((tab) => tab.id === panelState.activeTabId);
             if (productMode === 'work' && activeTab && isDeveloperOnlyContextMode(activeTab.mode)) {
-              uiState.openContextSurface(directoryKey, 'context');
+              uiState.openContextSurface(directoryKey, 'file');
             } else {
               uiState.setActiveContextPanelTab(directoryKey, panelState.activeTabId);
             }
           } else {
-            uiState.openContextSurface(directoryKey, productMode === 'work' ? 'context' : 'git');
+            uiState.openContextSurface(directoryKey, productMode === 'work' ? 'file' : 'git');
           }
           break;
         }

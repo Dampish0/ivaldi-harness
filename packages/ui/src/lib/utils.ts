@@ -96,7 +96,8 @@ export function formatPathForDisplay(path: string | null | undefined, homeDirect
   return normalizedPath;
 }
 
-export function formatDirectoryName(path: string | null | undefined, homeDirectory?: string | null): string {
+// The home folder shows its own name, not "~", so it reads the same everywhere.
+export function formatDirectoryName(path: string | null | undefined): string {
   if (!path) {
     return "/";
   }
@@ -104,11 +105,6 @@ export function formatDirectoryName(path: string | null | undefined, homeDirecto
   const normalizedPath = normalizePath(path);
   if (!normalizedPath || normalizedPath === "/") {
     return "/";
-  }
-
-  const normalizedHome = homeDirectory ? normalizePath(homeDirectory) : undefined;
-  if (normalizedHome && normalizedHome !== "/" && normalizedPath === normalizedHome) {
-    return "~";
   }
 
   const segments = normalizedPath.split("/");

@@ -1008,6 +1008,7 @@ const TaskToolSummary: React.FC<{
     isActive?: boolean;
 }> = ({ entries, isExpanded, isMobile, output, sessionId, onShowPopup, input, animateTailText = true, isActive = false }) => {
     const { t } = useI18n();
+    const isWorkMode = useProductModeStore((state) => state.mode === 'work');
     const currentDirectory = useEffectiveDirectory();
     const setCurrentSession = useSessionUIStore((state) => state.setCurrentSession);
     const openContextPanelTab = useUIStore((state) => state.openContextPanelTab);
@@ -1080,7 +1081,11 @@ const TaskToolSummary: React.FC<{
                     onClick={handleOpenSession}
                 >
                     <Icon name="external-link" className="h-3.5 w-3.5 flex-shrink-0" />
-                    <span className="typography-meta text-primary font-medium">{t('chat.toolPart.openSubtask', { type: agentType.charAt(0).toUpperCase() + agentType.slice(1) })}</span>
+                    <span className="typography-meta text-primary">
+                        {isWorkMode
+                            ? t('chat.messageBody.subtask.openSession')
+                            : t('chat.toolPart.openSubtask', { type: agentType.charAt(0).toUpperCase() + agentType.slice(1) })}
+                    </span>
                 </button>
             )}
 
@@ -1101,7 +1106,7 @@ const TaskToolSummary: React.FC<{
                         ) : (
                             <Icon name="arrow-right-s" className="h-3.5 w-3.5 flex-shrink-0" />
                         )}
-                        <span className="typography-meta text-foreground/80 font-medium">{t('chat.toolPart.output')}</span>
+                        <span className="typography-meta text-foreground/80">{t('chat.toolPart.output')}</span>
                     </button>
                     {isOutputExpanded ? (
                         <ToolScrollableSection maxHeightClass="max-h-[50vh]">
@@ -1955,11 +1960,23 @@ const ToolPartContent: React.FC<ToolPartProps> = ({
     const isMultiFileApplyPatch = normalizedPartTool === 'apply_patch' && Array.isArray(metadata?.files) && (metadata?.files as []).length > 1;
     const normalizedPart = normalizedPartTool !== part.tool ? ({ ...part, tool: normalizedPartTool } as ToolPartType) : part;
     const descriptionPath = getToolDescriptionPath(normalizedPart, state, currentDirectory);
+    // OpenCode titles the to-do row with the unfinished count ("2 todos" for a
+    // list of three), so the row says how far along the list is instead.
+    const todoProgress = React.useMemo(() => {
+        const items: unknown = input?.todos;
+        if (normalizedPartTool !== 'todowrite' || !Array.isArray(items)) return null;
+        const todos = items.filter((todo) => todo?.status !== 'cancelled');
+        const done = todos.filter((todo) => todo?.status === 'completed').length;
+        return t('chat.toolPart.todoProgress', { done, total: todos.length });
+    }, [input?.todos, normalizedPartTool, t]);
     const description = getToolDescription(normalizedPart, state, currentDirectory, isWorkMode);
     const displayName = getToolDisplayName(normalizedPartTool || part.tool, isWorkMode);
     
     // Tool title/description — shown inline as context
     const justificationText = React.useMemo(() => {
+        if (todoProgress) {
+            return todoProgress;
+        }
         if (normalizedPartTool === 'bash') {
             return null;
         }
@@ -1984,7 +2001,7 @@ const ToolPartContent: React.FC<ToolPartProps> = ({
             return inputDesc;
         }
         return null;
-    }, [descriptionPath, normalizedPartTool, stateWithData, input]);
+    }, [descriptionPath, normalizedPartTool, stateWithData, input, todoProgress]);
     const runtime = React.useContext(RuntimeAPIContext);
 
     const openApplyPatchFile = (file: Record<string, unknown>, event: React.MouseEvent<HTMLButtonElement>) => {

@@ -343,7 +343,7 @@ function SessionNodeItemComponent(props: SessionNodeItemProps): React.ReactNode 
       if (secondaryMeta?.projectLabel || !projectId) return null;
       const project = state.projects.find((entry) => entry.id === projectId);
       if (!project) return null;
-      return project.label?.trim() || formatDirectoryName(normalizePath(project.path) ?? project.path, null) || project.path;
+      return project.label?.trim() || formatDirectoryName(normalizePath(project.path) ?? project.path) || project.path;
     }, [projectId, secondaryMeta?.projectLabel]),
   );
   const tooltipProjectLabel = secondaryMeta?.projectLabel

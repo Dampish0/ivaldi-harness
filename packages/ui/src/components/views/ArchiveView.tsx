@@ -8,7 +8,6 @@ import { cn, formatDirectoryName } from '@/lib/utils';
 import { useI18n } from '@/lib/i18n';
 import { sessionEvents } from '@/lib/sessionEvents';
 import { useUIStore } from '@/stores/useUIStore';
-import { useDirectoryStore } from '@/stores/useDirectoryStore';
 import { useSessionUIStore } from '@/sync/session-ui-store';
 import { resolveGlobalSessionDirectory, useGlobalSessionsStore } from '@/stores/useGlobalSessionsStore';
 import { useProductModeStore } from '@/stores/useProductModeStore';
@@ -31,7 +30,6 @@ export function ArchiveView(): React.ReactNode {
   const setOpen = useUIStore((state) => state.setArchivePageOpen);
   const setCurrentSession = useSessionUIStore((state) => state.setCurrentSession);
   const unarchiveSession = useSessionUIStore((state) => state.unarchiveSession);
-  const homeDirectory = useDirectoryStore((state) => state.homeDirectory);
   const isWorkMode = useProductModeStore((state) => state.mode === 'work');
   const archivedSessions = useGlobalSessionsStore(useShallow((state) => open ? state.archivedSessions : []));
   const [query, setQuery] = React.useState('');
@@ -57,13 +55,13 @@ export function ArchiveView(): React.ReactNode {
       byDirectory.set(directory, {
         directory,
         label: directory
-          ? (formatDirectoryName(directory, homeDirectory) || directory)
+          ? (formatDirectoryName(directory) || directory)
           : t('sessions.archivePage.otherProjects'),
         sessions: [session],
       });
     }
     return [...byDirectory.values()].sort((a, b) => b.sessions.length - a.sessions.length);
-  }, [homeDirectory, sortedSessions, t]);
+  }, [sortedSessions, t]);
 
   // Search spans every archived session; the directory filter applies only
   // while not searching.
@@ -217,7 +215,7 @@ export function ArchiveView(): React.ReactNode {
               ) : visibleSessions.map((session) => {
                 const sessionDirectory = normalizePath(resolveGlobalSessionDirectory(session)) ?? '';
                 const directoryLabel = sessionDirectory
-                  ? (formatDirectoryName(sessionDirectory, homeDirectory) || sessionDirectory)
+                  ? (formatDirectoryName(sessionDirectory) || sessionDirectory)
                   : null;
                 return (
                   <div

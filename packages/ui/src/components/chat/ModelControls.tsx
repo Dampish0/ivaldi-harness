@@ -2459,6 +2459,7 @@ export const ModelControls: React.FC<ModelControlsProps> = ({
                                 selectedModel={currentProviderId && currentModelId ? { providerID: currentProviderId, modelID: currentModelId } : null}
                                 hiddenModels={hiddenModels}
                                 isModelAllowed={isDeveloperMode ? undefined : isWorkModelVisible}
+                                showModelDetails={isDeveloperMode}
                                 showProviderIdentity
                                 emptyContent={!isDeveloperMode && desktopModelQuery.trim().length === 0 ? (
                                     <div className="flex flex-col items-center gap-2">

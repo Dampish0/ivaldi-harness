@@ -132,10 +132,10 @@ const TOP_FADE_MAX_SIZE = 48;
 const TOP_FADE_MIN_SIZE = 32;
 const TOP_FADE_CLEAR_MAX_SIZE = 24;
 
-const getProjectLabel = (project: ProjectSection['project'], homeDirectory: string | null): string => (
+const getProjectLabel = (project: ProjectSection['project']): string => (
   formatProjectLabel(
     project.label?.trim()
-    || formatDirectoryName(project.normalizedPath, homeDirectory)
+    || formatDirectoryName(project.normalizedPath)
     || project.normalizedPath,
   )
 );
@@ -211,10 +211,10 @@ function SessionProjectScrollerComponent(props: Props): React.ReactNode {
   // lead the list, the Recent fallback below owns the top instead of a project.
   const leadingProject =
     stuckProject ?? (model.hasSharedSessions ? null : renderedSections[0]?.project ?? null);
-  const leadingProjectLabel = leadingProject ? getProjectLabel(leadingProject, view.homeDirectory) : null;
+  const leadingProjectLabel = leadingProject ? getProjectLabel(leadingProject) : null;
   const projectPickerOptions = React.useMemo(() => model.projectSections.map((section) => ({
     id: section.project.id,
-    projectLabel: getProjectLabel(section.project, view.homeDirectory),
+    projectLabel: getProjectLabel(section.project),
     projectDescription: formatPathForDisplay(section.project.normalizedPath, view.homeDirectory),
     projectIcon: section.project.icon,
     projectColor: section.project.color,
@@ -323,7 +323,7 @@ function SessionProjectScrollerComponent(props: Props): React.ReactNode {
             {renderedSections.map((section) => {
               const project = section.project;
               const projectKey = project.id;
-              const projectLabel = getProjectLabel(project, view.homeDirectory);
+              const projectLabel = getProjectLabel(project);
               const projectDescription = formatPathForDisplay(project.normalizedPath, view.homeDirectory);
               const isCollapsed = model.singleProjectMode ? false : view.collapsedProjects.has(projectKey);
               const isRepo = model.projectRepoStatus.get(projectKey);

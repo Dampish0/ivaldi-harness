@@ -447,6 +447,8 @@ interface MessageBodyProps {
     onRevert?: () => void;
     onFork?: () => void;
     errorMessage?: string;
+    /** `error` for a failed reply, `info` for a retry or a stopped reply. */
+    errorTone?: 'error' | 'info';
     userActionsMode?: 'inline' | 'external-content' | 'external-actions';
     stickyUserHeaderEnabled?: boolean;
     reviewTransferDirection?: ReviewTransferDirection | null;
@@ -1134,6 +1136,7 @@ const AssistantMessageBody = React.memo(({
     showReasoningTraces = false,
     turnGroupingContext,
     errorMessage,
+    errorTone = 'error',
     reviewTransferDirection = null,
     contextPinned,
     contextPinPending,
@@ -2163,9 +2166,19 @@ const AssistantMessageBody = React.memo(({
                     {renderedParts}
                     {showErrorMessage && (
                         <FadeInOnReveal key="assistant-error">
-                            <div className="group/assistant-text relative mt-3 max-w-full break-words rounded-2xl border border-[var(--status-info-border)] bg-[var(--status-info-background)] px-4 py-3 text-base leading-relaxed">
+                            <div
+                                className={cn(
+                                    'group/assistant-text relative mt-3 max-w-full break-words rounded-xl border px-4 py-3 text-base leading-relaxed',
+                                    errorTone === 'info'
+                                        ? 'border-[var(--status-info-border)] bg-[var(--status-info-background)]'
+                                        : 'border-[var(--status-error-border)] bg-[var(--status-error-background)]',
+                                )}
+                            >
                                 <div className="flex items-center gap-3">
-                                    <Icon name="information" className="size-4 shrink-0 text-[var(--status-info)]" />
+                                    <Icon
+                                        name={errorTone === 'info' ? 'information' : 'error-warning'}
+                                        className={cn('size-4 shrink-0', errorTone === 'info' ? 'text-[var(--status-info)]' : 'text-[var(--status-error)]')}
+                                    />
                                     <div className="min-w-0 flex-1 break-words">
                                         <SimpleMarkdownRenderer
                                             content={errorMessage ?? ''}

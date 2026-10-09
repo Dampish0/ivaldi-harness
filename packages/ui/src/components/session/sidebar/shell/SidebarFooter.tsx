@@ -86,21 +86,20 @@ export function SidebarFooter({
                 <span className="min-w-0 truncate text-left">{displayName}</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="start" sideOffset={8} className="w-72 max-w-[calc(100vw-2rem)] p-2">
-              <DropdownMenuLabel className="flex items-center gap-3 px-2 py-3">
+            <DropdownMenuContent side="top" align="start" sideOffset={8} className="w-72 max-w-[calc(100vw-2rem)]">
+              <DropdownMenuLabel className="flex items-center gap-2 py-2">
                 {avatar}
                 <span className="min-w-0">
                   <span className="block truncate text-foreground">{displayName}</span>
                   <span className="mt-0.5 block break-words typography-meta font-normal text-muted-foreground">{accountDetail}</span>
                 </span>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator className="mx-2 my-1" />
-              <DropdownMenuItem className="gap-3 py-2" onSelect={() => setEditingProfile(true)}>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => setEditingProfile(true)}>
                 <Icon name="user" className="size-4" />
                 {t('profile.actions.edit')}
               </DropdownMenuItem>
               <DropdownMenuItem
-                className="gap-3 py-2"
                 disabled={!hasCheckedGitHub || isLoadingGitHub}
                 onSelect={() => setGitHubDialogAction(githubStatus?.error ? 'manage' : githubStatus?.connected ? 'disconnect' : 'connect')}
               >
@@ -111,12 +110,12 @@ export function SidebarFooter({
                     ? t('sessions.sidebar.footer.github.disconnect')
                     : t('settings.github.page.actions.connect')}
               </DropdownMenuItem>
-              <DropdownMenuSeparator className="mx-2 my-1" />
-              <DropdownMenuItem className="gap-3 py-2" onSelect={() => { setSettingsPage('usage'); onOpenSettings(); }}>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => { setSettingsPage('usage'); onOpenSettings(); }}>
                 <Icon name="bar-chart-box" className="size-4" />
                 {t('settings.page.usage.title')}
               </DropdownMenuItem>
-              <DropdownMenuItem className="gap-3 py-2" onSelect={onOpenSettings}>
+              <DropdownMenuItem onSelect={onOpenSettings}>
                 <Icon name="settings-3" className="size-4" />
                 {t('sessions.sidebar.footer.actions.settings')}
               </DropdownMenuItem>

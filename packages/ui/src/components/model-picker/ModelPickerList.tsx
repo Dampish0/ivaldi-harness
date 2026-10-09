@@ -378,6 +378,8 @@ interface ModelPickerListProps {
   footerContent?: React.ReactNode | ((activeEntry: ModelPickerEntry | undefined) => React.ReactNode);
   renderVersion?: number;
   tooltipsEnabled?: boolean;
+  /** Show the context size and the capability/cost card. Work mode hides these technical details. */
+  showModelDetails?: boolean;
 }
 
 export const ModelPickerList: React.FC<ModelPickerListProps> = ({
@@ -421,6 +423,7 @@ export const ModelPickerList: React.FC<ModelPickerListProps> = ({
   footerContent,
   renderVersion,
   tooltipsEnabled = true,
+  showModelDetails = true,
 }) => {
   const selectionStoreRef = React.useRef<IndexSelectionStore | null>(null);
   if (!selectionStoreRef.current) selectionStoreRef.current = createIndexSelectionStore();
@@ -657,7 +660,7 @@ export const ModelPickerList: React.FC<ModelPickerListProps> = ({
 
   const renderRow = (entry: ModelPickerEntry, keyPrefix: string, showProviderLogo: boolean, rowIndex: number, dragHandleProps?: SortableFavoriteHandleProps | null) => {
     const metadata = mergeModelMetadataWithLiveModel(entry.providerID, entry.model, modelsMetadata.get(`${entry.providerID}/${entry.modelID}`));
-    const contextTokens = formatModelContextTokens(metadata?.limit?.context);
+    const contextTokens = showModelDetails ? formatModelContextTokens(metadata?.limit?.context) : null;
     const count = selectionCount?.(entry) ?? 0;
     const isSelected = selectedModel?.providerID === entry.providerID && selectedModel.modelID === entry.modelID;
     const favorite = isFavorite?.(entry) ?? false;
@@ -722,7 +725,7 @@ export const ModelPickerList: React.FC<ModelPickerListProps> = ({
             </div>
           );
 
-          return <ModelPickerRowTooltip metadata={metadata} active={tooltipsEnabled && isHighlighted} labels={labels}>{rowElement}</ModelPickerRowTooltip>;
+          return <ModelPickerRowTooltip metadata={metadata} active={tooltipsEnabled && showModelDetails && isHighlighted} labels={labels}>{rowElement}</ModelPickerRowTooltip>;
         }}
       </ModelPickerRowHighlight>
     );

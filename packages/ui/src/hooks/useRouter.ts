@@ -152,7 +152,7 @@ export function useRouter(): void {
           if (directory) {
             const mode: ContextPanelMode = route.tab === 'files' ? 'file' : route.tab;
             const targetMode = useProductModeStore.getState().mode === 'work' && isDeveloperOnlyContextMode(mode)
-              ? 'context'
+              ? 'file'
               : mode;
             // Routing is idempotent. Unlike the rail action, opening the same
             // routed surface twice must not toggle the panel closed.

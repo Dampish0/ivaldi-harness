@@ -387,7 +387,7 @@ export const CommandPalette: React.FC = () => {
       });
     }
     return productMode === 'work'
-      ? list.filter((entry) => entry.id !== 'toggle-terminal' && entry.id !== 'new-worktree')
+      ? list.filter((entry) => entry.id !== 'toggle-terminal' && entry.id !== 'new-worktree' && entry.id !== 'context-usage')
       : list;
   }, [
     t,

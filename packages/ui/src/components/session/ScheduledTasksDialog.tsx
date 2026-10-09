@@ -11,7 +11,6 @@ import { formatTimeForPreference } from '@/lib/timeFormat';
 import type { TimeFormatPreference } from '@/stores/useUIStore';
 import { useProjectsStore } from '@/stores/useProjectsStore';
 import { useSessionUIStore } from '@/sync/session-ui-store';
-import { useDirectoryStore } from '@/stores/useDirectoryStore';
 import { refreshGlobalSessions } from '@/stores/useGlobalSessionsStore';
 import { subscribeOpenchamberEvents } from '@/lib/openchamberEvents';
 import { PROJECT_COLOR_MAP, PROJECT_ICON_MAP, ProjectIconImage } from '@/lib/projectMeta';
@@ -178,7 +177,6 @@ export function ScheduledTasksDialog() {
   const timeFormatPreference = useUIStore((state) => state.timeFormatPreference);
   const projects = useProjectsStore((state) => state.projects);
   const activeProject = useProjectsStore((state) => state.getActiveProject());
-  const homeDirectory = useDirectoryStore((state) => state.homeDirectory);
   const isWorkMode = useProductModeStore((state) => state.mode === 'work');
   const { currentTheme } = useThemeSystem();
 
@@ -197,7 +195,7 @@ export function ScheduledTasksDialog() {
   );
 
   const renderProjectLabel = React.useCallback((project: ProjectEntry) => {
-    const displayLabel = project.label?.trim() || formatDirectoryName(project.path, homeDirectory || undefined);
+    const displayLabel = project.label?.trim() || formatDirectoryName(project.path);
     const projectIconName = project.icon ? PROJECT_ICON_MAP[project.icon] : null;
     const iconColor = project.color ? PROJECT_COLOR_MAP[project.color] : undefined;
     const fallbackIcon = projectIconName ? (
@@ -227,7 +225,7 @@ export function ScheduledTasksDialog() {
         <span className="truncate">{displayLabel}</span>
       </span>
     );
-  }, [homeDirectory, currentTheme.metadata.variant, currentTheme.colors.surface.foreground]);
+  }, [currentTheme.metadata.variant, currentTheme.colors.surface.foreground]);
 
   const reloadTasks = React.useCallback(async (projectID: string, options?: { silent?: boolean }) => {
     if (!projectID) {

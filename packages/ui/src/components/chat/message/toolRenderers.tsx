@@ -423,7 +423,8 @@ export const renderTodoOutput = (
             const baseClasses = 'w-2 h-2 rounded-full flex-shrink-0 mt-1';
             switch (priority) {
                 case 'high':
-                    return <div className={baseClasses} style={{ backgroundColor: 'var(--status-error)' }} />;
+                    // Warning, not error: red is kept for things that went wrong.
+                    return <div className={baseClasses} style={{ backgroundColor: 'var(--status-warning)' }} />;
                 case 'medium':
                     return <div className={baseClasses} style={{ backgroundColor: 'var(--primary)' }} />;
                 case 'low':

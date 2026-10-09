@@ -981,7 +981,7 @@ export const settingsDict = {
   'settings.openchamber.sessionRetention.title': 'Session retention',
   'settings.openchamber.sessionRetention.tooltip': 'Automatically archive or delete inactive sessions based on last activity. Keeps the 5 most recent sessions.',
   'settings.openchamber.sessionRetention.field.enableAutoCleanupAria': 'Enable auto-cleanup',
-  'settings.openchamber.sessionRetention.field.enableAutoCleanup': 'Enable Auto-Cleanup',
+  'settings.openchamber.sessionRetention.field.enableAutoCleanup': 'Enable auto-cleanup',
   'settings.openchamber.sessionRetention.field.retentionPeriod': 'Retention period',
   'settings.openchamber.sessionRetention.field.retentionPeriodAria': 'Retention period in days',
   'settings.openchamber.sessionRetention.field.days': 'days',

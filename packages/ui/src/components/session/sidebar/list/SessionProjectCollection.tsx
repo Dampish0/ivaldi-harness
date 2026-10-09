@@ -429,7 +429,6 @@ const VisibleSessionProjects: React.FC<SessionProjectCollectionProps> = ({ topol
       projects={topology.projects}
       availableWorktreesByProject={topology.availableWorktreesByProject}
       gitBranches={topology.gitBranches}
-      homeDirectory={view.homeDirectory}
       hasSessionSearchQuery={view.hasSessionSearchQuery}
       normalizedSessionSearchQuery={view.normalizedSessionSearchQuery}
       isDesktopShellRuntime={view.isDesktopShellRuntime}
@@ -489,7 +488,6 @@ const VisibleSessionProjects: React.FC<SessionProjectCollectionProps> = ({ topol
     topology.projects,
     collection.chatSessions,
     view.hasSessionSearchQuery,
-    view.homeDirectory,
     view.isDesktopShellRuntime,
     view.mobileVariant,
     view.normalizedSessionSearchQuery,

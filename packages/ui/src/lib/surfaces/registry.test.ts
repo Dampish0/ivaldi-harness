@@ -74,7 +74,7 @@ describe('getVisibleContextRailSurfaces', () => {
     expect(ids).not.toContain('diff');
     expect(ids).not.toContain('walkthrough');
     expect(ids).not.toContain('terminal');
-    expect(ids).toContain('context');
+    expect(ids).not.toContain('context');
     expect(ids).toContain('editor');
     expect(ids).toContain('notes');
     expect(ids).toContain('plan');

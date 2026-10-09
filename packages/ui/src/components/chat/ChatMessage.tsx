@@ -24,7 +24,7 @@ import { filterVisibleParts, normalizeParts } from './message/partUtils';
 import { normalizeUserDisplayParts } from './message/normalizeUserDisplayParts';
 import { isHiddenUserMessage } from './message/hiddenUserMessage';
 import { flattenAssistantTextParts } from '@/lib/messages/messageText';
-import { isLikelyProviderAuthFailure, PROVIDER_AUTH_FAILURE_MESSAGE } from '@/lib/messages/providerAuthError';
+import { isLikelyProviderAuthFailure } from '@/lib/messages/providerAuthError';
 import { getProviderModelDisplayName } from '@/lib/modelDisplay';
 import { lazyWithChunkRecovery } from '@/lib/chunkLoadRecovery';
 import { formatAgentDisplayName } from './mobileControlsUtils';
@@ -683,27 +683,21 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         if (!detail) {
             return undefined;
         }
+        // Retries and a stopped reply are not failures, so they keep the info tone.
         if (errorName === 'SessionRetry') {
-            return {
-                text: `Opencode failed to send a message. Retry attempt info: ${detail}`,
-            };
+            return { text: t('chat.messageBody.error.retrying', { detail }), tone: 'info' as const };
         }
         if (isLikelyProviderAuthFailure(detail)) {
-            return {
-                text: PROVIDER_AUTH_FAILURE_MESSAGE,
-            };
+            return { text: t('chat.messageBody.error.providerAuth'), tone: 'error' as const };
         }
         if (detail.trim().toLowerCase() === 'aborted') {
-            return {
-                text: 'The running turn was stopped before OpenCode could send the next message.',
-            };
+            return { text: t('chat.messageBody.error.stopped'), tone: 'info' as const };
         }
-        return {
-            text: `Opencode failed to send message with error: ${detail}`,
-        };
-    }, [isUser, message.info]);
+        return { text: t('chat.messageBody.error.failed', { detail }), tone: 'error' as const };
+    }, [isUser, message.info, t]);
 
     const assistantErrorText = assistantError?.text;
+    const assistantErrorTone = assistantError?.tone;
 
     const messageTextContent = React.useMemo(() => {
         if (isUser) {
@@ -933,6 +927,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                                                 contextPinPending={pinPending}
                                                 onToggleContextPin={canPinIntoContext && messageCreatedAt ? handleToggleContextPin : undefined}
                                                 errorMessage={assistantErrorText}
+                                                errorTone={assistantErrorTone}
                                                 userActionsMode={useExternalUserActionsRow ? 'external-content' : 'inline'}
                                                 stickyUserHeaderEnabled={stickyUserHeader}
                                             />
@@ -967,6 +962,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                                                 contextPinPending={pinPending}
                                                 onToggleContextPin={canPinIntoContext && messageCreatedAt ? handleToggleContextPin : undefined}
                                                 errorMessage={assistantErrorText}
+                                                errorTone={assistantErrorTone}
                                                 userActionsMode="external-actions"
                                                 stickyUserHeaderEnabled={stickyUserHeader}
                                             />
@@ -1007,6 +1003,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                                 agentMention={agentMention}
                                 turnGroupingContext={turnGroupingContext}
                                 errorMessage={assistantErrorText}
+                                errorTone={assistantErrorTone}
                                 reviewTransferDirection={reviewTransferDirection}
                                 footerProviderID={headerProviderID}
                                 footerModelName={headerModelName}

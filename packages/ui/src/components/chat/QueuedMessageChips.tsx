@@ -170,16 +170,16 @@ export const QueuedMessageChips = memo(({ onEditMessage, onSendMessage, isMobile
     }
 
     return (
-        <div className="pb-2 w-full px-1">
+        <div className="pb-2 w-full">
+            {/* Same surface and header as the question and permission cards. */}
             <div className={cn(
                 'overflow-hidden border border-border/60 bg-[var(--surface-elevated)] text-[var(--surface-elevated-foreground)]',
-                isMobile ? 'rounded-md shadow-none' : 'rounded-xl shadow-sm',
+                isMobile ? 'rounded-md' : 'rounded-xl',
             )}>
                 <div className="flex w-full items-center gap-2 px-3 py-2 text-left">
-                    <span className="typography-ui-label font-medium text-foreground flex-shrink-0">
-                        {t('chat.queuedMessage.title')} {queuedMessages.length}
-                    </span>
-                    <Icon name="time" className="ml-auto h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                    <Icon name="time" className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                    <span className="typography-ui-label shrink-0 font-semibold text-foreground">{t('chat.queuedMessage.title')}</span>
+                    <span className="typography-meta text-muted-foreground">{queuedMessages.length}</span>
                 </div>
                 <DndContext
                     sensors={sensors}

@@ -104,7 +104,6 @@ export const MultiRunLauncher: React.FC<MultiRunLauncherProps> = ({
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const currentDirectory = useDirectoryStore((state) => state.currentDirectory ?? null);
-  const homeDirectory = useDirectoryStore((state) => state.homeDirectory ?? null);
 
   const vscodeWorkspaceFolder = React.useMemo(() => {
     if (typeof window === 'undefined') return null;
@@ -144,7 +143,7 @@ export const MultiRunLauncher: React.FC<MultiRunLauncherProps> = ({
   const { currentTheme } = useThemeSystem();
 
   const renderProjectLabel = React.useCallback((project: ProjectEntry) => {
-    const displayLabel = project.label?.trim() || formatDirectoryName(project.path, homeDirectory);
+    const displayLabel = project.label?.trim() || formatDirectoryName(project.path);
     const projectIconName = project.icon ? PROJECT_ICON_MAP[project.icon] : null;
     const iconColor = project.color ? PROJECT_COLOR_MAP[project.color] : undefined;
     const fallbackIcon = projectIconName ? (
@@ -174,7 +173,7 @@ export const MultiRunLauncher: React.FC<MultiRunLauncherProps> = ({
         <span className="truncate">{displayLabel}</span>
       </span>
     );
-  }, [homeDirectory, currentTheme.metadata.variant, currentTheme.colors.surface.foreground]);
+  }, [currentTheme.metadata.variant, currentTheme.colors.surface.foreground]);
 
   const projectRef = React.useMemo<ProjectRef | null>(() => {
     if (selectedProject?.path) {

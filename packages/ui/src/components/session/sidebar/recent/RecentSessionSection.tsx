@@ -14,7 +14,6 @@ type Props = {
   projects: { id: string; label?: string; normalizedPath: string }[];
   availableWorktreesByProject: Map<string, WorktreeMetadata[]>;
   gitBranches: Map<string, string | null>;
-  homeDirectory: string | null;
   hasSessionSearchQuery: boolean;
   normalizedSessionSearchQuery: string;
   isDesktopShellRuntime: boolean;
@@ -56,7 +55,6 @@ export const RecentSessionSection: React.FC<Props> = (props) => {
     projects,
     availableWorktreesByProject,
     gitBranches,
-    homeDirectory,
     hasSessionSearchQuery,
     normalizedSessionSearchQuery,
     isDesktopShellRuntime,
@@ -84,7 +82,7 @@ export const RecentSessionSection: React.FC<Props> = (props) => {
       }
       if (!owner) continue;
       const worktree = availableWorktreesByProject.get(owner.normalizedPath)?.find((entry) => normalizePath(entry.path) === directory);
-      const projectLabel = formatProjectLabel(owner.label?.trim() || formatDirectoryName(owner.normalizedPath, homeDirectory) || owner.normalizedPath);
+      const projectLabel = formatProjectLabel(owner.label?.trim() || formatDirectoryName(owner.normalizedPath) || owner.normalizedPath);
       const branch = worktree?.branch?.trim() || gitBranches.get(directory)?.trim() || null;
       locations.set(session.id, {
         projectId: owner.id,
@@ -94,7 +92,7 @@ export const RecentSessionSection: React.FC<Props> = (props) => {
       });
     }
     return locations;
-  }, [availableWorktreesByProject, sessions, gitBranches, homeDirectory, projects]);
+  }, [availableWorktreesByProject, sessions, gitBranches, projects]);
   const getSessionLocation = React.useCallback(
     (sessionId: string) => sessionLocationById.get(sessionId) ?? null,
     [sessionLocationById],
